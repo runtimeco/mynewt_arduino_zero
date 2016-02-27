@@ -1,0 +1,10 @@
+.repo.db
+bin
+obj
+tags
+.gdb_history
+*~
+.app
+.DS_Store
+*.swp
+*.swo
