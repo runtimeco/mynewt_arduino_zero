@@ -32,7 +32,7 @@ pkg.cflags: -std=c99
             -I../../../../utils                                    
             -I../../../sam0/utils/preprocessor 
             -I./sam0/utils/preprocessor 
-            -I ../../../utils/preprocessor 
+            -I../../../utils/preprocessor 
             -I../../../../utils/preprocessor                         
             -I../../../sam0/utils/header_files 
             -I./sam0/utils/header_files 
