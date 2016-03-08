@@ -133,6 +133,42 @@ void hal_gpio_clear(int pin)
     port_pin_set_output_level(pin, false);    
 }
 
+int hal_gpio_init_in(int pin, gpio_pull_t pull) {
+    struct port_config cfg;
+    
+    int port = GPIO_PORT(pin);
+    int port_pin = GPIO_PIN(pin);
+    
+    if(port > GPIO_MAX_PORT) {
+        return -1;
+    }
+    
+    if((port_pin & valid_pins[port]) == 0) {
+        return -1;
+    }
+ 
+    cfg.direction = PORT_PIN_DIR_INPUT;
+    switch(pull) {
+        case GPIO_PULL_NONE:
+            cfg.input_pull = PORT_PIN_PULL_NONE;
+            break;
+        case GPIO_PULL_UP:
+            cfg.input_pull = GPIO_PULL_UP;
+            break;
+        case GPIO_PULL_DOWN:
+            cfg.input_pull = GPIO_PULL_DOWN;
+            break;
+        default:
+            return -1;
+    }
+
+    cfg.powersave = false;
+    
+    port_pin_set_config(pin, &cfg);
+        
+    return 0;
+}
+
 /**
  * gpio read 
  *  
