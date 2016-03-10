@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/sh -x
 # Licensed to the Apache Software Foundation (ASF) under one
 # or more contributor license agreements.  See the NOTICE file
 # distributed with this work for additional information
@@ -45,8 +45,9 @@ if [ $IS_BOOTLOADER -eq 1 ]; then
     # we will unprotect and reprotect our bootloader to ensure that its
     # safe. also Arduino Zero Pro boards looks like they come with the 
     # arduino bootloader protected via the NVM AUX 
-    UNPROTECT_FLASH=-c "at91samd bootloader"
-    PROTECT_FLASH=-c "at91samd bootloader 16384"
+    CMD=-c
+    UNPROTECT_FLASH="at91samd bootloader 0"
+    PROTECT_FLASH="at91samd bootloader 16384"
 else
     # this number is to offset the bootloader size 
     FLASH_OFFSET=0x0000C000
@@ -54,5 +55,6 @@ else
 fi
 echo "Downloading" $FILE_NAME "to" $FLASH_OFFSET
 
-openocd -f hw/bsp/arduino_zero/arduino_zero.cfg -c init -c "reset halt" $UNPROTECT_FLASH -c "flash write_image erase $FILE_NAME $FLASH_OFFSET" $PROTECT_FLASH -c "reset run" -c shutdown
+openocd -f hw/bsp/arduino_zero/arduino_zero.cfg -c init $CMD "$UNPROTECT_FLASH" -c "reset halt" -c "flash write_image erase $FILE_NAME $FLASH_OFFSET" $CMD "$PROTECT_FLASH" -c "reset run" -c shutdown
+
 
