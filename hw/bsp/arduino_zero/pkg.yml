@@ -25,3 +25,9 @@ pkg.cflags: -mthumb -D__SAMD21G18A__
 pkg.deps: 
     - hw/mcu/atmel/samd21xx
     - libs/cmsis-core
+
+# you will need to specify arduino_zero_pro or 
+# arduino in your target identities to get this to
+# build
+pkg.cflags.arduino_zero_pro: -DARDUINO_ZERO_PRO
+pkg.cflags.arduino_zero: -DARDUINO_ZERO

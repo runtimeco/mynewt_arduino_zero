@@ -19,6 +19,10 @@
 #ifndef __ARDUINO_BSP_H
 #define __ARDUINO_BSP_H
 
+#if !defined(ARDUINO_ZERO_PRO) && !defined(ARDUINO_ZERO)
+  #error you must defined arduino_zero_pro or arduino_zero in your target identieies 
+#endif
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -28,9 +32,7 @@ extern "C" {
      * MCU */
 #define ARDUINO_ZERO_PIN_D0      (11)
 #define ARDUINO_ZERO_PIN_D1      (10)
-#define ARDUINO_ZERO_PIN_D2      (8)
 #define ARDUINO_ZERO_PIN_D3      (9)
-#define ARDUINO_ZERO_PIN_D4      (14)
 #define ARDUINO_ZERO_PIN_D5      (15)
 #define ARDUINO_ZERO_PIN_D6      (20)
 #define ARDUINO_ZERO_PIN_D7      (21)  
@@ -40,7 +42,17 @@ extern "C" {
 #define ARDUINO_ZERO_PIN_D11     (16)
 #define ARDUINO_ZERO_PIN_D12     (19)
 #define ARDUINO_ZERO_PIN_D13     (17)
-        
+
+#ifdef ARDUINO_ZERO_PRO
+#define ARDUINO_ZERO_PIN_D2      (8)
+#define ARDUINO_ZERO_PIN_D4      (14)
+#endif
+    
+#ifdef ARDUINO_ZERO
+#define ARDUINO_ZERO_PIN_D2      (14)
+#define ARDUINO_ZERO_PIN_D4      (8)
+#endif
+
 #define ARDUINO_ZERO_PIN_A0      (2)  
 #define ARDUINO_ZERO_PIN_A1      (40)
 #define ARDUINO_ZERO_PIN_A2      (41)
