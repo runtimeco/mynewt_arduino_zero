@@ -42,6 +42,11 @@ done
 if [ $IS_BOOTLOADER -eq 1 ]; then
     FLASH_OFFSET=0x00000000
     FILE_NAME=$BASENAME.elf.bin
+    # we will unprotect and reprotect our bootloader to ensure that its
+    # safe. also Arduino Zero Pro boards looks like they come with the 
+    # arduino bootloader protected via the NVM AUX 
+    UNPROTECT_FLASH=-c "at91samd bootloader"
+    PROTECT_FLASH=-c "at91samd bootloader 16384"
 else
     # this number is to offset the bootloader size 
     FLASH_OFFSET=0x0000C000
@@ -49,5 +54,5 @@ else
 fi
 echo "Downloading" $FILE_NAME "to" $FLASH_OFFSET
 
-openocd -f hw/bsp/arduino_zero/arduino_zero.cfg -c init -c "reset halt" -c "flash write_image erase $FILE_NAME $FLASH_OFFSET" -c "reset run" -c shutdown
+openocd -f hw/bsp/arduino_zero/arduino_zero.cfg -c init -c "reset halt" $UNPROTECT_FLASH -c "flash write_image erase $FILE_NAME $FLASH_OFFSET" $PROTECT_FLASH -c "reset run" -c shutdown
 
