@@ -1,4 +1,4 @@
-#!/bin/sh -x
+#!/bin/bash
 # Licensed to the Apache Software Foundation (ASF) under one
 # or more contributor license agreements.  See the NOTICE file
 # distributed with this work for additional information
@@ -16,21 +16,24 @@
 # specific language governing permissions and limitations
 # under the License.
 #
-# Called $0 <binary> [identities ...]
+# Called: $0 <bsp_directory_path> <binary> [features...]
+#  - bsp_directory_path is absolute path to hw/bsp/bsp_name
 #  - binary is the path to prefix to target binary, .elf appended to name is
 #    the ELF file
 #  - identities is the project identities string.
 #
 #
-if [ $# -lt 1 ]; then
+if [ $# -lt 2 ]; then
     echo "Need binary to download"
     exit 1
 fi
 
-BASENAME=$1
+MY_PATH=$1
+BASENAME=$2
 IS_BOOTLOADER=0
 
-# Look for 'bootloader' from 2nd arg onwards
+# Look for 'bootloader' from 3rd arg onwards
+shift
 shift
 while [ $# -gt 0 ]; do
     if [ $1 == "bootloader" ]; then
@@ -55,6 +58,6 @@ else
 fi
 echo "Downloading" $FILE_NAME "to" $FLASH_OFFSET
 
-openocd -f hw/bsp/arduino_zero/arduino_zero.cfg -c init -c "reset halt" $CMD "$UNPROTECT_FLASH" -c "reset halt" -c "flash write_image erase $FILE_NAME $FLASH_OFFSET" $CMD "$PROTECT_FLASH" -c "reset run" -c shutdown
+openocd -f $MY_PATH/arduino_zero.cfg -c init -c "reset halt" $CMD "$UNPROTECT_FLASH" -c "reset halt" -c "flash write_image erase $FILE_NAME $FLASH_OFFSET" $CMD "$PROTECT_FLASH" -c "reset run" -c shutdown
 
 
