@@ -1,8 +1,9 @@
 pkg.name: "hw/mcu/atmel/samd21xx"
+pkg.repository: https://github.com/runtimeinc/mynewt_arduino_zero
+
 pkg.deps: 
-    - hw/hal 
-    - libs/cmsis-core
-    - compiler/arm-none-eabi-m4
+    - "@apache-mynewt-core/hw/hal"
+    - "@apache-mynewt-core/libs/cmsis-core"
 pkg.cflags: -std=c99  
             -DWDT_CALLBACK_MODE=true 
             -DTC_CALLBACK_MODE=true 

@@ -20,7 +20,7 @@
 #define __ARDUINO_BSP_H
 
 #if !defined(ARDUINO_ZERO_PRO) && !defined(ARDUINO_ZERO)
-  #error you must defined arduino_zero_pro or arduino_zero in your target identieies 
+  #error you must defined arduino_zero_pro or arduino_zero in your target features 
 #endif
 
 #ifdef __cplusplus

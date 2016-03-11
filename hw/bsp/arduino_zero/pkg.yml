@@ -17,6 +17,11 @@
 # under the License.
 #
 pkg.name: "hw/bsp/arduino_zero"
+pkg.type: bsp
+pkg.repository: https://github.com/runtimeinc/mynewt_arduino_zero
+
+pkg.arch: cortex_m0
+pkg.compiler: "@apache-mynewt-core/compiler/arm-none-eabi-m0"
 pkg.linkerscript: "arduino_zero.ld"
 pkg.linkerscript.bootloader.OVERWRITE: "arduino_zero_boot.ld"
 pkg.downloadscript: "arduino_zero_download.sh"
@@ -24,10 +29,9 @@ pkg.debugscript: "arduino_zero_debug.sh"
 pkg.cflags: -mthumb -D__SAMD21G18A__
 pkg.deps: 
     - hw/mcu/atmel/samd21xx
-    - libs/cmsis-core
 
 # you will need to specify arduino_zero_pro or 
-# arduino in your target identities to get this to
+# arduino in your target features to get this to
 # build
 pkg.cflags.arduino_zero_pro: -DARDUINO_ZERO_PRO
 pkg.cflags.arduino_zero: -DARDUINO_ZERO
