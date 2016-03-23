@@ -18,7 +18,6 @@ pkg.cflags: -std=c99
             -DI2S_CALLBACK_MODE=true 
             -DDAC_CALLBACK_MODE=true 
             -DAC_CALLBACK_MODE=true 
-            -DADC_CALLBACK_MODE=true 
             -DEVENTS_INTERRUPT_HOOKS_MODE=true 
             -DEXTINT_CALLBACK_MODE=true  
             -I../include 
@@ -96,7 +95,11 @@ pkg.cflags: -std=c99
             -I./sam0/drivers/sercom/usart
             -I./sam0/drivers/system
             -I./sam0/drivers/system/clock  
-            -I./sam0/drivers/system/clock/clock_samd21_r21_da 
+            -I./sam0/drivers/system/clock/clock_samd21_r21_da
+            -I./sam0/drivers/adc/
+            -I./sam0/drivers/adc/adc_sam_d_r
+            -I../sam0/drivers/adc/
+            -I../sam0/drivers/adc/adc_sam_d_r
             -I./sam0/drivers/system/power/power_sam_d_r
             -I./sam0/drivers/system/reset/reset_sam_d_r
             -I./sam0/drivers/system/interrupt/system_interrupt_samd21
