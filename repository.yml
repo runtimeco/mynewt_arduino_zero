@@ -2,5 +2,5 @@ repo.name: mynewt_arduino_zero
 repo.versions:
     "0.0.0": "master"
     "0.0.1": "develop"
-    "0-stable": "0.0.0"
-    "0-latest": "0.0.1"
+    "0-latest": "0.0.0"
+    "0-dev": "0.0.1"
