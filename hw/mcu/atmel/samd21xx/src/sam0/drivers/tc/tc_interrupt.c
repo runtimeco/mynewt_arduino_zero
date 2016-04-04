@@ -44,6 +44,8 @@
 /*
  * Support and FAQ: visit <a href="http://www.atmel.com/design-support/">Atmel Support</a>
  */
+#if TC_ASYNC 
+
 
 #include "tc_interrupt.h"
 
@@ -197,3 +199,5 @@ void _tc_interrupt_handler(
 		module->hw->COUNT8.INTFLAG.reg = TC_INTFLAG_MC(2);
 	}
 }
+
+#endif

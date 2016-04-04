@@ -187,7 +187,7 @@ void tcc_get_config_defaults(
 	uint8_t module_index = _tcc_get_inst_index(hw);
 
 	/* Base counter defaults */
-	config->counter.count                  = 0;
+	config->counter.duty                  = 0;
 
 	config->counter.period                 = _tcc_maxs[module_index];
 
@@ -523,7 +523,7 @@ enum status_code tcc_init(
 	uint32_t count_max  = _tcc_maxs[module_index];
 
 	/* Check all counter values */
-	if ((config->counter.count > count_max)
+	if ((config->counter.duty > count_max)
 		|| (config->counter.period > count_max)
 		) {
 		return STATUS_ERR_INVALID_ARG;
@@ -647,7 +647,7 @@ enum status_code tcc_init(
 	while (hw->SYNCBUSY.reg & TCC_SYNCBUSY_COUNT) {
 		/* Wait for sync */
 	}
-	hw->COUNT.reg = config->counter.count;
+	hw->COUNT.reg = config->counter.duty;
 
 #if (!SAML21) && (!SAMC20) && (!SAMC21) && (!SAML22)
 	while (hw->SYNCBUSY.reg & (TCC_SYNCBUSY_PER | TCC_SYNCBUSY_PERB)) {

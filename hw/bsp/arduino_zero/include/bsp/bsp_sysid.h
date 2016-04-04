@@ -30,8 +30,21 @@ enum system_device_id
         ARDUINO_ZERO_A2,
         ARDUINO_ZERO_A3,
         ARDUINO_ZERO_A4,
-        ARDUINO_ZERO_A5,     
-
+        ARDUINO_ZERO_A5,  
+        ARDUINO_ZERO_D0,
+        ARDUINO_ZERO_D1,
+        ARDUINO_ZERO_D2,
+        ARDUINO_ZERO_D3,
+        ARDUINO_ZERO_D4,
+        ARDUINO_ZERO_D5,
+        ARDUINO_ZERO_D6,
+        ARDUINO_ZERO_D7,
+        ARDUINO_ZERO_D8,
+        ARDUINO_ZERO_D9,
+        ARDUINO_ZERO_D10,
+        ARDUINO_ZERO_D11,
+        ARDUINO_ZERO_D12,
+        ARDUINO_ZERO_D13,
         /* NOTE, as we get other drivers on the new HAL, the will go here */
 };
 
