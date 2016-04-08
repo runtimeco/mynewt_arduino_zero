@@ -27,38 +27,14 @@
 extern "C" {
 #endif
 
-/* the digital pins are still defined here.  In the future they 
- * will nove to bsp_sysid.h */
-#define ARDUINO_ZERO_PIN_D0      (11)
-#define ARDUINO_ZERO_PIN_D1      (10)
-#define ARDUINO_ZERO_PIN_D3      (9)
-#define ARDUINO_ZERO_PIN_D5      (15)
-#define ARDUINO_ZERO_PIN_D6      (20)
-#define ARDUINO_ZERO_PIN_D7      (21)  
-#define ARDUINO_ZERO_PIN_D8      (6)
-#define ARDUINO_ZERO_PIN_D9      (7)
-#define ARDUINO_ZERO_PIN_D10     (18)
-#define ARDUINO_ZERO_PIN_D11     (16)
-#define ARDUINO_ZERO_PIN_D12     (19)
-#define ARDUINO_ZERO_PIN_D13     (17)
 
-#ifdef ARDUINO_ZERO_PRO
-#define ARDUINO_ZERO_PIN_D2      (8)
-#define ARDUINO_ZERO_PIN_D4      (14)
-#endif
-    
-#ifdef ARDUINO_ZERO
-#define ARDUINO_ZERO_PIN_D2      (14)
-#define ARDUINO_ZERO_PIN_D4      (8)
-#endif
  
-#define ARDUINO_ZERO_PIN_UART_RX (ARDUINO_ZERO_PIN_D0)    
-#define ARDUINO_ZERO_PIN_UART_TX (ARDUINO_ZERO_PIN_D1)       
+#define ARDUINO_ZERO_PIN_UART_RX (ARDUINO_ZERO_D0)    
+#define ARDUINO_ZERO_PIN_UART_TX (ARDUINO_ZERO_D1)       
       
-#define LED_BLINK_PIN   (ARDUINO_ZERO_PIN_D13)
+#define LED_BLINK_PIN   (ARDUINO_ZERO_D13)
 #define CONSOLE_UART    (2)    
 
-    
 /* This defines the maximum NFFS areas (block) are in the BSPs NFS file 
  * system space.  This in conjunction with flash map determines how 
  * many NFS blocks there will be.  A minimum is the number of individually

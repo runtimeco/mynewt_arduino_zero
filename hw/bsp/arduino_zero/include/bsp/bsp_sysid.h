@@ -25,27 +25,40 @@ extern "C" {
 
 enum system_device_id  
 {
-        ARDUINO_ZERO_A0 = 0,
-        ARDUINO_ZERO_A1,
-        ARDUINO_ZERO_A2,
-        ARDUINO_ZERO_A3,
-        ARDUINO_ZERO_A4,
-        ARDUINO_ZERO_A5,  
-        ARDUINO_ZERO_D0,
-        ARDUINO_ZERO_D1,
-        ARDUINO_ZERO_D2,
-        ARDUINO_ZERO_D3,
-        ARDUINO_ZERO_D4,
-        ARDUINO_ZERO_D5,
-        ARDUINO_ZERO_D6,
-        ARDUINO_ZERO_D7,
-        ARDUINO_ZERO_D8,
-        ARDUINO_ZERO_D9,
-        ARDUINO_ZERO_D10,
-        ARDUINO_ZERO_D11,
-        ARDUINO_ZERO_D12,
-        ARDUINO_ZERO_D13,
-        /* NOTE, as we get other drivers on the new HAL, the will go here */
+    /* NOTE: Some HALs use a virtual enumeration of the devices, while
+     * other still use the actual pins (GPIO). For arduino this means
+     * that the sysIDs for analog and digital pins are the actual pin 
+     * numbers */
+    
+     ARDUINO_ZERO_D0 =     (11),
+     ARDUINO_ZERO_D1 =     (10),
+     ARDUINO_ZERO_D3 =     (9),
+     ARDUINO_ZERO_D5 =     (15),
+     ARDUINO_ZERO_D6 =     (20),
+     ARDUINO_ZERO_D7 =     (21),  
+     ARDUINO_ZERO_D8 =     (6),
+     ARDUINO_ZERO_D9 =     (7),
+     ARDUINO_ZERO_D10 =    (18),
+     ARDUINO_ZERO_D11 =    (16),
+     ARDUINO_ZERO_D12 =    (19),
+     ARDUINO_ZERO_D13 =    (17),
+
+#ifdef ARDUINO_ZERO_PRO
+     ARDUINO_ZERO_D2 =     (8),
+     ARDUINO_ZERO_D4 =     (14),
+#endif
+    
+#ifdef ARDUINO_ZERO
+     ARDUINO_ZERO_D2 =     (14),
+     ARDUINO_ZERO_D4 =     (8),
+#endif
+             
+    ARDUINO_ZERO_A0 =      (2),  
+    ARDUINO_ZERO_A1 =      (40),
+    ARDUINO_ZERO_A2 =      (41),
+    ARDUINO_ZERO_A3 =      (4),
+    ARDUINO_ZERO_A4 =      (5),
+    ARDUINO_ZERO_A5 =      (34),
 };
 
 #ifdef __cplusplus
