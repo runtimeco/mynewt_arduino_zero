@@ -23,6 +23,10 @@
   #error you must defined arduino_zero_pro or arduino_zero in your target features 
 #endif
 
+#ifndef BSP_SYSID_H
+#include <bsp/bsp_sysid.h>
+#endif
+
 #ifdef __cplusplus
 extern "C" {
 #endif
