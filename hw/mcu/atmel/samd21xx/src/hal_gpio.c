@@ -215,11 +215,12 @@ void hal_gpio_write(int pin, int val)
  * 
  * @param pin Pin number to toggle
  */
-void hal_gpio_toggle(int pin)
+int hal_gpio_toggle(int pin)
 {
     if (hal_gpio_read(pin)) {
         hal_gpio_clear(pin);
     } else {
         hal_gpio_set(pin);
     }
+    return hal_gpio_read(pin);
 }
