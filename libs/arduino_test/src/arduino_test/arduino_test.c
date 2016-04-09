@@ -289,6 +289,7 @@ arduino_read(int entry_id, int *value) {
         case INTERFACE_GPIO_OUT:
         case INTERFACE_PWM_DUTY:
         case INTERFACE_DAC:
+        case INTERFACE_PWM_FREQ:            
             *value = pint->value;            
             rc = 0;
             break;            
