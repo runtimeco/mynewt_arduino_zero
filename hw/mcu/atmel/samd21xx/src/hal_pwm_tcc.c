@@ -357,7 +357,7 @@ samd_tcc_pwm_get_clk(struct hal_pwm *ppwm)
     struct samd_tcc_pwm_channel *ptccpwm = (struct samd_tcc_pwm_channel*) ppwm;
     
     if (ptccpwm && (ptccpwm->parent.driver_api == &samd21_tcc_pwm_driver)) {
-        return pdevices[ptccpwm->port.channel]->pconfig->clock_freq;
+        return pdevices[ptccpwm->port.device]->pconfig->clock_freq;
     }
     return -1;}
 
