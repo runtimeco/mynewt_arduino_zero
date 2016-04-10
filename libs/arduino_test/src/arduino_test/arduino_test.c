@@ -29,7 +29,8 @@
 #include <string.h>
 #include <assert.h>
 
-struct arduino_pin_map_entry {
+struct arduino_pin_map_entry 
+{
     char *name;
     uint8_t   sysid;
     uint8_t   entry_id;
@@ -37,7 +38,8 @@ struct arduino_pin_map_entry {
 
 /* maps the pin names to the sys id and to an index to reference dynamic data */
 static const struct arduino_pin_map_entry 
-pin_map[] = {
+pin_map[] = 
+{
     {"A0", ARDUINO_ZERO_A0, 0},
     {"A1", ARDUINO_ZERO_A1, 1},
     {"A2", ARDUINO_ZERO_A2, 2},
@@ -58,10 +60,11 @@ pin_map[] = {
     {"D13", ARDUINO_ZERO_D13, 17},
 };
 
-#define ARDUINO_NUM_DEVS    (sizeof(pin_map)/sizeof(struct arduino_pin_map_entry))
+#define ARDUINO_NUM_DEVS  (sizeof(pin_map)/sizeof(struct arduino_pin_map_entry))
 
 /* the types of things we can configure this to */
-enum interface_type {
+enum interface_type 
+{
     INTERFACE_UNINITIALIZED = 0,
     INTERFACE_GPIO_OUT,
     INTERFACE_GPIO_IN,
@@ -71,7 +74,8 @@ enum interface_type {
     INTERFACE_PWM_FREQ,
 };
 
-typedef struct {
+typedef struct 
+{
     char    *name;
     uint8_t  entry_id;
     int      min_value;
@@ -79,7 +83,8 @@ typedef struct {
     char * desc; 
 } interface_into_t;
 
-const interface_into_t interface_info[] = {
+const interface_into_t interface_info[] = 
+{
     {"none",     INTERFACE_UNINITIALIZED, 0, -1,     "Unused Pin"},
     {"gpio_out", INTERFACE_GPIO_OUT,      0, 1,      "Binary Output Port"},
     {"gpio_in",  INTERFACE_GPIO_IN,       0, -1,     "Binary Input Port"},
@@ -92,10 +97,12 @@ const interface_into_t interface_info[] = {
 #define INTERFACE_CNT   (sizeof(interface_info)/sizeof(interface_into_t))
 
 /* The dynamic data that says what each pin is doing */
-typedef struct {
+typedef struct
+{
     int type;
     int value;
-    union {
+    union
+    {
         int    gpio_pin;
         struct hal_adc *padc;
         struct hal_dac *pdac;
@@ -108,16 +115,18 @@ static interfaces_t interface_map[ARDUINO_NUM_DEVS];
 
 static int arduino_test_cli_cmd(int argc, char **argv);
 
-static struct shell_cmd arduino_test_cmd_struct = {
+static struct shell_cmd arduino_test_cmd_struct = 
+{
     .sc_cmd = "arduino",
     .sc_cmd_func = arduino_test_cli_cmd
 };
 
 static int
-arduino_pinstr_to_entry(char *pinstr) {
+arduino_pinstr_to_entry(char *pinstr)
+{
     int i;
     
-    for(i = 0; i < ARDUINO_NUM_DEVS; i++) {
+    for (i = 0; i < ARDUINO_NUM_DEVS; i++) {
         if (strcmp(pinstr, pin_map[i].name) == 0) {
             return pin_map[i].entry_id;
         }
@@ -126,10 +135,11 @@ arduino_pinstr_to_entry(char *pinstr) {
 }
 
 static int 
-arduino_devstr_to_dev(char *devstr) {
+arduino_devstr_to_dev(char *devstr)
+{
     int i;
-    for(i = 0; i < INTERFACE_CNT; i++) {
-        if(strcmp(devstr, interface_info[i].name) == 0) {
+    for (i = 0; i < INTERFACE_CNT; i++) {
+        if (strcmp(devstr, interface_info[i].name) == 0) {
             return i;
         }
     }
@@ -137,14 +147,15 @@ arduino_devstr_to_dev(char *devstr) {
 }
 
 static int
-arduino_set_device(int entry_id, int devtype) {    
+arduino_set_device(int entry_id, int devtype)
+{    
     int rc = -1;
     const struct arduino_pin_map_entry *pmap = &pin_map[entry_id];
     interfaces_t *pint = &interface_map[entry_id];
 
     assert(entry_id < ARDUINO_NUM_DEVS);
     
-    if(pint->type) {
+    if (pint->type) {
         console_printf("Device already Initialized as %s\n",
                 interface_info[entry_id].name);
         return rc;
@@ -153,14 +164,14 @@ arduino_set_device(int entry_id, int devtype) {
     switch (devtype) {
         case INTERFACE_GPIO_OUT:
             rc = hal_gpio_init_out(pmap->sysid, 0);
-            if(rc == 0) {
+            if (rc == 0) {
                 pint->gpio_pin = pmap->sysid;
                 pint->type = INTERFACE_GPIO_OUT;                
             }
             break;
         case INTERFACE_GPIO_IN:
             rc = hal_gpio_init_in(pmap->sysid, GPIO_PULL_NONE);
-            if(rc == 0) {
+            if (rc == 0) {
                 pint->gpio_pin = pmap->sysid;
                 pint->type = INTERFACE_GPIO_IN;
             }
@@ -169,7 +180,7 @@ arduino_set_device(int entry_id, int devtype) {
         {
             struct hal_adc *padc;
             padc = hal_adc_init(pmap->sysid);
-            if(NULL != padc) {
+            if (NULL != padc) {
                 rc = 0;
                 pint->padc = padc;
                 pint->type = INTERFACE_ADC;
@@ -178,18 +189,23 @@ arduino_set_device(int entry_id, int devtype) {
         }
         case INTERFACE_DAC:
         {
-            console_printf("Not supported\n");
-            rc = -3;
-            break;   
+            struct hal_dac *pdac;
+            pdac = hal_dac_init(pmap->sysid);
+            if (NULL != pdac) {
+                rc = 0;
+                pint->pdac = pdac;
+                pint->type = INTERFACE_DAC;
+            }
+            break;
         }
         case INTERFACE_PWM_DUTY:
         {
             struct hal_pwm *ppwm;
             ppwm = hal_pwm_init(pmap->sysid);
-            if(NULL != ppwm) {
+            if (NULL != ppwm) {
                 rc = 0;
                 
-                if(hal_pwm_enable_duty_cycle(ppwm,0) == 0) {
+                if (hal_pwm_enable_duty_cycle(ppwm,0) == 0) {
                     pint->ppwm = ppwm;
                     pint->type = INTERFACE_PWM_DUTY;
                 } else {
@@ -204,9 +220,9 @@ arduino_set_device(int entry_id, int devtype) {
         {
             struct hal_pwm *ppwm;
             ppwm = hal_pwm_init(pmap->sysid);
-            if(NULL != ppwm) {
+            if (NULL != ppwm) {
                 rc = 0;
-                if(hal_pwm_set_frequency(ppwm, 200) == 0) {
+                if (hal_pwm_set_frequency(ppwm, 200) == 0) {
                     pint->ppwm = ppwm;
                     pint->type = INTERFACE_PWM_FREQ;
                 } else {
@@ -234,11 +250,12 @@ arduino_set_device(int entry_id, int devtype) {
 }
 
 static int
-arduino_write(int entry_id, int value) {
+arduino_write(int entry_id, int value)
+{
     int rc = -1;
     interfaces_t *pint = &interface_map[entry_id];
     
-    if((value > interface_info[pint->type].max_value) ||
+    if ((value > interface_info[pint->type].max_value) ||
        (value < interface_info[pint->type].min_value)) {
         console_printf("Value %d out of range for device \n", value);
         return rc;
@@ -252,7 +269,7 @@ arduino_write(int entry_id, int value) {
             /* these don't support write */
             break;
         case INTERFACE_GPIO_OUT:
-            if(value) {
+            if (value) {
                 hal_gpio_set(pint->gpio_pin);
             } else {
                 hal_gpio_clear(pint->gpio_pin);                
@@ -260,7 +277,7 @@ arduino_write(int entry_id, int value) {
             rc = 0;
             break;
         case INTERFACE_DAC:
-            return -2;
+            rc = hal_dac_write(pint->pdac, (uint16_t) value);
             break;
         case INTERFACE_PWM_DUTY:
             rc = hal_pwm_enable_duty_cycle(pint->ppwm, (uint16_t) value);
@@ -272,14 +289,15 @@ arduino_write(int entry_id, int value) {
     }
     
     /* store what we wrote */
-    if(0 == rc) {
+    if (0 == rc) {
         pint->value = value;        
     }
     return rc;
 }
 
 static int
-arduino_read(int entry_id, int *value) {
+arduino_read(int entry_id, int *value) 
+{
     int rc = -1;
     interfaces_t *pint = &interface_map[entry_id];
     
@@ -307,26 +325,27 @@ arduino_read(int entry_id, int *value) {
 }
 
 static void 
-arduino_show(int entry_id) {
+arduino_show(int entry_id) 
+{
     int i;
     int min = 0;
     int max = ARDUINO_NUM_DEVS;
     char buf[32];
     
-    if(entry_id >= 0) {
+    if (entry_id >= 0) {
         min = entry_id;
         max = entry_id + 1;
     }
     
     console_printf("        %5s%9s%10s\n", "Pin", "Function", "Value");
-    for( i = min; i < max; i++) {
+    for ( i = min; i < max; i++) {
         int value;
         interfaces_t *pint = &interface_map[i];
         const interface_into_t *pinfo;
         
         pinfo = &interface_info[pint->type];
         
-        if(arduino_read(i, &value) != 0) {
+        if (arduino_read(i, &value) != 0) {
             sprintf(buf, "N/A");
         } else {
             sprintf(buf, "%d", value);            
@@ -337,7 +356,8 @@ arduino_show(int entry_id) {
 }
 
 static void
-usage(void) {
+usage(void) 
+{
     int i;
     char buf[256];
     char *ptr;
@@ -366,15 +386,16 @@ usage(void) {
     console_printf("       Valid Pins\n");
     ptr = buf;
     ptr += sprintf(buf, "          ");
-    for(i = 0; i < ARDUINO_NUM_DEVS; i++) {
+    for (i = 0; i < ARDUINO_NUM_DEVS; i++) {
         ptr += sprintf(ptr, "%s ", pin_map[i].name);
-        if(i && ((i & 15) == 0)) {
+        if (i && ((i & 15) == 0)) {
             console_printf("%s\n", buf);
             ptr = buf;
             ptr += sprintf(buf, "          ");            
         }
     }
-    if(~i || ((i & 15) != 0)) {
+    
+    if (~i || ((i & 15) != 0)) {
         console_printf("%s\n", buf);
     }
     
@@ -382,7 +403,7 @@ usage(void) {
     console_printf("       Valid Functions\n");
     console_printf("          %9s%8s%8s %s\n",
                     "name", "min_val", "max_val", "Description");
-    for(i = 0; i < INTERFACE_CNT; i++) {
+    for (i = 0; i < INTERFACE_CNT; i++) {
         console_printf( "          %9s%8d%8d %s\n",
                 interface_info[i].name,
                 interface_info[i].min_value,
@@ -404,14 +425,14 @@ arduino_test_cli_cmd(int argc, char **argv)
         int entry;
         int dev;
         
-        if(argc != 4) {
+        if (argc != 4) {
             usage();
             return 0;
         }
         
         entry = arduino_pinstr_to_entry(argv[2]);
         
-        if(entry < 0) {
+        if (entry < 0) {
             console_printf("Invalid pin %s \n", argv[2]);
             usage();
             return -1;                                
@@ -426,7 +447,7 @@ arduino_test_cli_cmd(int argc, char **argv)
         }
         
         rc = arduino_set_device(entry, dev);
-        if(rc) {
+        if (rc) {
             console_printf("Unable to set pin %s to %s, err=%d\n", argv[2], argv[3], rc);
         } else {
             console_printf("Set pin %s to %s\n", argv[2], argv[3]);            
@@ -435,14 +456,14 @@ arduino_test_cli_cmd(int argc, char **argv)
         int entry;
         int value;
 
-        if(argc != 4) {
+        if (argc != 4) {
             usage();
             return 0;
         }
         
         entry = arduino_pinstr_to_entry(argv[2]);
         
-        if(entry < 0) {
+        if (entry < 0) {
             console_printf("Invalid pin %s \n", argv[2]);
             usage();
             return -1;                                
@@ -451,7 +472,7 @@ arduino_test_cli_cmd(int argc, char **argv)
         value = atoi(argv[3]);
 
         rc = arduino_write(entry, value);
-        if(rc) {
+        if (rc) {
             console_printf("Unable to write %s to %d, err=%d\n", argv[2], value, rc);
         } else {
             console_printf("Write pin %s to %d\n", argv[2], value);            
@@ -462,29 +483,29 @@ arduino_test_cli_cmd(int argc, char **argv)
 
         entry = arduino_pinstr_to_entry(argv[2]);
         
-        if(argc != 3) {
+        if (argc != 3) {
             usage();
             return 0;
         }
         
-        if(entry < 0) {
+        if (entry < 0) {
             console_printf("Invalid pin %s \n", argv[2]);
             usage();
             return -1;                                
         }
 
         rc = arduino_read(entry, &value);
-        if(rc) {
+        if (rc) {
             console_printf("Unable to read %s, err=%d\n", argv[2], rc);
         } else {
             console_printf("Read pin %s value %d\n", argv[2], value);            
         }              
     } else if (!strcmp(argv[1], "show")) {
         int entry_id = -1;
-        if(argc == 3) {
+        if (argc == 3) {
             entry_id = arduino_pinstr_to_entry(argv[2]);
 
-            if(entry_id < 0) {
+            if (entry_id < 0) {
                 console_printf("Invalid pin %s \n", argv[2]);
                 usage();
                 return -1;                                
@@ -501,7 +522,8 @@ arduino_test_cli_cmd(int argc, char **argv)
 }
 
 int
-arduino_test_init(void) {
+arduino_test_init(void) 
+{
     shell_cmd_register(&arduino_test_cmd_struct);
     return 0;
 }

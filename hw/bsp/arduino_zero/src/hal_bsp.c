@@ -168,7 +168,7 @@ static const struct samd21_dac_config dac_cfg =
 };
 
 extern struct hal_dac*
-bsp_get_hal_dac_driver(enum system_device_id sysid) 
+bsp_get_hal_dac(enum system_device_id sysid) 
 {
     struct hal_dac *pdac = NULL;
     
