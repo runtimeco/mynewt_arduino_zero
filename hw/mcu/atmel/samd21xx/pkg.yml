@@ -13,7 +13,6 @@ pkg.cflags: -std=c99
             -DRTC_CALENDAR_ASYNC=true 
             -DRTC_COUNT_ASYNC=true 
             -DI2S_CALLBACK_MODE=true 
-            -DDAC_CALLBACK_MODE=true 
             -DAC_CALLBACK_MODE=true 
             -DEVENTS_INTERRUPT_HOOKS_MODE=true 
             -DEXTINT_CALLBACK_MODE=true  
@@ -108,4 +107,8 @@ pkg.cflags: -std=c99
             -I../sam0/drivers/tc/tc_sam_d_r            
             -I./sam0/drivers/tcc/
             -I../sam0/drivers/tcc/
+            -I../sam0/drivers/dac/dac_sam_d_c
+            -I./sam0/drivers/dac/dac_sam_d_c
+            -I./sam0/drivers/dac/
+            -I../sam0/drivers/dac/ 
 

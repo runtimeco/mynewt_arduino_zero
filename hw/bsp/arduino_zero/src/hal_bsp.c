@@ -18,7 +18,6 @@
  * under the License.
  */
 #include <stddef.h>
-
 #include "mcu/samd21.h"
 #include "bsp/bsp.h"
 #include <bsp/bsp_sysid.h>
@@ -26,6 +25,7 @@
 #include <mcu/hal_adc.h>
 #include <hal/hal_pwm_int.h>
 #include <mcu/hal_pwm.h>
+#include <mcu/hal_dac.h>
 
 const struct hal_flash *
 bsp_flash_dev(uint8_t id)
@@ -87,7 +87,7 @@ bsp_get_hal_adc(enum system_device_id sysid) {
  * at 122 Hz which is good for flicker free LED.
  * if you attach other stuff, you may want a lower 
  * duty cycle */
-const struct samd21_pwm_tc_config tc_cfg = {
+static const struct samd21_pwm_tc_config tc_cfg = {
     .prescalar = SAMD_TC_CLOCK_PRESCALER_DIV1,
     .clock_freq = 8000000,
     /* TODO allow us to specify a clock source */
@@ -98,7 +98,7 @@ const struct samd21_pwm_tc_config tc_cfg = {
  * at ~0.47 Hz which is good for most wearable timing
  * if you attach other stuff, you may want a lower 
  * duty cycle */
-const struct samd21_pwm_tcc_config tcc_cfg = {
+static const struct samd21_pwm_tcc_config tcc_cfg = {
     .prescalar = SAMD_TC_CLOCK_PRESCALER_DIV1,
     .clock_freq = 8000000,
     /* TODO allow us to specify a clock source */
@@ -159,4 +159,25 @@ bsp_get_hal_pwm_driver(enum system_device_id sysid) {
             break;
     }
     return ppwm;
+}
+
+static const struct samd21_dac_config dac_cfg = 
+{
+    .dac_reference_voltage_mvolts = 3300,
+    .reference = SAMD_DAC_REFERENCE_AVCC,
+};
+
+extern struct hal_dac*
+bsp_get_hal_dac_driver(enum system_device_id sysid) 
+{
+    struct hal_dac *pdac = NULL;
+    
+    switch (sysid) {
+        case ARDUINO_ZERO_A0:
+            pdac = samd21_dac_create(&dac_cfg); 
+            break;
+        default:
+            break;
+    }
+    return pdac;
 }

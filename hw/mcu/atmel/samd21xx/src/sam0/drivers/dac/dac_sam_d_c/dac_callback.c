@@ -43,6 +43,9 @@
 /*
  * Support and FAQ: visit <a href="http://www.atmel.com/design-support/">Atmel Support</a>
  */
+
+#ifdef DAC_CALLBACK_MODE
+
 #include "dac.h"
 #include "dac_callback.h"
 
@@ -433,3 +436,5 @@ void dac_chan_abort_job(
 	module_inst->remaining_conversions = 0;
 
 }
+
+#endif
