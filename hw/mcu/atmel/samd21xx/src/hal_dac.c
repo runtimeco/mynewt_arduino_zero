@@ -48,7 +48,7 @@ const struct hal_dac_funcs samd21_dac_func =
 struct samd21_dac 
 {
     struct hal_dac                  parent;
-    struct dac_module *const        dev_inst;    
+    struct dac_module               dev_inst;    
     const struct samd21_dac_config* pconfig;    
     uint16_t                        value;
     uint8_t                         init;
@@ -66,7 +66,7 @@ build_and_apply_config(struct samd21_dac *pdac)
         dac_get_config_defaults(&cfg);    
         
         /* override default */        
-        switch (pdac->pconfig->dac_reference_voltage_mvolts) {
+        switch (pdac->pconfig->reference) {
             case SAMD_DAC_REFERENCE_INT1V:
                 cfg.reference = DAC_REFERENCE_INT1V;
                 break;
@@ -81,7 +81,7 @@ build_and_apply_config(struct samd21_dac *pdac)
         }        
 
         /* there is only one DAC instance on this part */
-        if (dac_init(pdac->dev_inst, DAC, &cfg) != STATUS_OK) {
+        if (dac_init(&pdac->dev_inst, DAC, &cfg) != STATUS_OK) {
             return -1;
         }       
 
@@ -89,7 +89,7 @@ build_and_apply_config(struct samd21_dac *pdac)
     }
     
     /* write the DAC value */
-    if (dac_chan_write(pdac->dev_inst, 
+    if (dac_chan_write(&pdac->dev_inst, 
                        DAC_CHANNEL_0, 
                        pdac->value) != STATUS_OK) {
         return -2;
@@ -97,7 +97,7 @@ build_and_apply_config(struct samd21_dac *pdac)
     
     /* if we are not enabled, enable it now */
     if (! pdac->enabled) {
-        dac_enable(pdac->dev_inst);
+        dac_enable(&pdac->dev_inst);
         pdac->enabled = 1;
     }
     
@@ -204,6 +204,6 @@ samd21_dac_disable(struct hal_dac *pdac)
         return -1;
     }
     
-    dac_disable(psdac->dev_inst);
+    dac_disable(&psdac->dev_inst);
     return 0;
 }
