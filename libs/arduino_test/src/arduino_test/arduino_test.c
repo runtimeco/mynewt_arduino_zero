@@ -107,6 +107,7 @@ typedef struct
         struct hal_adc *padc;
         struct hal_dac *pdac;
         struct hal_pwm *ppwm;
+        void           *pany;
     };    
 } interfaces_t;
 
@@ -147,6 +148,37 @@ arduino_devstr_to_dev(char *devstr)
 }
 
 static int
+arduino_free_device(int entry_id) {
+    int rc = -1;
+    const struct arduino_pin_map_entry *pmap = &pin_map[entry_id];
+    interfaces_t *pint = &interface_map[entry_id];
+
+    switch(pint->type) {
+        case INTERFACE_DAC:
+        case INTERFACE_PWM_DUTY:
+        case INTERFACE_PWM_FREQ:    
+        case INTERFACE_ADC:
+            /* This code looks a bit weird, but assumes that all the 
+             * pointers are in the union and this just frees any of
+             * them */
+            free(pint->pany);
+            
+            /* fall through on purpose to set as input */
+        case INTERFACE_GPIO_IN:
+        case INTERFACE_GPIO_OUT:     
+            /* just set as input */
+            rc = hal_gpio_init_in(pmap->sysid, GPIO_PULL_NONE);              
+            memset(pint,0, sizeof(*pint));
+            break;
+        default:
+            /* nothing to do here */
+            rc = 0;
+            break;
+    }
+    return rc;
+}
+
+static int
 arduino_set_device(int entry_id, int devtype)
 {    
     int rc = -1;
@@ -155,10 +187,10 @@ arduino_set_device(int entry_id, int devtype)
 
     assert(entry_id < ARDUINO_NUM_DEVS);
     
-    if (pint->type) {
-        console_printf("Device already Initialized as %s\n",
-                interface_info[entry_id].name);
-        return rc;
+    if (pint->type && (devtype != INTERFACE_UNINITIALIZED)) {
+        console_printf("Device already Initialized as %s -- set to %s to clear\n",
+                interface_info[entry_id].name,
+                "none");
     }
     
     switch (devtype) {
@@ -234,10 +266,7 @@ arduino_set_device(int entry_id, int devtype)
             break;            
         }        
         case INTERFACE_UNINITIALIZED:
-            /* HMM do we free memory here. We didnt make any way to 
-             * reassign these tings */
-            console_printf("Not supported\n");
-            rc = -3;
+            rc = arduino_free_device(entry_id);
             break;            
         default:
             rc = -2;
@@ -324,6 +353,66 @@ arduino_read(int entry_id, int *value)
     return rc;
 }
 
+static 
+void arduino_test_value_to_string(interfaces_t *pint, char *buf, int value) {
+    switch(pint->type) {
+        case INTERFACE_UNINITIALIZED:
+        {
+            sprintf(buf, "N/A");
+            break;
+        }
+        case INTERFACE_GPIO_OUT: 
+        {
+            sprintf(buf, "%s", (value ? "HIGH" : "LOW" ));
+            break;
+        }
+        case INTERFACE_PWM_DUTY:
+        {
+            int duty = (value * 100)/65536;
+            sprintf(buf, "%d %% Duty Cycle", duty);
+            break;
+        }
+        case INTERFACE_DAC:
+        {           
+            int bits = hal_dac_get_bits(pint->pdac);
+            int ref = hal_dac_get_ref_mv(pint->pdac);                        
+            int mvolts = 0;
+            
+            if (bits > 0 && ref > 0) {
+                mvolts = (value * ref) / (1 << bits);
+            }
+            /* get the mv and bits */
+            sprintf(buf, "%d milli-volts", mvolts);
+            
+            break;
+        }
+        case INTERFACE_PWM_FREQ:                     
+        {
+            sprintf(buf, "%d Hz", value );
+            break;
+        }
+        case INTERFACE_GPIO_IN:
+        {
+            sprintf(buf, "%s", value ? "HIGH" : "LOW");
+            break;
+        }            
+        case INTERFACE_ADC:
+        {
+            int bits = hal_adc_get_bits(pint->padc);
+            int ref = hal_adc_get_ref_mv(pint->padc);                        
+            int mvolts = 0;
+            
+            if (bits > 0 && ref > 0) {
+                mvolts = (value * ref) / (1 << bits);
+            }
+            /* get the mv and bits */
+            sprintf(buf, "%d milli-volts", mvolts);
+            
+            break;
+        }
+    }    
+}
+
 static void 
 arduino_show(int entry_id) 
 {
@@ -337,7 +426,7 @@ arduino_show(int entry_id)
         max = entry_id + 1;
     }
     
-    console_printf("        %5s%9s%10s\n", "Pin", "Function", "Value");
+    console_printf("        %5s%9s%10s%22s\n", "Pin", "Function", "Raw Value", "Decoded Value");
     for ( i = min; i < max; i++) {
         int value;
         interfaces_t *pint = &interface_map[i];
@@ -350,8 +439,11 @@ arduino_show(int entry_id)
         } else {
             sprintf(buf, "%d", value);            
         }
-        console_printf("        %5s%9s%10s\n",
+        console_printf("        %5s%9s%10s",
                         pin_map[i].name, pinfo->name, buf);
+        
+        arduino_test_value_to_string(pint, buf, value);
+        console_printf(" ( %17s )\n", buf);
     }    
 }
 
