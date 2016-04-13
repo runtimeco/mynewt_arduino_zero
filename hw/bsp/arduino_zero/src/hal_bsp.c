@@ -26,6 +26,7 @@
 #include <hal/hal_pwm_int.h>
 #include <mcu/hal_pwm.h>
 #include <mcu/hal_dac.h>
+#include <mcu/hal_spi.h>
 
 const struct hal_flash *
 bsp_flash_dev(uint8_t id)
@@ -180,4 +181,48 @@ bsp_get_hal_dac(enum system_device_id sysid)
             break;
     }
     return pdac;
+}
+
+static const struct samd21_spi_config spi_cfg = 
+{
+    /* pinmux values */
+    /* clock configuration */
+    
+};
+
+/* configure the SPI port for arduino external spi */
+const struct samd21_spi_config icsp_spi_config = {
+    .dipo = 0,  /* sends MISO to PAD 0 */
+    .dopo = 1,  /* send CLK to PAD 3 and MOSI to PAD 2 */
+    .pad0_pinmux = PINMUX_PA12D_SERCOM4_PAD0,       /* MISO */
+    .pad3_pinmux = PINMUX_PB11D_SERCOM4_PAD3,       /* SCK */
+    .pad2_pinmux = PINMUX_PB10D_SERCOM4_PAD2,       /* MOSI */
+};
+
+/* NOTE using this will overwrite the debug interface */
+const struct samd21_spi_config alt_spi_config = {
+    .dipo = 3,  /* sends MISO to PAD 3 */
+    .dopo = 0,  /* send CLK to PAD 1 and MOSI to PAD 0 */
+    .pad0_pinmux = PINMUX_PA04D_SERCOM0_PAD0,       /* MOSI */
+    .pad1_pinmux = PINMUX_PA05D_SERCOM0_PAD1,       /* SCK */
+    .pad2_pinmux = PINMUX_PA06D_SERCOM0_PAD2,       /* SCK */
+    .pad3_pinmux = PINMUX_PA07D_SERCOM0_PAD3,       /* MISO */
+};
+
+extern struct hal_spi*
+bsp_get_hal_spi(enum system_device_id sysid) 
+{
+    struct hal_spi *pspi = NULL;
+    
+    switch (sysid) {
+        case ARDUINO_ZERO_SPI_ICSP:
+            pspi = samd21_spi_create(SAMD21_SPI_SERCOM4, &icsp_spi_config);
+            break;
+        case ARDUINO_ZERO_SPI_ALT:
+            pspi = samd21_spi_create(SAMD21_SPI_SERCOM0, &alt_spi_config);
+            break;
+        default:
+            break;
+    }
+    return pspi;
 }

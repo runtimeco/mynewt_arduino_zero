@@ -24,6 +24,7 @@
 #include <hal/hal_pwm.h>
 #include <hal/hal_gpio.h>
 #include <hal/hal_dac.h>
+#include <hal/hal_spi.h>
 #include <shell/shell.h>
 #include <stdio.h>
 #include <string.h>
@@ -31,33 +32,36 @@
 
 struct arduino_pin_map_entry 
 {
-    char *name;
+    char     *name;
     uint8_t   sysid;
     uint8_t   entry_id;
+    char     *desc;
 };
 
 /* maps the pin names to the sys id and to an index to reference dynamic data */
 static const struct arduino_pin_map_entry 
 pin_map[] = 
 {
-    {"A0", ARDUINO_ZERO_A0, 0},
-    {"A1", ARDUINO_ZERO_A1, 1},
-    {"A2", ARDUINO_ZERO_A2, 2},
-    {"A3", ARDUINO_ZERO_A3, 3},
-    {"A4", ARDUINO_ZERO_A4, 4},
-    {"A5", ARDUINO_ZERO_A5, 5},
-    {"D2", ARDUINO_ZERO_D2, 6},
-    {"D3", ARDUINO_ZERO_D3, 7},
-    {"D4", ARDUINO_ZERO_D4, 8},
-    {"D5", ARDUINO_ZERO_D5, 9},
-    {"D6", ARDUINO_ZERO_D6, 10},
-    {"D7", ARDUINO_ZERO_D7, 11},
-    {"D8", ARDUINO_ZERO_D8, 12},
-    {"D9", ARDUINO_ZERO_D9, 13},
-    {"D10", ARDUINO_ZERO_D10, 14},
-    {"D11", ARDUINO_ZERO_D11, 15},
-    {"D12", ARDUINO_ZERO_D12, 16},
-    {"D13", ARDUINO_ZERO_D13, 17},
+    {"A0", ARDUINO_ZERO_A0, 0, "Analog/Digital Port Pin A0"},
+    {"A1", ARDUINO_ZERO_A1, 1, "Analog/Digital Port Pin A1"},
+    {"A2", ARDUINO_ZERO_A2, 2, "Analog/Digital Port Pin A2"},
+    {"A3", ARDUINO_ZERO_A3, 3, "Analog/Digital Port Pin A3"},
+    {"A4", ARDUINO_ZERO_A4, 4, "Analog/Digital Port Pin A4"},
+    {"A5", ARDUINO_ZERO_A5, 5, "Analog/Digital Port Pin A5"},
+    {"D2", ARDUINO_ZERO_D2, 6, "Digital Port Pin D2"},
+    {"D3", ARDUINO_ZERO_D3, 7, "Digital Port Pin D3"},
+    {"D4", ARDUINO_ZERO_D4, 8, "Digital Port Pin D4"},
+    {"D5", ARDUINO_ZERO_D5, 9, "Digital Port Pin D5"},
+    {"D6", ARDUINO_ZERO_D6, 10, "Digital Port Pin D6"},
+    {"D7", ARDUINO_ZERO_D7, 11, "Digital Port Pin D7"},
+    {"D8", ARDUINO_ZERO_D8, 12, "Digital/PWM Port Pin D8"},
+    {"D9", ARDUINO_ZERO_D9, 13, "Digital/PWM Port Pin D9"},
+    {"D10", ARDUINO_ZERO_D10, 14, "Digital/PWM Port Pin D10"},
+    {"D11", ARDUINO_ZERO_D11, 15, "Digital/PWM Port Pin D11"},
+    {"D12", ARDUINO_ZERO_D12, 16, "Digital/PWM Port Pin D12"},
+    {"D13", ARDUINO_ZERO_D13, 17, "Digital/PWM Port Pin D13"},
+    {"SPI0", ARDUINO_ZERO_SPI_ICSP, 18, "SPI port on 6-pin SPI connector"},
+    {"SPI1", ARDUINO_ZERO_SPI_ALT, 19, "SPI port on A3-MOSI,A4-CLK,D9-MISO"},
 };
 
 #define ARDUINO_NUM_DEVS  (sizeof(pin_map)/sizeof(struct arduino_pin_map_entry))
@@ -72,6 +76,7 @@ enum interface_type
     INTERFACE_DAC,
     INTERFACE_PWM_DUTY,
     INTERFACE_PWM_FREQ,
+    INTERFACE_SPI,    
 };
 
 typedef struct 
@@ -80,7 +85,7 @@ typedef struct
     uint8_t  entry_id;
     int      min_value;
     int      max_value;    
-    char * desc; 
+    char *  desc; 
 } interface_into_t;
 
 const interface_into_t interface_info[] = 
@@ -92,6 +97,7 @@ const interface_into_t interface_info[] =
     {"dac",      INTERFACE_DAC,           0, 2048,   "Digital to Analog Output"},
     {"pwm_duty", INTERFACE_PWM_DUTY,      0, 65535,  "Pulse Width Mod. by Duty Cycle" },  
     {"pwm_freq", INTERFACE_PWM_FREQ,      60, 10000, "PWM as Frequency Generator" },  
+    {"spi",      INTERFACE_SPI,           0, 255,    "8-bit SPI" },  
 };
 
 #define INTERFACE_CNT   (sizeof(interface_info)/sizeof(interface_into_t))
@@ -107,6 +113,7 @@ typedef struct
         struct hal_adc *padc;
         struct hal_dac *pdac;
         struct hal_pwm *ppwm;
+        struct hal_spi *pspi;
         void           *pany;
     };    
 } interfaces_t;
@@ -154,6 +161,8 @@ arduino_free_device(int entry_id) {
     interfaces_t *pint = &interface_map[entry_id];
 
     switch(pint->type) {
+        case INTERFACE_SPI:
+            /* TODO special code to set all pins to inputs.  For now fall through */
         case INTERFACE_DAC:
         case INTERFACE_PWM_DUTY:
         case INTERFACE_PWM_FREQ:    
@@ -265,6 +274,33 @@ arduino_set_device(int entry_id, int devtype)
             }            
             break;            
         }        
+        case INTERFACE_SPI:
+        {
+            struct hal_spi *pspi;            
+            struct hal_spi_settings settings;
+            
+            pspi = hal_spi_init(pmap->sysid);
+            if (NULL != pspi) {
+                rc = 0;
+                pint->pspi = pspi;
+                pint->type = INTERFACE_SPI;
+                
+                /* some basic spi settings */
+                settings.data_mode = HAL_SPI_MODE0;
+                settings.data_order = HAL_SPI_MSB_FIRST;
+                settings.word_size = HAL_SPI_WORD_SIZE_8BIT;
+                settings.baudrate = 1000000;
+                
+                rc = hal_spi_config(pspi, &settings);
+                
+                if(rc) {
+                    free(pspi);
+                    pint->pspi = NULL;
+                    rc = -5;
+                }
+            }
+            break;
+        }
         case INTERFACE_UNINITIALIZED:
             rc = arduino_free_device(entry_id);
             break;            
@@ -314,7 +350,14 @@ arduino_write(int entry_id, int value)
         case INTERFACE_PWM_FREQ:
             rc = hal_pwm_set_frequency(pint->ppwm, value);
             hal_pwm_enable_duty_cycle(pint->ppwm, 0x8000);
-            break;            
+            break;    
+        case INTERFACE_SPI:
+            rc = hal_spi_master_transfer(pint->pspi, value);
+            /* this method has a special return code */
+            if(rc >= 0) {
+                value = rc;
+                rc = 0;
+            }
     }
     
     /* store what we wrote */
@@ -349,6 +392,10 @@ arduino_read(int entry_id, int *value)
             if(*value >= 0) {
                 rc = 0;
             }
+        case INTERFACE_SPI:
+            *value = pint->value;
+            rc = 0;
+            break;            
     }
     return rc;
 }
@@ -410,6 +457,11 @@ void arduino_test_value_to_string(interfaces_t *pint, char *buf, int value) {
             
             break;
         }
+        case INTERFACE_SPI:
+        {
+            sprintf(buf, "%d (0x%x)", value, value);
+            break;
+        }            
     }    
 }
 
@@ -426,7 +478,9 @@ arduino_show(int entry_id)
         max = entry_id + 1;
     }
     
-    console_printf("        %5s%9s%10s%22s\n", "Pin", "Function", "Raw Value", "Decoded Value");
+    console_printf("    %5s%9s%10s%22s%s\n", 
+                "Pin", "Function", "Raw Value", "Decoded Value", "Description");
+    
     for ( i = min; i < max; i++) {
         int value;
         interfaces_t *pint = &interface_map[i];
@@ -443,7 +497,8 @@ arduino_show(int entry_id)
                         pin_map[i].name, pinfo->name, buf);
         
         arduino_test_value_to_string(pint, buf, value);
-        console_printf(" ( %17s )\n", buf);
+        console_printf(" ( %17s )", buf);
+        console_printf(" %s\n", pin_map[i].desc);
     }    
 }
 

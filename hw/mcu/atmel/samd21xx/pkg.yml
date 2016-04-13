@@ -7,7 +7,7 @@ pkg.deps:
 pkg.cflags: -std=c99  
             -DWDT_CALLBACK_MODE=true 
             -DUSART_CALLBACK_MODE=true 
-            -DSPI_CALLBACK_MODE=true 
+            -DCONF_SPI_MASTER_ENABLE=true            
             -DI2C_MASTER_CALLBACK_MODE=true 
             -DI2C_SLAVE_CALLBACK_MODE=true  
             -DRTC_CALENDAR_ASYNC=true 
@@ -111,4 +111,8 @@ pkg.cflags: -std=c99
             -I./sam0/drivers/dac/dac_sam_d_c
             -I./sam0/drivers/dac/
             -I../sam0/drivers/dac/ 
+            -I../sam0/drivers/sercom/spi/
+            -I./sam0/drivers/sercom/spi/
+            -I./sam0/drivers/sercom/spi/module_config
+ 
 

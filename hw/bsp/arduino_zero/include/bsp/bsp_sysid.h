@@ -59,6 +59,13 @@ enum system_device_id
     ARDUINO_ZERO_A3 =      (4),
     ARDUINO_ZERO_A4 =      (5),
     ARDUINO_ZERO_A5 =      (34),
+
+    /* This set does not map directly to a PIN value */
+    ARDUINO_ZERO_SPI_ICSP = 200,
+    
+    /* an alternate SPI based on SERCOM0 at A3,A4,D8,D9*/
+    ARDUINO_ZERO_SPI_ALT = 201,
+
 };
 
 #ifdef __cplusplus
