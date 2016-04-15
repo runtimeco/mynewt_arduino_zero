@@ -44,6 +44,8 @@
  * Support and FAQ: visit <a href="http://www.atmel.com/design-support/">Atmel Support</a>
  */
 
+#ifdef I2C_SLAVE_CALLBACK_MODE
+
 #include "i2c_slave_interrupt.h"
 
 /**
@@ -432,3 +434,5 @@ void _i2c_slave_interrupt_handler(
 		}
 	}
 }
+
+#endif 

@@ -44,6 +44,8 @@
  * Support and FAQ: visit <a href="http://www.atmel.com/design-support/">Atmel Support</a>
  */
 
+#ifdef I2C_MASTER_CALLBACK_MODE
+
 #include "i2c_master_interrupt.h"
 
 extern enum status_code _i2c_master_wait_for_bus(
@@ -753,3 +755,5 @@ void _i2c_master_interrupt_handler(
 		}
 	}
 }
+
+#endif /* I2C_MASTER_CALLBACK_MODE */

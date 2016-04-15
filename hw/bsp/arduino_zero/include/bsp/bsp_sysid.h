@@ -23,19 +23,19 @@
 extern "C" {
 #endif
 
-enum system_device_id  
+enum system_device_id
 {
     /* NOTE: Some HALs use a virtual enumeration of the devices, while
      * other still use the actual pins (GPIO). For arduino this means
      * that the sysIDs for analog and digital pins are the actual pin 
      * numbers */
-    
+
      ARDUINO_ZERO_D0 =     (11),
      ARDUINO_ZERO_D1 =     (10),
      ARDUINO_ZERO_D3 =     (9),
      ARDUINO_ZERO_D5 =     (15),
      ARDUINO_ZERO_D6 =     (20),
-     ARDUINO_ZERO_D7 =     (21),  
+     ARDUINO_ZERO_D7 =     (21),
      ARDUINO_ZERO_D8 =     (6),
      ARDUINO_ZERO_D9 =     (7),
      ARDUINO_ZERO_D10 =    (18),
@@ -47,12 +47,12 @@ enum system_device_id
      ARDUINO_ZERO_D2 =     (8),
      ARDUINO_ZERO_D4 =     (14),
 #endif
-    
+
 #ifdef ARDUINO_ZERO
      ARDUINO_ZERO_D2 =     (14),
      ARDUINO_ZERO_D4 =     (8),
 #endif
-             
+
     ARDUINO_ZERO_A0 =      (2),  
     ARDUINO_ZERO_A1 =      (40),
     ARDUINO_ZERO_A2 =      (41),
@@ -62,9 +62,12 @@ enum system_device_id
 
     /* This set does not map directly to a PIN value */
     ARDUINO_ZERO_SPI_ICSP = 200,
-    
+
     /* an alternate SPI based on SERCOM0 at A3,A4,D8,D9*/
-    ARDUINO_ZERO_SPI_ALT = 201,
+    ARDUINO_ZERO_SPI_ALT  = 201,
+
+    /* a I2c port on SCLK and SDA */
+    ARDUINO_ZERO_I2C      = 202,
 
 };
 

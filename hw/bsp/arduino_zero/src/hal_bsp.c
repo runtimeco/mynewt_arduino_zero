@@ -27,6 +27,7 @@
 #include <mcu/hal_pwm.h>
 #include <mcu/hal_dac.h>
 #include <mcu/hal_spi.h>
+#include <mcu/hal_i2c.h>
 
 const struct hal_flash *
 bsp_flash_dev(uint8_t id)
@@ -225,4 +226,24 @@ bsp_get_hal_spi(enum system_device_id sysid)
             break;
     }
     return pspi;
+}
+
+const struct samd21_i2c_config i2c_config = {
+    .pad0_pinmux = PINMUX_PA22D_SERCOM5_PAD0,
+    .pad1_pinmux = PINMUX_PA23D_SERCOM5_PAD1,
+};
+
+extern struct hal_i2c*
+bsp_get_hal_i2c_driver(enum system_device_id sysid)
+{
+    struct hal_i2c *pi2c = NULL;
+
+    switch (sysid) {
+        case ARDUINO_ZERO_I2C:
+            pi2c = samd21_i2c_create(SAMD21_SPI_SERCOM5, &i2c_config);
+            break;
+        default:
+            break;
+    }
+    return pi2c;
 }

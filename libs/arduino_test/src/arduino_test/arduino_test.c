@@ -25,6 +25,7 @@
 #include <hal/hal_gpio.h>
 #include <hal/hal_dac.h>
 #include <hal/hal_spi.h>
+#include <hal/hal_i2c.h>
 #include <shell/shell.h>
 #include <stdio.h>
 #include <string.h>
@@ -62,12 +63,13 @@ pin_map[] =
     {"D13", ARDUINO_ZERO_D13, 17, "Digital/PWM Port Pin D13"},
     {"SPI0", ARDUINO_ZERO_SPI_ICSP, 18, "SPI port on 6-pin SPI connector"},
     {"SPI1", ARDUINO_ZERO_SPI_ALT, 19, "SPI port on A3-MOSI,A4-CLK,D9-MISO"},
+    {"I2C", ARDUINO_ZERO_I2C, 20, "I2C Port on SCL and SDA"},
 };
 
 #define ARDUINO_NUM_DEVS  (sizeof(pin_map)/sizeof(struct arduino_pin_map_entry))
 
 /* the types of things we can configure this to */
-enum interface_type 
+enum interface_type
 {
     INTERFACE_UNINITIALIZED = 0,
     INTERFACE_GPIO_OUT,
@@ -76,7 +78,8 @@ enum interface_type
     INTERFACE_DAC,
     INTERFACE_PWM_DUTY,
     INTERFACE_PWM_FREQ,
-    INTERFACE_SPI,    
+    INTERFACE_SPI,
+    INTERFACE_I2C,
 };
 
 typedef struct 
@@ -84,20 +87,21 @@ typedef struct
     char    *name;
     uint8_t  entry_id;
     int      min_value;
-    int      max_value;    
+    int      max_value;
     char *  desc; 
 } interface_into_t;
 
-const interface_into_t interface_info[] = 
+const interface_into_t interface_info[] =
 {
     {"none",     INTERFACE_UNINITIALIZED, 0, -1,     "Unused Pin"},
     {"gpio_out", INTERFACE_GPIO_OUT,      0, 1,      "Binary Output Port"},
     {"gpio_in",  INTERFACE_GPIO_IN,       0, -1,     "Binary Input Port"},
     {"adc",      INTERFACE_ADC,           0, -1,     "Analog to Digital Input"},
     {"dac",      INTERFACE_DAC,           0, 2048,   "Digital to Analog Output"},
-    {"pwm_duty", INTERFACE_PWM_DUTY,      0, 65535,  "Pulse Width Mod. by Duty Cycle" },  
-    {"pwm_freq", INTERFACE_PWM_FREQ,      60, 10000, "PWM as Frequency Generator" },  
-    {"spi",      INTERFACE_SPI,           0, 255,    "8-bit SPI" },  
+    {"pwm_duty", INTERFACE_PWM_DUTY,      0, 65535,  "Pulse Width Mod. by Duty Cycle" },
+    {"pwm_freq", INTERFACE_PWM_FREQ,      60, 10000, "PWM as Frequency Generator" },
+    {"spi",      INTERFACE_SPI,           0, 255,    "8-bit SPI" },
+    {"i2c",      INTERFACE_I2C,           0, 255,    "8-bit I2C" },
 };
 
 #define INTERFACE_CNT   (sizeof(interface_info)/sizeof(interface_into_t))
@@ -114,8 +118,9 @@ typedef struct
         struct hal_dac *pdac;
         struct hal_pwm *ppwm;
         struct hal_spi *pspi;
+        struct hal_i2c *pi2c;
         void           *pany;
-    };    
+    };
 } interfaces_t;
 
 /* internal state for this CPI */
@@ -123,7 +128,7 @@ static interfaces_t interface_map[ARDUINO_NUM_DEVS];
 
 static int arduino_test_cli_cmd(int argc, char **argv);
 
-static struct shell_cmd arduino_test_cmd_struct = 
+static struct shell_cmd arduino_test_cmd_struct =
 {
     .sc_cmd = "arduino",
     .sc_cmd_func = arduino_test_cli_cmd
@@ -133,7 +138,7 @@ static int
 arduino_pinstr_to_entry(char *pinstr)
 {
     int i;
-    
+
     for (i = 0; i < ARDUINO_NUM_DEVS; i++) {
         if (strcmp(pinstr, pin_map[i].name) == 0) {
             return pin_map[i].entry_id;
@@ -156,27 +161,27 @@ arduino_devstr_to_dev(char *devstr)
 
 static int
 arduino_free_device(int entry_id) {
-    int rc = -1;
+    int rc = 0;
     const struct arduino_pin_map_entry *pmap = &pin_map[entry_id];
     interfaces_t *pint = &interface_map[entry_id];
 
     switch(pint->type) {
+        case INTERFACE_GPIO_IN:
+        case INTERFACE_GPIO_OUT:
+            /* just set as input */
+            rc = hal_gpio_init_in(pmap->sysid, GPIO_PULL_NONE);
+            /* fall through on purpose to set as input */
+        case INTERFACE_I2C:
         case INTERFACE_SPI:
             /* TODO special code to set all pins to inputs.  For now fall through */
         case INTERFACE_DAC:
         case INTERFACE_PWM_DUTY:
-        case INTERFACE_PWM_FREQ:    
+        case INTERFACE_PWM_FREQ:
         case INTERFACE_ADC:
             /* This code looks a bit weird, but assumes that all the 
              * pointers are in the union and this just frees any of
              * them */
             free(pint->pany);
-            
-            /* fall through on purpose to set as input */
-        case INTERFACE_GPIO_IN:
-        case INTERFACE_GPIO_OUT:     
-            /* just set as input */
-            rc = hal_gpio_init_in(pmap->sysid, GPIO_PULL_NONE);              
             memset(pint,0, sizeof(*pint));
             break;
         default:
@@ -195,13 +200,13 @@ arduino_set_device(int entry_id, int devtype)
     interfaces_t *pint = &interface_map[entry_id];
 
     assert(entry_id < ARDUINO_NUM_DEVS);
-    
+
     if (pint->type && (devtype != INTERFACE_UNINITIALIZED)) {
         console_printf("Device already Initialized as %s -- set to %s to clear\n",
                 interface_info[entry_id].name,
                 "none");
     }
-    
+
     switch (devtype) {
         case INTERFACE_GPIO_OUT:
             rc = hal_gpio_init_out(pmap->sysid, 0);
@@ -254,7 +259,7 @@ arduino_set_device(int entry_id, int devtype)
                     free(ppwm);
                     rc = -2;
                 }
-            }            
+            }
             break;
         }       
         case INTERFACE_PWM_FREQ:
@@ -269,11 +274,11 @@ arduino_set_device(int entry_id, int devtype)
                 } else {
                     /* does this not support duty cycle */
                     free(ppwm);
-                    rc = -2;                    
+                    rc = -2;
                 }
-            }            
-            break;            
-        }        
+            }
+            break;
+        }
         case INTERFACE_SPI:
         {
             struct hal_spi *pspi;            
@@ -301,13 +306,24 @@ arduino_set_device(int entry_id, int devtype)
             }
             break;
         }
+        case INTERFACE_I2C:
+        {
+            struct hal_i2c *pi2c;
+            pi2c = hal_i2c_init(pmap->sysid);
+            if (NULL != pi2c) {
+                rc = 0;
+                pint->pi2c = pi2c;
+                pint->type = INTERFACE_I2C;
+            }
+            break;
+        }        
         case INTERFACE_UNINITIALIZED:
             rc = arduino_free_device(entry_id);
             break;            
         default:
             rc = -2;
     }
-    
+
     if (0 == rc) {
        pint->value = 0; 
     }
@@ -358,6 +374,29 @@ arduino_write(int entry_id, int value)
                 value = rc;
                 rc = 0;
             }
+        case INTERFACE_I2C:
+        {
+            uint8_t buf[8] = {0x33, 0x33, value >> 8, value & 0xff};
+            struct hal_i2c_master_data data;
+            memset(&data,0,sizeof(data));
+            data.address = 80;
+            data.buffer = buf;
+            data.len = 4;
+            
+            rc = hal_i2c_master_start(pint->pi2c);
+            
+            if (rc) {
+                break;
+            }
+            
+            rc = hal_i2c_master_write(pint->pi2c, &data);
+            hal_i2c_master_stop(pint->pi2c);
+            if (rc) {
+                break;
+            }
+
+            value = rc;
+        }
     }
     
     /* store what we wrote */
@@ -395,7 +434,31 @@ arduino_read(int entry_id, int *value)
         case INTERFACE_SPI:
             *value = pint->value;
             rc = 0;
-            break;            
+            break;      
+        case INTERFACE_I2C:
+        {
+            uint8_t buf[8] = {0x33,0x33};
+            struct hal_i2c_master_data data;
+            memset(&data,0,sizeof(data));
+            data.address = 80;
+            data.buffer = buf;
+            data.len = 2;
+            
+            rc = hal_i2c_master_start(pint->pi2c);
+            if (rc) {
+                break;
+            }
+            
+            rc = hal_i2c_master_write(pint->pi2c, &data);
+            if (rc == 0) {
+                data.len = 2;                
+                rc = hal_i2c_master_read(pint->pi2c, &data);
+            } 
+            
+            hal_i2c_master_stop(pint->pi2c);            
+            *value = ((buf[0] << 8) | buf[1]);
+            break;
+        }            
     }
     return rc;
 }
@@ -461,7 +524,12 @@ void arduino_test_value_to_string(interfaces_t *pint, char *buf, int value) {
         {
             sprintf(buf, "%d (0x%x)", value, value);
             break;
-        }            
+        }        
+        case INTERFACE_I2C:
+        {
+            sprintf(buf, "%d (0x%x)", value, value);
+            break;
+        }               
     }    
 }
 

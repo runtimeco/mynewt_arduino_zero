@@ -47,6 +47,8 @@
 #ifndef I2C_SLAVE_INTERRUPT_H_INCLUDED
 #define I2C_SLAVE_INTERRUPT_H_INCLUDED
 
+#ifdef I2C_SLAVE_CALLBACK_MODE
+
 #include "i2c_slave.h"
 
 #ifdef __cplusplus
@@ -211,5 +213,7 @@ static inline enum status_code i2c_slave_get_job_status(
 #ifdef __cplusplus
 }
 #endif
+
+#endif /* I2C_SLAVE_CALLBACK_MODE */
 
 #endif /* I2C_SLAVE_INTERRUPT_H_INCLUDED */
