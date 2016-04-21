@@ -383,14 +383,14 @@ arduino_write(int entry_id, int value)
             data.buffer = buf;
             data.len = 4;
             
-            rc = hal_i2c_master_start(pint->pi2c);
+            rc = hal_i2c_master_begin(pint->pi2c);
             
             if (rc) {
                 break;
             }
             
             rc = hal_i2c_master_write(pint->pi2c, &data);
-            hal_i2c_master_stop(pint->pi2c);
+            hal_i2c_master_end(pint->pi2c);
             if (rc) {
                 break;
             }
@@ -444,7 +444,7 @@ arduino_read(int entry_id, int *value)
             data.buffer = buf;
             data.len = 2;
             
-            rc = hal_i2c_master_start(pint->pi2c);
+            rc = hal_i2c_master_begin(pint->pi2c);
             if (rc) {
                 break;
             }
@@ -455,7 +455,7 @@ arduino_read(int entry_id, int *value)
                 rc = hal_i2c_master_read(pint->pi2c, &data);
             } 
             
-            hal_i2c_master_stop(pint->pi2c);            
+            hal_i2c_master_end(pint->pi2c);            
             *value = ((buf[0] << 8) | buf[1]);
             break;
         }            
