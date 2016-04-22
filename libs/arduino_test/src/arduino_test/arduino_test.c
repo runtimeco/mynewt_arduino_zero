@@ -170,14 +170,14 @@ arduino_free_device(int entry_id) {
         case INTERFACE_GPIO_OUT:
             /* just set as input */
             rc = hal_gpio_init_in(pmap->sysid, GPIO_PULL_NONE);
-            /* fall through on purpose to set as input */
+            break;
         case INTERFACE_I2C:
         case INTERFACE_SPI:
-            /* TODO special code to set all pins to inputs.  For now fall through */
         case INTERFACE_DAC:
         case INTERFACE_PWM_DUTY:
         case INTERFACE_PWM_FREQ:
         case INTERFACE_ADC:
+            /* TODO special code to set all pins to inputs. */
             /* This code looks a bit weird, but assumes that all the 
              * pointers are in the union and this just frees any of
              * them */
@@ -356,32 +356,38 @@ arduino_write(int entry_id, int value)
                 hal_gpio_clear(pint->gpio_pin);                
             }
             rc = 0;
+            pint->value = value;
             break;
         case INTERFACE_DAC:
             rc = hal_dac_write(pint->pdac, (uint16_t) value);
+            pint->value = value;
             break;
         case INTERFACE_PWM_DUTY:
             rc = hal_pwm_enable_duty_cycle(pint->ppwm, (uint16_t) value);
+            pint->value = value;
             break;
         case INTERFACE_PWM_FREQ:
             rc = hal_pwm_set_frequency(pint->ppwm, value);
             hal_pwm_enable_duty_cycle(pint->ppwm, 0x8000);
+            pint->value = value;
             break;    
         case INTERFACE_SPI:
-            rc = hal_spi_master_transfer(pint->pspi, value);
+            rc = hal_spi_master_transfer(pint->pspi, (uint8_t) value);
             /* this method has a special return code */
             if(rc >= 0) {
-                value = rc;
+                /* store what we read back  */
+                pint->value = rc;
                 rc = 0;
             }
+            break;
         case INTERFACE_I2C:
         {
-            uint8_t buf[8] = {0x33, 0x33, value >> 8, value & 0xff};
+            uint8_t buf[8] = { 0x17 };
             struct hal_i2c_master_data data;
             memset(&data,0,sizeof(data));
-            data.address = 80;
+            data.address = value;
             data.buffer = buf;
-            data.len = 4;
+            data.len = 1;
             
             rc = hal_i2c_master_begin(pint->pi2c);
             
@@ -393,16 +399,12 @@ arduino_write(int entry_id, int value)
             hal_i2c_master_end(pint->pi2c);
             if (rc) {
                 break;
-            }
-
-            value = rc;
+            }            
+            /* store the value to use later */
+            pint->value = value;
         }
     }
-    
-    /* store what we wrote */
-    if (0 == rc) {
-        pint->value = value;        
-    }
+
     return rc;
 }
 
@@ -418,7 +420,8 @@ arduino_read(int entry_id, int *value)
         case INTERFACE_GPIO_OUT:
         case INTERFACE_PWM_DUTY:
         case INTERFACE_DAC:
-        case INTERFACE_PWM_FREQ:            
+        case INTERFACE_PWM_FREQ:  
+        case INTERFACE_SPI:            
             *value = pint->value;            
             rc = 0;
             break;            
@@ -431,32 +434,23 @@ arduino_read(int entry_id, int *value)
             if(*value >= 0) {
                 rc = 0;
             }
-        case INTERFACE_SPI:
-            *value = pint->value;
-            rc = 0;
-            break;      
+            break; 
         case INTERFACE_I2C:
         {
-            uint8_t buf[8] = {0x33,0x33};
+            uint8_t buf[8];
             struct hal_i2c_master_data data;
             memset(&data,0,sizeof(data));
-            data.address = 80;
+            data.address = pint->value;
             data.buffer = buf;
-            data.len = 2;
+            data.len = 1;
             
             rc = hal_i2c_master_begin(pint->pi2c);
             if (rc) {
                 break;
             }
-            
-            rc = hal_i2c_master_write(pint->pi2c, &data);
-            if (rc == 0) {
-                data.len = 2;                
-                rc = hal_i2c_master_read(pint->pi2c, &data);
-            } 
-            
+            rc = hal_i2c_master_read(pint->pi2c, &data);            
             hal_i2c_master_end(pint->pi2c);            
-            *value = ((buf[0] << 8) | buf[1]);
+            *value = buf[0];
             break;
         }            
     }
@@ -588,11 +582,17 @@ usage(void)
     console_printf("          Reads the value from a pin. If the function is \n");
     console_printf("          a read function, returns the value read.  If the \n");
     console_printf("          function is a write function, reads the previously \n");
-    console_printf("          written value \n");
+    console_printf("          written value. For SPI this returns the data \n");
+    console_printf("          read in the previous transfer (write) \n");
+    console_printf("          For I2C this reads one byte from the address\n");
+    console_printf("          used in the last I2C write.  It no write \n");
+    console_printf("          has been performed, this value is undefined \n");
     console_printf("cmd:   write <pin> <value>\n");
     console_printf("          Write a value to a pin.  If the pin is set to a\n");
     console_printf("          read only function, an error is returned. The \n");
-    console_printf("          legal value depends on the function of the pin\n");
+    console_printf("          legal value depends on the function of the pin.\n");
+    console_printf("          For SPI this writes <value> as a 8-bit number.\n");
+    console_printf("          For I2C this writes 0x17 to the address <value>\n");
     console_printf("cmd:   show {pin}\n");
     console_printf("          With argument pin, shows information about that\n");
     console_printf("          specific pin. Otherwise, shows information about\n");
