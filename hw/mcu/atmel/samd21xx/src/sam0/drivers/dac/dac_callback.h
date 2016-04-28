@@ -46,6 +46,8 @@
 #ifndef DAC_CALLBACK_H_INCLUDED
 #define DAC_CALLBACK_H_INCLUDED
 
+#ifdef DAC_CALLBACK_MODE
+
 #include <compiler.h>
 #include "dac.h"
 
@@ -114,6 +116,8 @@ void dac_chan_abort_job(
 
 #ifdef __cplusplus
 }
+#endif
+
 #endif
 
 #endif

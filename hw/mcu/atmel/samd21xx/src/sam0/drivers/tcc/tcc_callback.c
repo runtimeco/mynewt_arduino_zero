@@ -43,6 +43,8 @@
 /*
  * Support and FAQ: visit <a href="http://www.atmel.com/design-support/">Atmel Support</a>
  */
+#if (TCC_ASYNC && TC_CALLBACK_MODE)
+
 
 #include "tcc_callback.h"
 
@@ -243,3 +245,5 @@ void _tcc_interrupt_handler(
 		}
 	}
 }
+
+#endif

@@ -22,7 +22,7 @@
 #include <assert.h>
 #include <stdlib.h>
 #include <usart.h>
-#  include "usart_interrupt.h"
+#include "usart_interrupt.h"
 
 #define UART_CNT    (SERCOM_INST_NUM)
 #define TX_BUFFER_SIZE  (8)

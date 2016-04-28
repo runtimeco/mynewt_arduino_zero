@@ -43,7 +43,11 @@
 /*
  * Support and FAQ: visit <a href="http://www.atmel.com/design-support/">Atmel Support</a>
  */
+#ifdef ADC_CALLBACK_MODE 
+
+
 #include "adc_callback.h"
+
 
 struct adc_module *_adc_instances[ADC_INST_NUM];
 
@@ -252,4 +256,6 @@ void adc_abort_job(
 		module_inst->remaining_conversions = 0;
 	}
 }
+
+#endif
 

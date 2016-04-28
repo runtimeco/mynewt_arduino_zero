@@ -1500,7 +1500,7 @@ struct tcc_events {
  */
 struct tcc_counter_config {
 	/** Value to initialize the count register */
-	uint32_t count;
+	uint32_t duty;
 	/** Period/top and period/top buffer values for counter */
 	uint32_t period;
 

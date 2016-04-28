@@ -43,6 +43,8 @@
 /*
  * Support and FAQ: visit <a href="http://www.atmel.com/design-support/">Atmel Support</a>
  */
+#ifdef SPI_CALLBACK_MODE
+
 #include "spi_interrupt.h"
 
 /**
@@ -731,3 +733,5 @@ void _spi_interrupt_handler(
 	}
 #  endif
 }
+
+#endif
