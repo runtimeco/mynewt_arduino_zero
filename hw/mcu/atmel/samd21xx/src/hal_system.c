@@ -16,11 +16,19 @@
 
 #include <mcu/cortex_m0.h>
 #include "hal/hal_system.h"
+#include <stdlib.h>
 
 void
 system_reset(void)
 {
     while (1) {
+        if (DSU->STATUSB.reg & DSU_STATUSB_DBGPRES) {
+            /*
+             * If debugger is attached, breakpoint here.
+             */
+            __asm__("bkpt");
+        }
+
 	/* Cortex-M0+ Core Debug Registers (DCB registers, SHCSR, and DFSR)
            are only accessible over DAP and not via processor. Therefore
            they are not covered by the Cortex-M0 header file. */
