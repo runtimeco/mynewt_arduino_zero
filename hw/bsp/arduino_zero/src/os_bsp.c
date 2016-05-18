@@ -18,9 +18,9 @@
  * under the License.
  */
 #include <sys/types.h>
+#include <hal/hal_bsp.h>
 #include <hal/flash_map.h>
 
-void *_sbrk(int incr);
 void _close(int fd);
 
 static struct flash_area arduino_zero_flash_areas[] = {

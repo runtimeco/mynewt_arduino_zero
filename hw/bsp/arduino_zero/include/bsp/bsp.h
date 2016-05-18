@@ -47,7 +47,6 @@ extern "C" {
  * multiple sectors into an NFFS area */
 #define NFFS_AREA_MAX    (8)
     
-int bsp_imgr_current_slot(void);
 #ifdef __cplusplus
 }
 #endif

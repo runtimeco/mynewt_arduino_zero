@@ -21,6 +21,7 @@
 #include "mcu/samd21.h"
 #include "bsp/bsp.h"
 #include <bsp/bsp_sysid.h>
+#include <hal/hal_bsp.h>
 #include <hal/hal_adc_int.h>
 #include <mcu/hal_adc.h>
 #include <hal/hal_pwm_int.h>
