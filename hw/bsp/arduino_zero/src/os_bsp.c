@@ -58,7 +58,7 @@ bsp_imgr_current_slot(void)
 }
 
 void
-os_bsp_init(void)
+bsp_init(void)
 {
     /*
      * XXX these references are here to keep the functions in for libc to find.
