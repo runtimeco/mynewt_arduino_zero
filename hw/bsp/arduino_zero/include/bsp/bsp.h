@@ -23,6 +23,8 @@
   #error you must defined arduino_zero_pro or arduino_zero in your target features 
 #endif
 
+#include <inttypes.h>
+
 #ifndef BSP_SYSID_H
 #include <bsp/bsp_sysid.h>
 #endif
@@ -31,8 +33,9 @@
 extern "C" {
 #endif
 
+extern uint8_t _ram_start;
+#define RAM_SIZE        0x00008000
 
- 
 #define ARDUINO_ZERO_PIN_UART_RX (ARDUINO_ZERO_D0)    
 #define ARDUINO_ZERO_PIN_UART_TX (ARDUINO_ZERO_D1)       
       

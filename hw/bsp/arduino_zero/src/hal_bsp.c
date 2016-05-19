@@ -42,6 +42,23 @@ bsp_flash_dev(uint8_t id)
     return &samd21_flash_dev;
 }
 
+/*
+ * What memory to include in coredump.
+ */
+static const struct bsp_mem_dump dump_cfg[] = {
+    [0] = {
+	.bmd_start = &_ram_start,
+        .bmd_size = RAM_SIZE
+    }
+};
+
+const struct bsp_mem_dump *
+bsp_core_dump(int *area_cnt)
+{
+    *area_cnt = sizeof(dump_cfg) / sizeof(dump_cfg[0]);
+    return dump_cfg;
+}
+
 /* the default arduino configuration uses 3v3 volts as the reference 
  * voltage.  This is equivalent to using VCC/2 as the internal 
  * reference with a divide by 2 in the pre-stage */
