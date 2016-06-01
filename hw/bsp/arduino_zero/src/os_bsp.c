@@ -42,13 +42,18 @@ static struct flash_area arduino_zero_flash_areas[] = {
     [FLASH_AREA_IMAGE_SCRATCH] = {
         .fa_flash_id = 0,
         .fa_off = 0x0003c000,
-        .fa_size = (8 * 1024)
+        .fa_size = (7 * 1024)
     },
     [FLASH_AREA_NFFS] = {
         .fa_flash_id = 0,
         .fa_off = 0x0003e000,
         .fa_size = (8 * 1024)
-    }
+    },
+    [FLASH_AREA_REBOOT_LOG] = {
+        .fa_flash_id = 0,
+        .fa_off = 0x0003dc00,
+        .fa_size = (1 * 1024)
+    },
 };
 
 int
@@ -66,5 +71,5 @@ bsp_init(void)
     _sbrk(0);
     _close(0);
     flash_area_init(arduino_zero_flash_areas,
-      sizeof(arduino_zero_flash_areas) / sizeof(arduino_zero_flash_areas[0]));    
+      sizeof(arduino_zero_flash_areas) / sizeof(arduino_zero_flash_areas[0]));
 }
