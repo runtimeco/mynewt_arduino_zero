@@ -22,7 +22,7 @@ void
 system_reset(void)
 {
     while (1) {
-        if (DSU->STATUSB.reg & DSU_STATUSB_DBGPRES) {
+        if (system_debugger_connected()) {
             /*
              * If debugger is attached, breakpoint here.
              */
@@ -35,6 +35,12 @@ system_reset(void)
 
         NVIC_SystemReset();
     }
+}
+
+int
+system_debugger_connected(void)
+{
+    return DSU->STATUSB.reg & DSU_STATUSB_DBGPRES;
 }
 
 uint32_t
