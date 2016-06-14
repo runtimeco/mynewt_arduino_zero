@@ -32,6 +32,7 @@ enum system_device_id {
     /*
      * XXX fill in
      */
+    NONE = 0
 };
 
 #ifdef __cplusplus
