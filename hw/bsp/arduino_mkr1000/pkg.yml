@@ -1,0 +1,51 @@
+#
+# Licensed to the Apache Software Foundation (ASF) under one
+# or more contributor license agreements.  See the NOTICE file
+# distributed with this work for additional information
+# regarding copyright ownership.  The ASF licenses this file
+# to you under the Apache License, Version 2.0 (the
+# "License"); you may not use this file except in compliance
+# with the License.  You may obtain a copy of the License at
+#
+#  http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing,
+# software distributed under the License is distributed on an
+# "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+# KIND, either express or implied.  See the License for the
+# specific language governing permissions and limitations
+# under the License.
+#
+pkg.name: "hw/bsp/arduino_mkr1000"
+pkg.type: bsp
+pkg.repository: https://github.com/runtimeinc/mynewt_arduino_zero
+
+pkg.arch: cortex_m0
+pkg.compiler: "@apache-mynewt-core/compiler/arm-none-eabi-m0"
+pkg.linkerscript: "mkr1000.ld"
+pkg.linkerscript.bootloader.OVERWRITE: "mkr1000_boot.ld"
+pkg.downloadscript: "mkr1000_download.sh"
+pkg.debugscript: "mkr1000_debug.sh"
+pkg.deps:
+    - hw/mcu/atmel/samd21xx
+    - "@apache-mynewt-core/libs/baselibc"
+
+# SAMD21G18A
+pkg.cflags:
+    - -mthumb
+    - -D__SAMD21G18A__
+    - -I../../../../hw/mcu/atmel/samd21xx/src/sam0/drivers/sercom
+    - -I../../../../hw/mcu/atmel/samd21xx/src/sam0/drivers/sercom/usart
+    - -I../../../../hw/mcu/atmel/samd21xx/src/sam0/drivers/system
+    - -I../../../../hw/mcu/atmel/samd21xx/src/sam0/drivers/system/clock
+    - -I../../../../hw/mcu/atmel/samd21xx/src/sam0/drivers/system/clock/clock_samd21_r21_da
+    - -I../../../../hw/mcu/atmel/samd21xx/src/sam0/drivers/system/interrupt
+    - -I../../../../hw/mcu/atmel/samd21xx/src/sam0/drivers/system/interrupt/system_interrupt_samd21
+    - -I../../../../hw/mcu/atmel/samd21xx/src/sam0/drivers/system/pinmux
+    - -I../../../../hw/mcu/atmel/samd21xx/src/sam0/drivers/system/power/power_sam_d_r
+    - -I../../../../hw/mcu/atmel/samd21xx/src/sam0/drivers/system/reset/reset_sam_d_r
+    - -I../../../../hw/mcu/atmel/samd21xx/src/sam0/utils
+    - -I../../../../hw/mcu/atmel/samd21xx/src/sam0/utils/header_files
+    - -I../../../../hw/mcu/atmel/samd21xx/src/sam0/utils/preprocessor
+    - -I../../../../hw/mcu/atmel/samd21xx/src/common/utils
+
