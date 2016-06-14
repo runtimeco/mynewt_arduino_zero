@@ -26,10 +26,26 @@ pkg.linkerscript: "arduino_zero.ld"
 pkg.linkerscript.bootloader.OVERWRITE: "arduino_zero_boot.ld"
 pkg.downloadscript: "arduino_zero_download.sh"
 pkg.debugscript: "arduino_zero_debug.sh"
-pkg.cflags: -mthumb -D__SAMD21G18A__
 pkg.deps:
     - hw/mcu/atmel/samd21xx
     - "@apache-mynewt-core/libs/baselibc"
+pkg.cflags:
+    - -mthumb
+    - -D__SAMD21G18A__
+    - -I../../../../hw/mcu/atmel/samd21xx/src/sam0/drivers/sercom
+    - -I../../../../hw/mcu/atmel/samd21xx/src/sam0/drivers/sercom/usart
+    - -I../../../../hw/mcu/atmel/samd21xx/src/sam0/drivers/system
+    - -I../../../../hw/mcu/atmel/samd21xx/src/sam0/drivers/system/clock
+    - -I../../../../hw/mcu/atmel/samd21xx/src/sam0/drivers/system/clock/clock_samd21_r21_da
+    - -I../../../../hw/mcu/atmel/samd21xx/src/sam0/drivers/system/interrupt
+    - -I../../../../hw/mcu/atmel/samd21xx/src/sam0/drivers/system/interrupt/system_interrupt_samd21
+    - -I../../../../hw/mcu/atmel/samd21xx/src/sam0/drivers/system/pinmux
+    - -I../../../../hw/mcu/atmel/samd21xx/src/sam0/drivers/system/power/power_sam_d_r
+    - -I../../../../hw/mcu/atmel/samd21xx/src/sam0/drivers/system/reset/reset_sam_d_r
+    - -I../../../../hw/mcu/atmel/samd21xx/src/sam0/utils
+    - -I../../../../hw/mcu/atmel/samd21xx/src/sam0/utils/header_files
+    - -I../../../../hw/mcu/atmel/samd21xx/src/sam0/utils/preprocessor
+    - -I../../../../hw/mcu/atmel/samd21xx/src/common/utils
 
 # you will need to specify arduino_zero_pro or
 # arduino in your target features to get this to

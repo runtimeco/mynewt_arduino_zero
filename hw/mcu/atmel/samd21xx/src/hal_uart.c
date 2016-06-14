@@ -23,6 +23,7 @@
 #include <stdlib.h>
 #include <usart.h>
 #include "usart_interrupt.h"
+#include <mcu/hal_uart.h>
 
 #define UART_CNT    (SERCOM_INST_NUM)
 #define TX_BUFFER_SIZE  (8)
@@ -165,18 +166,19 @@ hal_uart_config(int port, int32_t baudrate, uint8_t databits, uint8_t stopbits,
 {
     struct usart_module *pinst = &uarts[port].instance;
     struct usart_config config_usart;
+    const struct samd21_uart_config *samd21_cfg;
 
     /* TODO get this done earlier */
     system_clock_init();
-    
+
     if(uarts[port].u_open) {
         return -1;
     }
-    
-    /* TODO move to BSP */
-    #define BSP_SERCOM      (SERCOM2)        
-    #define BSP_PINMUX      (USART_RX_3_TX_2_XCK_3)   
-    #define BSP_CLK_GENERATOR   (GCLK_GENERATOR_0)
+
+    samd21_cfg = bsp_uart_config(port);
+    if (!samd21_cfg) {
+        return -1;
+    }
 
     usart_get_config_defaults(&config_usart);
 
@@ -201,7 +203,7 @@ hal_uart_config(int port, int32_t baudrate, uint8_t databits, uint8_t stopbits,
             config_usart.character_size = USART_CHARACTER_SIZE_9BIT;
             break;
         default:
-            return -1;                        
+            return -1;
     }
 
     switch(parity) {
@@ -238,36 +240,32 @@ hal_uart_config(int port, int32_t baudrate, uint8_t databits, uint8_t stopbits,
             return -1;
     }
 
-    /* hard code for now but move to BSP */
-    config_usart.mux_setting = BSP_PINMUX;
-    config_usart.generator_source = BSP_CLK_GENERATOR;
+    config_usart.mux_setting       = samd21_cfg->suc_mux_setting;
+    config_usart.generator_source  = samd21_cfg->suc_generator_source;
+    config_usart.sample_adjustment = samd21_cfg->suc_sample_adjustment;
+    config_usart.sample_rate       = samd21_cfg->suc_sample_rate;
+    config_usart.pinmux_pad0       = samd21_cfg->suc_pad0;
+    config_usart.pinmux_pad1       = samd21_cfg->suc_pad1;
+    config_usart.pinmux_pad2       = samd21_cfg->suc_pad2;
+    config_usart.pinmux_pad3       = samd21_cfg->suc_pad3;
 
-    /* TODO. This should also be BSP specific.... */
-    config_usart.sample_adjustment     = USART_SAMPLE_ADJUSTMENT_7_8_9;
-    config_usart.sample_rate           = USART_SAMPLE_RATE_16X_ARITHMETIC;    
-    
-    config_usart.pinmux_pad0 = PINMUX_DEFAULT;
-    config_usart.pinmux_pad1 = PINMUX_DEFAULT;
-    config_usart.pinmux_pad2 = PINMUX_DEFAULT;
-    config_usart.pinmux_pad3 = PINMUX_DEFAULT;
-
-    if(usart_init(pinst, BSP_SERCOM, &config_usart) != STATUS_OK) {
+    if (usart_init(pinst, samd21_cfg->suc_sercom, &config_usart) != STATUS_OK) {
         return -1;
     }
-    
-    /* register callbacks */
-    usart_register_callback(pinst, usart_callback_txdone, 
-                            USART_CALLBACK_BUFFER_TRANSMITTED);    
 
-    usart_register_callback(pinst, usart_callback_rx, 
-                            USART_CALLBACK_BUFFER_RECEIVED);         
-    
+    /* register callbacks */
+    usart_register_callback(pinst, usart_callback_txdone,
+                            USART_CALLBACK_BUFFER_TRANSMITTED);
+
+    usart_register_callback(pinst, usart_callback_rx,
+                            USART_CALLBACK_BUFFER_RECEIVED);
+
     usart_enable_callback(pinst, USART_CALLBACK_BUFFER_TRANSMITTED);
     usart_enable_callback(pinst, USART_CALLBACK_BUFFER_RECEIVED);
-    usart_enable(pinst);         
+    usart_enable(pinst);
     uarts[port].u_open = 1;
 
     hal_uart_start_rx(port);
-    
+
     return 0;
 }

@@ -40,7 +40,7 @@ extern uint8_t _ram_start;
 #define ARDUINO_ZERO_PIN_UART_TX (ARDUINO_ZERO_D1)       
       
 #define LED_BLINK_PIN   (ARDUINO_ZERO_D13)
-#define CONSOLE_UART    (2)    
+#define CONSOLE_UART    (0)
 
 /* This defines the maximum NFFS areas (block) are in the BSPs NFS file 
  * system space.  This in conjunction with flash map determines how 

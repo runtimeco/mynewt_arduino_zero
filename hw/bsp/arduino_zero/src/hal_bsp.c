@@ -30,6 +30,12 @@
 #include <mcu/hal_spi.h>
 #include <mcu/hal_i2c.h>
 
+/*
+ * hw/mcu/atmel/samd21xx/src/sam0/drivers/sercom/usart/usart.h
+ */
+#include <usart.h>
+#include <mcu/hal_uart.h>
+
 const struct hal_flash *
 bsp_flash_dev(uint8_t id)
 {
@@ -264,4 +270,27 @@ bsp_get_hal_i2c_driver(enum system_device_id sysid)
             break;
     }
     return pi2c;
+}
+
+static const struct samd21_uart_config uart_cfgs[] = {
+    [0] = {
+        .suc_sercom = SERCOM2,
+        .suc_mux_setting = USART_RX_3_TX_2_XCK_3,
+        .suc_generator_source = GCLK_GENERATOR_0,
+        .suc_sample_rate = USART_SAMPLE_RATE_16X_ARITHMETIC,
+        .suc_sample_adjustment = USART_SAMPLE_ADJUSTMENT_7_8_9,
+        .suc_pad0 = 0,
+        .suc_pad1 = 0,
+        .suc_pad2 = PINMUX_PA10D_SERCOM2_PAD2,
+        .suc_pad3 = PINMUX_PA11D_SERCOM2_PAD3
+    }
+};
+
+const struct samd21_uart_config *
+bsp_uart_config(int port)
+{
+    if (port < sizeof(uart_cfgs) / sizeof(uart_cfgs[0])) {
+        return &uart_cfgs[port];
+    }
+    return NULL;
 }
