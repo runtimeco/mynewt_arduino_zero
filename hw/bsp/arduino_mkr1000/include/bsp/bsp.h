@@ -35,6 +35,11 @@ extern uint8_t _ram_start;
 #define LED_BLINK_PIN   (20)
 #define CONSOLE_UART    (0)
 
+#ifdef BOOT_SERIAL
+#define BOOT_SERIAL_DETECT_PIN 		43
+#define BOOT_SERIAL_DETECT_PIN_CFG 	GPIO_PULL_UP
+#define BOOT_SERIAL_DETECT_PIN_VAL      0
+#endif
 
 /* This defines the maximum NFFS areas (block) are in the BSPs NFS file
  * system space.  This in conjunction with flash map determines how
