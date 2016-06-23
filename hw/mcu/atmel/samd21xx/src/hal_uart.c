@@ -168,10 +168,7 @@ hal_uart_config(int port, int32_t baudrate, uint8_t databits, uint8_t stopbits,
     struct usart_config config_usart;
     const struct samd21_uart_config *samd21_cfg;
 
-    /* TODO get this done earlier */
-    system_clock_init();
-
-    if(uarts[port].u_open) {
+    if (uarts[port].u_open) {
         return -1;
     }
 
