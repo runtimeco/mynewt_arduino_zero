@@ -118,4 +118,5 @@ pkg.cflags:
           -  -I../sam0/drivers/sercom/i2c/
           -  -I./sam0/drivers/sercom/i2c/
           -  -I./sam0/drivers/sercom/spi/i2c_sam0 
+          -  -I./sam0/drivers/extint
 
