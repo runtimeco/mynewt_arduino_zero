@@ -174,7 +174,7 @@ hal_uart_config(int port, int32_t baudrate, uint8_t databits, uint8_t stopbits,
     }
     
     /* TODO move to BSP */
-    #define BSP_SERCOM      (SERCOM2)        
+    #define BSP_SERCOM      (SERCOM5)        
     #define BSP_PINMUX      (USART_RX_3_TX_2_XCK_3)   
     #define BSP_CLK_GENERATOR   (GCLK_GENERATOR_0)
 
@@ -246,10 +246,11 @@ hal_uart_config(int port, int32_t baudrate, uint8_t databits, uint8_t stopbits,
     config_usart.sample_adjustment     = USART_SAMPLE_ADJUSTMENT_7_8_9;
     config_usart.sample_rate           = USART_SAMPLE_RATE_16X_ARITHMETIC;    
     
-    config_usart.pinmux_pad0 = PINMUX_DEFAULT;
-    config_usart.pinmux_pad1 = PINMUX_DEFAULT;
-    config_usart.pinmux_pad2 = PINMUX_DEFAULT;
-    config_usart.pinmux_pad3 = PINMUX_DEFAULT;
+    config_usart.pinmux_pad0 = PINMUX_UNUSED;
+    config_usart.pinmux_pad1 = PINMUX_UNUSED;
+    config_usart.pinmux_pad2 = PINMUX_PB22D_SERCOM5_PAD2;
+    config_usart.pinmux_pad3 = PINMUX_PB22D_SERCOM5_PAD3;
+   
 
     if(usart_init(pinst, BSP_SERCOM, &config_usart) != STATUS_OK) {
         return -1;
