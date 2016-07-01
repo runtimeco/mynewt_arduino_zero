@@ -62,6 +62,12 @@ cputime_hw_init(uint32_t clock_freq)
     struct tc_config cfg;
     tc_get_config_defaults(&cfg);
 
+#if defined(HAL_CPUTIME_1MHZ)
+    if (clock_freq != 1000000) {
+        return -1;
+    }
+#endif
+
     if(clock_freq > 8000000) {
         return -1;
     }
