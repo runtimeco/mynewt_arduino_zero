@@ -32,7 +32,10 @@ enum system_device_id {
     /*
      * XXX fill in
      */
-    NONE = 0
+    NONE = 0,
+
+    WINC1500_SPI_PORT = 200
+
 };
 
 #ifdef __cplusplus

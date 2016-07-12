@@ -41,6 +41,20 @@ extern uint8_t _ram_start;
 #define BOOT_SERIAL_DETECT_PIN_VAL      0
 #endif
 
+/*
+ * Wiring of WINC1500 chip to SAMD21.
+ */
+#define WINC1500_PIN_RESET  /* PA27 */ 27
+#define WINC1500_PIN_WAKE   /* PB08 */ (8 + 32)
+#define WINC1500_PIN_IRQ    /* PB09 */ (9 + 32)
+#define WINC1500_PIN_ENABLE /* PA28 */ 28
+
+#define WINC1500_SPI_SPEED  4000000
+#define WINC1500_SPI_SSN    /* PA14 */ 14
+#define WINC1500_SPI_SCK    /* PA13 */ 13
+#define WINC1500_SPI_MOSI   /* PA12 */ 12
+#define WINC1500_SPI_MISO   /* PA15 */ 15
+
 /* This defines the maximum NFFS areas (block) are in the BSPs NFS file
  * system space.  This in conjunction with flash map determines how
  * many NFS blocks there will be.  A minimum is the number of individually

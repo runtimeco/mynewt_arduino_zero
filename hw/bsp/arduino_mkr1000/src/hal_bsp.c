@@ -83,10 +83,23 @@ bsp_get_hal_dac(enum system_device_id sysid)
     return NULL;
 }
 
+static const struct samd21_spi_config winc1500_spi_cfg = {
+    .dipo = 3,
+    .dopo = 0,
+    .pad0_pinmux = PINMUX_PA12C_SERCOM2_PAD0,   /* MISO */
+    .pad1_pinmux = PINMUX_PA13C_SERCOM2_PAD1,   /* SCK */
+    .pad3_pinmux = PINMUX_PA15C_SERCOM2_PAD3    /* MISO */
+};
+
 extern struct hal_spi *
 bsp_get_hal_spi(enum system_device_id sysid)
 {
-    return NULL;
+    switch (sysid) {
+    case WINC1500_SPI_PORT:
+        return samd21_spi_create(SAMD21_SPI_SERCOM2, &winc1500_spi_cfg);
+    default:
+        return NULL;
+    }
 }
 
 extern struct hal_i2c *
