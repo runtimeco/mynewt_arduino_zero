@@ -25,6 +25,8 @@
 #define WIFI_KEY_MAX            64
 #define WIFI_SSID_EMPTY(ssid)   (ssid)[0] == '\0'
 
+#define WINC1500_SOCK_RX_BLOCK  128
+
 struct wifi_ap {
     char wa_ssid[WIFI_SSID_MAX + 1];
     char wa_bssid[WIFI_BSSID_LEN + 1];
@@ -53,8 +55,13 @@ struct winc1500 {
 };
 
 extern struct winc1500 winc1500;
+extern struct os_mutex winc1500_mtx;
 extern struct shell_cmd wifi_cli_cmd;
 
 struct wifi_ap *wifi_find_ap(struct winc1500 *w, char *ssid);
+
+int winc1500_socket_init(void);
+void winc1500_socket_start(void);
+void winc1500_socket_poll(void);
 
 #endif

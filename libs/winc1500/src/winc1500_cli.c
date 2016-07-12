@@ -82,7 +82,7 @@ wifi_cli(int argc, char **argv)
         strcpy(w->w_ssid, argv[2]);
         if (winc1500_connect(w)) {
 conn_usage:
-            console_printf("%s %s [<ssid> [\"wep\"|\"wpa\" <key>]]\n",
+            console_printf("%s %s [<ssid> [<key>]]\n",
               argv[0], argv[1]);
         }
     }

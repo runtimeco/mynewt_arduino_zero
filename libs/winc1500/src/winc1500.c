@@ -35,6 +35,7 @@
 
 static struct os_task winc1500_os_task;
 static struct os_eventq winc1500_evq;
+struct os_mutex winc1500_mtx;
 struct winc1500 winc1500;
 
 static void
@@ -198,7 +199,10 @@ winc1500_events(void *arg)
 {
     struct winc1500 *w = (struct winc1500 *)arg;
 
+    os_mutex_pend(&winc1500_mtx, OS_TIMEOUT_NEVER);
     m2m_wifi_handle_events(NULL);
+    os_mutex_release(&winc1500_mtx);
+    winc1500_socket_poll();
     os_callout_reset(&w->w_cb.cf_c, WINC1500_POLL_ITVL);
 }
 
@@ -269,6 +273,7 @@ winc1500_step(struct winc1500 *w)
                 w->w_state = INIT;
                 os_callout_reset(&w->w_cb.cf_c, WINC1500_POLL_ITVL);
             }
+            winc1500_socket_start();
         } else if (w->w_state == SCANNING) {
             w->w_state = w->w_tgt;
         }
@@ -367,6 +372,9 @@ winc1500_task_init(uint8_t prio, os_stack_t *stack, uint16_t stack_size)
     assert(rc == 0);
 
     nm_bsp_reset();
+    os_mutex_init(&winc1500_mtx);
+
+    winc1500_socket_init();
 
     return os_task_init(&winc1500_os_task, "winc1500", winc1500_task, NULL,
       prio, OS_WAIT_FOREVER, stack, stack_size);
