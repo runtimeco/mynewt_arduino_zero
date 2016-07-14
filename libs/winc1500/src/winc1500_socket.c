@@ -32,6 +32,7 @@
 #include "winc1500/bsp/nm_bsp.h"
 #include "winc1500/socket/socket.h"
 #include "winc1500_priv.h"
+#include "driver/m2m_hif.h"
 
 static int winc1500_sock_create(struct mn_socket **sp, uint8_t domain,
   uint8_t type, uint8_t proto);
@@ -68,12 +69,15 @@ static struct winc1500_sock {
     STAILQ_HEAD(, os_mbuf_pkthdr) ws_rx; /* RX data queue */
 } winc1500_socks[MAX_SOCKET];
 
+#define WINC1500_SOCK_RX_SIZE       1500
+
 /*
  * State of socket RX polling. This is done periodically.
  */
 static struct winc1500_sock_state {
     uint8_t polling;                /* if polling is going on */
-    struct os_mbuf *rx_buf;         /* mbuf to receive data to */
+    struct os_mbuf *rx_buf;         /* chain of mbufs to receive data to */
+    struct os_mbuf *cur_buf;        /* currently receiving to this */
 } winc1500_socket_state;
 
 static const struct mn_socket_ops winc1500_sock_ops = {
@@ -392,6 +396,7 @@ static int winc1500_sock_recvfrom(struct mn_socket *sock, struct os_mbuf **mp,
     }
     os_mutex_release(&winc1500_mtx);
     if (m) {
+        console_printf("sock_recvfrom %d\n", ws->ws_idx);
         *mp = OS_MBUF_PKTHDR_TO_MBUF(m);
         if (addr) {
             if (ws->ws_type == SOCK_DGRAM) {
@@ -430,33 +435,81 @@ winc1500_sock_getpeername(struct mn_socket *sock, struct mn_sockaddr *addr)
  * queue.
  */
 static int
-winc1500_sock_start_rx(struct winc1500_sock_state *wss, int idx)
+winc1500_sock_start_rx(struct winc1500_sock_state *wss, int idx, int cont)
 {
     struct winc1500_sock *ws;
+    struct os_mbuf *m;
+    struct os_mbuf *n;
+    int need;
     int rc;
 
+    wss->polling = 0;
     if (!wss->rx_buf) {
-        wss->rx_buf = os_msys_get_pkthdr(WINC1500_SOCK_RX_BLOCK,
+        /*
+         * Allocate a chain of mbufs, with total available space
+         * more than WINC1500_SOCK_RX_SIZE bytes.
+         */
+        m = os_msys_get_pkthdr(WINC1500_SOCK_RX_SIZE,
           sizeof(struct mn_sockaddr_in));
-        if (!wss->rx_buf) {
-            return -1;
+        if (!m) {
+            goto flow_ctl;
+        }
+        wss->rx_buf = m;
+        need = WINC1500_SOCK_RX_SIZE - OS_MBUF_TRAILINGSPACE(m);
+
+        while (need > 0) {
+            n = os_msys_get(need, 0);
+            if (n) {
+                SLIST_NEXT(m, om_next) = n;
+                m = n;
+                need -= OS_MBUF_TRAILINGSPACE(n);
+            } else {
+                os_mbuf_free_chain(wss->rx_buf);
+                wss->rx_buf = NULL;
+                goto flow_ctl;
+            }
         }
     }
+
+    /*
+     * We have mbufs to receive a packet to.
+     */
+    hif_flow_ctrl(0);
+
     for ( ; idx < MAX_SOCKET; idx++) {
         ws = &winc1500_socks[idx];
         if (!ws->ws_poll) {
             continue;
         }
-        rc = recvfrom(idx, wss->rx_buf->om_data, WINC1500_SOCK_RX_BLOCK, 1);
+
+        if (!cont) {
+            /*
+             * Poll socket for data. Tell it to write the data to first mbuf
+             * in the chain.
+             */
+            m = wss->rx_buf;
+            console_printf(" recvfrom for %d %x\n", ws->ws_idx, (int)m);
+        } else {
+            m = SLIST_NEXT(wss->cur_buf, om_next);
+            console_printf(" recvfrom cont for %d %x\n", ws->ws_idx, (int)m);
+        }
+        rc = recvfrom(idx, m->om_data, OS_MBUF_TRAILINGSPACE(m), 1);
         if (rc == 0) {
+            wss->cur_buf = m;
             wss->polling = 1;
             return 0;
         } else {
             return -1;
         }
     }
-    wss->polling = 0;
     return 0;
+flow_ctl:
+
+    /*
+     * We don't have mbuf to receive data to.
+     */
+    hif_flow_ctrl(1);
+    return -1;
 }
 
 /*
@@ -477,6 +530,7 @@ winc1500_sock_cb(SOCKET idx, uint8_t msg, void *data)
     struct winc1500_sock *new_ws;
     struct os_mbuf *m;
     int len;
+    int cont;
 
     if (msg != SOCKET_MSG_RECV && msg != SOCKET_MSG_RECVFROM) {
         console_printf("sock cb %d msg %d data %x\n", idx, msg, (int)data);
@@ -524,24 +578,35 @@ winc1500_sock_cb(SOCKET idx, uint8_t msg, void *data)
     case SOCKET_MSG_RECVFROM:
         recv_msg = (tstrSocketRecvMsg *)data;
         len = recv_msg->s16BufferSize;
+        cont = 0;
         if (len == SOCK_ERR_TIMEOUT) {
             idx = idx + 1;
         } else {
-            console_printf(" %s %d %d\n",
+            console_printf(" %s %d %d %x %x\n",
               msg == SOCKET_MSG_RECV ? "recv" : "recvfrom",
-              recv_msg->s16BufferSize, recv_msg->u16RemainingSize);
+              recv_msg->s16BufferSize, recv_msg->u16RemainingSize,
+              (int)recv_msg->pu8Buffer,
+              (int)wss->rx_buf);
             if (len > 0) {
-                m = wss->rx_buf;
-                wss->rx_buf = NULL;
-                OS_MBUF_PKTHDR(m)->omp_len = len;
+                assert(wss->cur_buf);
+                m = wss->cur_buf;
+                OS_MBUF_PKTLEN(wss->rx_buf) += len;
                 m->om_len = len;
-                if (ws->ws_type == SOCK_DGRAM) {
+                if (ws->ws_type == SOCK_DGRAM && m == wss->rx_buf) {
                     winc1500_addr_to_mn_addr(&recv_msg->strRemoteAddr,
                       OS_MBUF_USRHDR(m));
                 }
-                STAILQ_INSERT_TAIL(&ws->ws_rx, OS_MBUF_PKTHDR(m), omp_next);
-                if (recv_msg->u16RemainingSize == 0) {
-                    idx = idx + 1;
+                if (recv_msg->u16RemainingSize) {
+                    cont = 1;
+                } else {
+                    if (SLIST_NEXT(m, om_next)) {
+                        os_mbuf_free_chain(SLIST_NEXT(m, om_next));
+                        SLIST_NEXT(m, om_next) = NULL;
+                    }
+                    m = wss->rx_buf;
+                    wss->rx_buf = NULL;
+                    STAILQ_INSERT_TAIL(&ws->ws_rx, OS_MBUF_PKTHDR(m), omp_next);
+                    mn_socket_readable(&ws->ws_sock, 0);
                 }
             } else {
                 idx = idx + 1;
@@ -550,9 +615,8 @@ winc1500_sock_cb(SOCKET idx, uint8_t msg, void *data)
                 winc1500_sock_wake(ws, len);
                 mn_socket_readable(&ws->ws_sock, winc1500_err_to_mn_err(len));
             }
-            mn_socket_readable(&ws->ws_sock, 0);
         }
-        winc1500_sock_start_rx(wss, idx);
+        winc1500_sock_start_rx(wss, idx, cont);
         break;
     case SOCKET_MSG_SEND:
         console_printf(" send\n");
@@ -586,7 +650,7 @@ winc1500_socket_poll(void)
     if (wss->polling) {
         return;
     }
-    winc1500_sock_start_rx(wss, 0);
+    winc1500_sock_start_rx(wss, 0, 0);
 }
 
 int
