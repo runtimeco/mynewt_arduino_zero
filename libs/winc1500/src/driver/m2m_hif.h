@@ -235,6 +235,10 @@ NMI_API sint8 hif_Resp_handler(uint8 *pu8Buffer, uint16 u16BufferSize);
 */
 NMI_API sint8 hif_handle_isr(void);
 
+/*
+ * Set to stop from pulling events from WINC1500.
+ */
+void hif_flow_ctrl(uint8 stop);
 #ifdef __cplusplus
 }
 #endif

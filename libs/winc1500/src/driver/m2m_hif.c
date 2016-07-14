@@ -73,6 +73,7 @@ static volatile uint8 gu8ChipMode = 0;
 static volatile uint8 gu8ChipSleep = 0;
 static volatile uint8 gu8HifSizeDone = 0;
 static volatile uint8 gu8Interrupt = 0;
+static volatile uint8 gu8FlowCtrl = 0;
 
 tpfHifCallBack pfWifiCb = NULL;		/*!< pointer to Wi-Fi call back function */
 tpfHifCallBack pfIpCb  = NULL;		/*!< pointer to Socket call back function */
@@ -564,7 +565,7 @@ sint8 hif_handle_isr(void)
 {
 	sint8 ret = M2M_SUCCESS;
 
-	while (gu8Interrupt) {
+	while (gu8Interrupt && !gu8FlowCtrl) {
 		/*must be at that place because of the race of interrupt increment and that decrement*/
 		/*when the interrupt enabled*/
 		gu8Interrupt--;
@@ -699,6 +700,11 @@ sint8 hif_register_cb(uint8 u8Grp,tpfHifCallBack fn)
 			break;
 	}
 	return ret;
+}
+
+void hif_flow_ctrl(uint8 stop)
+{
+	gu8FlowCtrl = stop;
 }
 
 #endif
