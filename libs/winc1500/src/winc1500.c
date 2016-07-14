@@ -276,6 +276,8 @@ winc1500_step(struct winc1500 *w)
             winc1500_socket_start();
         } else if (w->w_state == SCANNING) {
             w->w_state = w->w_tgt;
+        } else if (w->w_state == CONNECTING) {
+            w->w_state = w->w_tgt;
         }
         break;
     case SCANNING:
