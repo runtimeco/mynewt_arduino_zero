@@ -34,6 +34,12 @@
 #include "winc1500_priv.h"
 #include "driver/m2m_hif.h"
 
+#ifdef SOCK_DEBUG
+#define DEBUG_PRINTF console_printf
+#else
+#define DEBUG_PRINTF(...)
+#endif
+
 static int winc1500_sock_create(struct mn_socket **sp, uint8_t domain,
   uint8_t type, uint8_t proto);
 static int winc1500_sock_close(struct mn_socket *);
@@ -67,6 +73,7 @@ static struct winc1500_sock {
     uint8_t ws_err;                 /* err return for sync calls */
     uint8_t ws_type;                /* SOCK_DGRAM/SOCK_STREAM */
     STAILQ_HEAD(, os_mbuf_pkthdr) ws_rx; /* RX data queue */
+    struct os_mbuf *ws_tx;          /* SOCK_STREAM, data being TX'd */
 } winc1500_socks[MAX_SOCKET];
 
 #define WINC1500_SOCK_RX_SIZE       1500
@@ -244,9 +251,18 @@ winc1500_sock_close(struct mn_socket *sock)
     ws->ws_type = 0;
     ws->ws_poll = 0;
     ws->ws_closed = 0;
+
+    /*
+     * When socket is closed, we must free all mbufs which might be
+     * queued in it.
+     */
     while ((m = STAILQ_FIRST(&ws->ws_rx))) {
         STAILQ_REMOVE_HEAD(&ws->ws_rx, omp_next);
         os_mbuf_free_chain(OS_MBUF_PKTHDR_TO_MBUF(m));
+    }
+    if (ws->ws_tx) {
+        os_mbuf_free_chain(ws->ws_tx);
+        ws->ws_tx = NULL;
     }
     os_mutex_release(&winc1500_mtx);
     return 0;
@@ -317,6 +333,49 @@ winc1500_sock_listen(struct mn_socket *sock, uint8_t qlen)
     return rc;
 }
 
+/*
+ * TX routine for stream sockets (TCP). The data to send is pointed
+ * by ws_tx.
+ * Keep sending mbufs until WINC1500 says that it can't take anymore.
+ * then wait for send event notification before continuing.
+ */
+static int
+winc1500_stream_tx(struct winc1500_sock *ws, int notify)
+{
+    struct os_mbuf *m;
+    struct os_mbuf *n;
+    int rc;
+
+    rc = 0;
+
+    os_mutex_pend(&winc1500_mtx, OS_TIMEOUT_NEVER);
+    while (ws->ws_tx && rc == 0) {
+        m = ws->ws_tx;
+        n = SLIST_NEXT(m, om_next);
+        rc = send(ws->ws_idx, m->om_data, m->om_len, 0);
+        if (rc == 0) {
+            ws->ws_tx = n;
+            os_mbuf_free(m);
+        }
+    }
+    os_mutex_release(&winc1500_mtx);
+    if (rc) {
+        if (rc == MN_ENOBUFS) {
+            rc = 0;
+        } else {
+            rc = winc1500_err_to_mn_err(rc);
+        }
+    }
+    if (notify) {
+        if (ws->ws_tx == NULL) {
+            mn_socket_writable(&ws->ws_sock, 0);
+        } else if (rc) {
+            mn_socket_writable(&ws->ws_sock, rc);
+        }
+    }
+    return rc;
+}
+
 static int
 winc1500_sock_sendto(struct mn_socket *sock, struct os_mbuf *m,
   struct mn_sockaddr *dst)
@@ -330,18 +389,15 @@ winc1500_sock_sendto(struct mn_socket *sock, struct os_mbuf *m,
 
     if (ws->ws_type == SOCK_STREAM) {
         rc = 0;
-        /*
-         * Walk through the mbuf chain, sending all the data.
-         */
-        for (n = m; n != NULL; n = SLIST_NEXT(n, om_next)) {
-            os_mutex_pend(&winc1500_mtx, OS_TIMEOUT_NEVER);
-            rc = send(ws->ws_idx, n->om_data, n->om_len, 0);
-            os_mutex_release(&winc1500_mtx);
-            if (rc) {
-                rc = winc1500_err_to_mn_err(rc);
-                goto err;
-            }
+        if (ws->ws_tx) {
+            return MN_EAGAIN;
         }
+        ws->ws_tx = m;
+
+        /*
+         * Send this data.
+         */
+        rc = winc1500_stream_tx(ws, 0);
     } else {
         /*
          * XXXX every write presumably sends a single datagram.
@@ -353,8 +409,20 @@ winc1500_sock_sendto(struct mn_socket *sock, struct os_mbuf *m,
         if (rc) {
             goto err;
         }
-        n = os_msys_get(OS_MBUF_PKTHDR(m)->omp_len, 0);
+        off = 0;
+        for (o = m; o; o = SLIST_NEXT(o, om_next)) {
+            off += o->om_len;
+        }
+        n = os_msys_get(off, 0);
         if (!n) {
+            rc = MN_ENOBUFS;
+            goto err;
+        }
+
+        /*
+         * os_msys_get() might not give big enough buffer to fit the data.
+         */
+        if (OS_MBUF_TRAILINGSPACE(n) < off) {
             rc = MN_ENOBUFS;
             goto err;
         }
@@ -372,7 +440,7 @@ winc1500_sock_sendto(struct mn_socket *sock, struct os_mbuf *m,
             goto err;
         }
     }
-    if (rc == 0) {
+    if (rc == 0 && ws->ws_type == SOCK_DGRAM) {
         os_mbuf_free_chain(m);
         return 0;
     } else {
@@ -396,7 +464,7 @@ static int winc1500_sock_recvfrom(struct mn_socket *sock, struct os_mbuf **mp,
     }
     os_mutex_release(&winc1500_mtx);
     if (m) {
-        console_printf("sock_recvfrom %d\n", ws->ws_idx);
+        DEBUG_PRINTF("sock_recvfrom %d\n", ws->ws_idx);
         *mp = OS_MBUF_PKTHDR_TO_MBUF(m);
         if (addr) {
             if (ws->ws_type == SOCK_DGRAM) {
@@ -488,10 +556,10 @@ winc1500_sock_start_rx(struct winc1500_sock_state *wss, int idx, int cont)
              * in the chain.
              */
             m = wss->rx_buf;
-            console_printf(" recvfrom for %d %x\n", ws->ws_idx, (int)m);
+            DEBUG_PRINTF(" recvfrom for %d %x\n", ws->ws_idx, (int)m);
         } else {
             m = SLIST_NEXT(wss->cur_buf, om_next);
-            console_printf(" recvfrom cont for %d %x\n", ws->ws_idx, (int)m);
+            DEBUG_PRINTF(" recvfrom cont for %d %x\n", ws->ws_idx, (int)m);
         }
         rc = recvfrom(idx, m->om_data, OS_MBUF_TRAILINGSPACE(m), 1);
         if (rc == 0) {
@@ -533,7 +601,7 @@ winc1500_sock_cb(SOCKET idx, uint8_t msg, void *data)
     int cont;
 
     if (msg != SOCKET_MSG_RECV && msg != SOCKET_MSG_RECVFROM) {
-        console_printf("sock cb %d msg %d data %x\n", idx, msg, (int)data);
+        DEBUG_PRINTF("sock cb %d msg %d data %x\n", idx, msg, (int)data);
     }
     assert(idx < MAX_SOCKET);
     ws = &winc1500_socks[idx];
@@ -560,9 +628,11 @@ winc1500_sock_cb(SOCKET idx, uint8_t msg, void *data)
         new_ws->ws_type = ws->ws_type;
         new_ws->ws_poll = 1;
 
+#ifdef SOCK_DEBUG
         uint8_t *ip = (uint8_t *)&new_ws->ws_tgt.msin_addr;
-        console_printf(" newconn %d %d.%d.%d.%d/%d\n", accept->sock,
+        DEBUG_PRINTF(" newconn %d %d.%d.%d.%d/%d\n", accept->sock,
           ip[0], ip[1], ip[2], ip[3], ntohs(accept->strAddr.sin_port));
+#endif
         if (mn_socket_newconn(&ws->ws_sock, &new_ws->ws_sock)) {
             /*
              * XXXX not accepting the connection. should close it
@@ -582,7 +652,7 @@ winc1500_sock_cb(SOCKET idx, uint8_t msg, void *data)
         if (len == SOCK_ERR_TIMEOUT) {
             idx = idx + 1;
         } else {
-            console_printf(" %s %d %d %x %x\n",
+            DEBUG_PRINTF(" %s %d %d %x %x\n",
               msg == SOCKET_MSG_RECV ? "recv" : "recvfrom",
               recv_msg->s16BufferSize, recv_msg->u16RemainingSize,
               (int)recv_msg->pu8Buffer,
@@ -619,10 +689,13 @@ winc1500_sock_cb(SOCKET idx, uint8_t msg, void *data)
         winc1500_sock_start_rx(wss, idx, cont);
         break;
     case SOCKET_MSG_SEND:
-        console_printf(" send\n");
+        DEBUG_PRINTF(" send %d\n", *(sint16 *)data);
+        if (ws->ws_type == SOCK_STREAM) {
+            winc1500_stream_tx(ws, 1);
+        }
         break;
     case SOCKET_MSG_SENDTO:
-        console_printf(" sendto\n");
+        DEBUG_PRINTF(" sendto\n");
         break;
     default:
         break;
