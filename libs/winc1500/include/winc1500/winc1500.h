@@ -19,12 +19,6 @@
 #ifndef __WINC1500_H__
 #define __WINC1500_H__
 
-int winc1500_task_init(uint8_t prio, os_stack_t *stack, uint16_t stack_size);
-
-struct winc1500;
-int winc1500_start(struct winc1500 *);
-int winc1500_connect(struct winc1500 *);
-int winc1500_stop(struct winc1500 *w);
-int winc1500_scan_start(struct winc1500 *w);
+int winc1500_init(void);
 
 #endif /* __WINC1500_H__ */

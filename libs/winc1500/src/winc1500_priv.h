@@ -19,46 +19,18 @@
 #ifndef __WINC1500_PRIV_H__
 #define __WINC1500_PRIV_H__
 
-#define WIFI_SSID_MAX           32
-#define WIFI_BSSID_LEN           6
-#define WIFI_SCAN_CNT_MAX       20
-#define WIFI_KEY_MAX            64
-#define WIFI_SSID_EMPTY(ssid)   (ssid)[0] == '\0'
-
 #define WINC1500_SOCK_RX_BLOCK  128
 
-struct wifi_ap {
-    char wa_ssid[WIFI_SSID_MAX + 1];
-    char wa_bssid[WIFI_BSSID_LEN + 1];
-    int8_t wa_rssi;
-    uint8_t wa_key_type;
-    uint8_t wa_channel;
-};
+#include <wifi_mgmt/wifi_mgmt.h>
 
 struct winc1500 {
-    enum  {
-        STOPPED = 0,
-        INIT,
-        CONNECTING,
-        DHCP_WAIT,
-        CONNECTED,
-        SCANNING
-    } w_state, w_tgt;
-    struct os_callout_func w_cb;
-    struct os_event w_event;
+    struct wifi_if w_if;
+    struct os_callout_func w_timer;
     uint8_t w_scan_cnt;
     uint8_t w_scan_idx;
-    struct wifi_ap w_scan[WIFI_SCAN_CNT_MAX];
-    char w_ssid[WIFI_SSID_MAX + 1];
-    char w_key[WIFI_KEY_MAX + 1];
-    uint8_t w_myip[4];
 };
 
 extern struct winc1500 winc1500;
-extern struct os_mutex winc1500_mtx;
-extern struct shell_cmd wifi_cli_cmd;
-
-struct wifi_ap *wifi_find_ap(struct winc1500 *w, char *ssid);
 
 int winc1500_socket_init(void);
 void winc1500_socket_start(void);

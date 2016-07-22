@@ -172,11 +172,11 @@ winc1500_sock_wait(struct winc1500_sock *s, uint32_t ticks)
     int rc;
 
     s->ws_waiting = 1;
-    os_mutex_release(&winc1500_mtx);
+    os_mutex_release(&winc1500.w_if.wi_mtx);
 
     rc = os_sem_pend(&s->ws_sem, ticks);
 
-    os_mutex_pend(&winc1500_mtx, OS_TIMEOUT_NEVER);
+    os_mutex_pend(&winc1500.w_if.wi_mtx, OS_TIMEOUT_NEVER);
     s->ws_waiting = 0;
     if (rc == OS_TIMEOUT) {
         return MN_ETIMEDOUT;
@@ -221,7 +221,7 @@ winc1500_sock_create(struct mn_socket **sp, uint8_t domain, uint8_t type,
     default:
         return MN_EPROTONOSUPPORT;
     }
-    os_mutex_pend(&winc1500_mtx, OS_TIMEOUT_NEVER);
+    os_mutex_pend(&winc1500.w_if.wi_mtx, OS_TIMEOUT_NEVER);
     idx = socket(AF_INET, type, 0);
     if (idx >= 0) {
         ws = &winc1500_socks[idx];
@@ -232,7 +232,7 @@ winc1500_sock_create(struct mn_socket **sp, uint8_t domain, uint8_t type,
         ws->ws_type = type;
         *sp = &ws->ws_sock;
     }
-    os_mutex_release(&winc1500_mtx);
+    os_mutex_release(&winc1500.w_if.wi_mtx);
     if (idx < 0 ) {
         return MN_ENOBUFS;
     } else {
@@ -246,7 +246,7 @@ winc1500_sock_close(struct mn_socket *sock)
     struct winc1500_sock *ws = (struct winc1500_sock *)sock;
     struct os_mbuf_pkthdr *m;
 
-    os_mutex_pend(&winc1500_mtx, OS_TIMEOUT_NEVER);
+    os_mutex_pend(&winc1500.w_if.wi_mtx, OS_TIMEOUT_NEVER);
     close(ws->ws_idx);
     ws->ws_type = 0;
     ws->ws_poll = 0;
@@ -264,7 +264,7 @@ winc1500_sock_close(struct mn_socket *sock)
         os_mbuf_free_chain(ws->ws_tx);
         ws->ws_tx = NULL;
     }
-    os_mutex_release(&winc1500_mtx);
+    os_mutex_release(&winc1500.w_if.wi_mtx);
     return 0;
 }
 
@@ -279,14 +279,14 @@ winc1500_sock_bind(struct mn_socket *sock, struct mn_sockaddr *addr)
     if (rc) {
         return rc;
     }
-    os_mutex_pend(&winc1500_mtx, OS_TIMEOUT_NEVER);
+    os_mutex_pend(&winc1500.w_if.wi_mtx, OS_TIMEOUT_NEVER);
     rc = bind(ws->ws_idx, (struct sockaddr *)&sin, sizeof(sin));
     if (rc == 0) {
         rc = winc1500_sock_wait(ws, OS_TICKS_PER_SEC);
     } else {
         rc = winc1500_err_to_mn_err(rc);
     }
-    os_mutex_release(&winc1500_mtx);
+    os_mutex_release(&winc1500.w_if.wi_mtx);
     return rc;
 }
 
@@ -302,7 +302,7 @@ winc1500_sock_connect(struct mn_socket *sock, struct mn_sockaddr *addr)
         return rc;
     }
     ws->ws_tgt = *(struct mn_sockaddr_in *)addr;
-    os_mutex_pend(&winc1500_mtx, OS_TIMEOUT_NEVER);
+    os_mutex_pend(&winc1500.w_if.wi_mtx, OS_TIMEOUT_NEVER);
     if (ws->ws_type == SOCK_STREAM) {
         rc = connect(ws->ws_idx, (struct sockaddr *)&sin, sizeof(sin));
     } else {
@@ -312,7 +312,7 @@ winc1500_sock_connect(struct mn_socket *sock, struct mn_sockaddr *addr)
         rc = SOCK_ERR_INVALID;
     }
     ws->ws_poll = 1;
-    os_mutex_release(&winc1500_mtx);
+    os_mutex_release(&winc1500.w_if.wi_mtx);
     return winc1500_err_to_mn_err(rc);
 }
 
@@ -322,14 +322,14 @@ winc1500_sock_listen(struct mn_socket *sock, uint8_t qlen)
     struct winc1500_sock *ws = (struct winc1500_sock *)sock;
     int rc;
 
-    os_mutex_pend(&winc1500_mtx, OS_TIMEOUT_NEVER);
+    os_mutex_pend(&winc1500.w_if.wi_mtx, OS_TIMEOUT_NEVER);
     rc = listen(ws->ws_idx, qlen);
     if (rc == 0) {
         rc = winc1500_sock_wait(ws, OS_TICKS_PER_SEC);
     } else {
         rc = winc1500_err_to_mn_err(rc);
     }
-    os_mutex_release(&winc1500_mtx);
+    os_mutex_release(&winc1500.w_if.wi_mtx);
     return rc;
 }
 
@@ -348,7 +348,7 @@ winc1500_stream_tx(struct winc1500_sock *ws, int notify)
 
     rc = 0;
 
-    os_mutex_pend(&winc1500_mtx, OS_TIMEOUT_NEVER);
+    os_mutex_pend(&winc1500.w_if.wi_mtx, OS_TIMEOUT_NEVER);
     while (ws->ws_tx && rc == 0) {
         m = ws->ws_tx;
         n = SLIST_NEXT(m, om_next);
@@ -358,7 +358,7 @@ winc1500_stream_tx(struct winc1500_sock *ws, int notify)
             os_mbuf_free(m);
         }
     }
-    os_mutex_release(&winc1500_mtx);
+    os_mutex_release(&winc1500.w_if.wi_mtx);
     if (rc) {
         if (rc == MN_ENOBUFS) {
             rc = 0;
@@ -431,10 +431,10 @@ winc1500_sock_sendto(struct mn_socket *sock, struct os_mbuf *m,
             os_mbuf_copyinto(n, off, o->om_data, o->om_len);
             off += o->om_len;
         }
-        os_mutex_pend(&winc1500_mtx, OS_TIMEOUT_NEVER);
+        os_mutex_pend(&winc1500.w_if.wi_mtx, OS_TIMEOUT_NEVER);
         rc = sendto(ws->ws_idx, n->om_data, n->om_len, 0,
           (struct sockaddr *)&sin, sizeof(sin));
-        os_mutex_release(&winc1500_mtx);
+        os_mutex_release(&winc1500.w_if.wi_mtx);
         if (rc) {
             rc = winc1500_err_to_mn_err(rc);
             goto err;
@@ -456,13 +456,13 @@ static int winc1500_sock_recvfrom(struct mn_socket *sock, struct os_mbuf **mp,
     struct os_mbuf_pkthdr *m;
     struct mn_sockaddr_in *msin = (struct mn_sockaddr_in *)addr;
 
-    os_mutex_pend(&winc1500_mtx, OS_TIMEOUT_NEVER);
+    os_mutex_pend(&winc1500.w_if.wi_mtx, OS_TIMEOUT_NEVER);
     m = STAILQ_FIRST(&ws->ws_rx);
     if (m) {
         STAILQ_REMOVE_HEAD(&ws->ws_rx, omp_next);
         STAILQ_NEXT(m, omp_next) = NULL;
     }
-    os_mutex_release(&winc1500_mtx);
+    os_mutex_release(&winc1500.w_if.wi_mtx);
     if (m) {
         DEBUG_PRINTF("sock_recvfrom %d\n", ws->ws_idx);
         *mp = OS_MBUF_PKTHDR_TO_MBUF(m);

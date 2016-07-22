@@ -26,148 +26,103 @@
 #include <shell/shell.h>
 #include <console/console.h>
 
+#include <wifi_mgmt/wifi_mgmt.h>
+#include <wifi_mgmt/wifi_mgmt_if.h>
+
 #include "winc1500/driver/m2m_wifi.h"
 
 #include "winc1500_priv.h"
 
-#define WINC1500_POLL_ITVL	100
-#define WINC1500_EV_STATE	OS_EVENT_T_PERUSER
+#define WINC1500_POLL_ITVL      100
 
-static struct os_task winc1500_os_task;
-static struct os_eventq winc1500_evq;
-struct os_mutex winc1500_mtx;
 struct winc1500 winc1500;
 
-static void
-winc1500_tgt_state(struct winc1500 *w, int state)
-{
-    w->w_tgt = state;
-    os_eventq_put(&winc1500_evq, &w->w_event);
-}
+static int winc1500_start(struct wifi_if *);
+static void winc1500_stop(struct wifi_if *);
+static int winc1500_scan_start(struct wifi_if *);
+static int winc1500_connect(struct wifi_if *, struct wifi_ap *);
+static void winc1500_disconnect(struct wifi_if *);
 
-static void
-winc1500_scan_done(struct winc1500 *w, int status)
-{
-    struct wifi_ap *ap = NULL;
-
-    console_printf("scan_results: %d\n", status);
-    if (status) {
-        winc1500_tgt_state(w, STOPPED);
-        return;
-    }
-
-    /*
-     * XXX decide what to do with scan results here.
-     */
-    if (!WIFI_SSID_EMPTY(w->w_ssid)) {
-        ap = wifi_find_ap(w, w->w_ssid);
-    }
-    if (ap) {
-        winc1500_tgt_state(w, CONNECTING);
-    } else {
-        winc1500_tgt_state(w, INIT);
-    }
-}
-
-static void
-winc1500_connect_done(struct winc1500 *w, int status)
-{
-    console_printf("connect_done : %d\n", status);
-    if (status) {
-        winc1500_tgt_state(w, INIT);
-        return;
-    }
-    winc1500_tgt_state(w, DHCP_WAIT);
-}
-
-static void
-winc1500_dhcp_done(struct winc1500 *w, uint8_t *ip)
-{
-    console_printf("dhcp done %d.%d.%d.%d\n", ip[0], ip[1], ip[2], ip[3]);
-    winc1500_tgt_state(w, CONNECTED);
-}
-
-static void
-winc1500_disconnect_done(struct winc1500 *w, int status)
-{
-    console_printf("disconnect : %d\n", status);
-    winc1500_tgt_state(w, INIT);
-}
+static const struct wifi_if_ops winc1500_ops = {
+    .wio_init = winc1500_start,
+    .wio_deinit = winc1500_stop,
+    .wio_scan_start = winc1500_scan_start,
+    .wio_connect = winc1500_connect,
+    .wio_disconnect = winc1500_disconnect
+};
 
 /*
  * Called within winc1500 task context to report incoming events.
  */
 static void
-wifi_callback(uint8_t msg_type, void *msg_data)
+winc1500_callback(uint8_t msg_type, void *msg_data)
 {
     struct winc1500 *w;
+    struct wifi_if *wi;
     tstrM2mScanDone *scan_done;
     tstrM2mWifiscanResult *scan;
     tstrM2mWifiStateChanged *state;
     tstrSystemTime *time;
-    struct wifi_ap *wap;
+    struct wifi_ap ap;
     int rc;
 
     w = &winc1500;
+    wi = &w->w_if;
     switch (msg_type) {
     case M2M_WIFI_RESP_SCAN_DONE:
-        if (w->w_state != SCANNING) {
+        if (wi->wi_state != SCANNING) {
             break;
         }
         scan_done = (tstrM2mScanDone *)msg_data;
-        console_printf("scan_done: %d\n", scan_done->u8NumofCh);
         w->w_scan_cnt = scan_done->u8NumofCh;
-        if (w->w_scan_cnt > WIFI_SCAN_CNT_MAX) {
-            w->w_scan_cnt = WIFI_SCAN_CNT_MAX;
-        }
         if (w->w_scan_cnt > 0) {
             w->w_scan_idx = 0;
             rc = m2m_wifi_req_scan_result(0);
             if (rc) {
-                winc1500_scan_done(w, -1);
+                wifi_scan_done(wi, -1);
             }
         }
         break;
     case M2M_WIFI_RESP_SCAN_RESULT:
-        if (w->w_state != SCANNING) {
+        if (wi->wi_state != SCANNING) {
             break;
         }
         scan = (tstrM2mWifiscanResult *)msg_data;
-        wap = (struct wifi_ap *)&w->w_scan[w->w_scan_idx];
-        memcpy(wap->wa_ssid, scan->au8SSID, sizeof(wap->wa_ssid));
-        memcpy(wap->wa_bssid, scan->au8BSSID, sizeof(wap->wa_bssid));
-        wap->wa_rssi = scan->s8rssi;
-        wap->wa_key_type = scan->u8AuthType;
-        wap->wa_channel = scan->u8ch;
+        memcpy(ap.wa_ssid, scan->au8SSID, sizeof(ap.wa_ssid));
+        memcpy(ap.wa_bssid, scan->au8BSSID, sizeof(ap.wa_bssid));
+        ap.wa_rssi = scan->s8rssi;
+        ap.wa_key_type = scan->u8AuthType;
+        ap.wa_channel = scan->u8ch;
+        wifi_scan_result(wi, &ap);
         ++w->w_scan_idx;
         if (w->w_scan_idx < w->w_scan_cnt) {
             rc = m2m_wifi_req_scan_result(w->w_scan_idx);
             if (rc) {
-                winc1500_scan_done(w, -1);
+                wifi_scan_done(wi, -1);
             }
         } else {
-            winc1500_scan_done(w, 0);
+            wifi_scan_done(wi, 0);
         }
         break;
     case M2M_WIFI_RESP_CON_STATE_CHANGED:
         state = (tstrM2mWifiStateChanged *)msg_data;
         if (state->u8CurrState == M2M_WIFI_CONNECTED) {
             /* connected */
-            if (w->w_state != CONNECTING) {
+            if (wi->wi_state != CONNECTING) {
                 break;
             }
-            winc1500_connect_done(w, 0);
+            wifi_connect_done(wi, 0);
         } else if (state->u8CurrState == M2M_WIFI_DISCONNECTED) {
             /* disconnected */
-            if (w->w_state == CONNECTING) {
-                winc1500_connect_done(w, state->u8ErrCode);
+            if (wi->wi_state == CONNECTING) {
+                wifi_connect_done(wi, state->u8ErrCode);
             } else {
-                winc1500_disconnect_done(w, state->u8ErrCode);
+                wifi_disconnected(wi, state->u8ErrCode);
             }
         }
         break;
     case M2M_WIFI_REQ_DHCP_CONF:
-        winc1500_dhcp_done(w, msg_data);
+        wifi_dhcp_done(&w->w_if, msg_data);
         break;
     case M2M_WIFI_RESP_GET_SYS_TIME:
         time = (tstrSystemTime *)msg_data;
@@ -181,190 +136,77 @@ wifi_callback(uint8_t msg_type, void *msg_data)
     }
 }
 
-struct wifi_ap *
-wifi_find_ap(struct winc1500 *w, char *ssid)
-{
-    int i;
-
-    for (i = 0; i < w->w_scan_cnt; i++) {
-        if (!strcmp(w->w_scan[i].wa_ssid, ssid)) {
-            return &w->w_scan[i];
-        }
-    }
-    return NULL;
-}
-
 static void
 winc1500_events(void *arg)
 {
     struct winc1500 *w = (struct winc1500 *)arg;
 
-    os_mutex_pend(&winc1500_mtx, OS_TIMEOUT_NEVER);
+    os_mutex_pend(&w->w_if.wi_mtx, OS_TIMEOUT_NEVER);
     m2m_wifi_handle_events(NULL);
-    os_mutex_release(&winc1500_mtx);
+    os_mutex_release(&w->w_if.wi_mtx);
     winc1500_socket_poll();
-    os_callout_reset(&w->w_cb.cf_c, WINC1500_POLL_ITVL);
+    os_callout_reset(&w->w_timer.cf_c, WINC1500_POLL_ITVL);
 }
 
-int
-winc1500_start(struct winc1500 *w)
+static int
+winc1500_start(struct wifi_if *wi)
 {
-    if (w->w_state != STOPPED) {
-        return -1;
-    }
-    winc1500_tgt_state(w, INIT);
-    return 0;
-}
-
-int
-winc1500_stop(struct winc1500 *w)
-{
-    winc1500_tgt_state(w, STOPPED);
-    return 0;
-}
-
-int
-winc1500_connect(struct winc1500 *w)
-{
-    switch (w->w_state) {
-    case STOPPED:
-        return -1;
-    case INIT:
-        if (WIFI_SSID_EMPTY(w->w_ssid)) {
-            return -1;
-        }
-        winc1500_tgt_state(w, CONNECTING);
-        return 0;
-    default:
-        return -1;
-    }
-}
-
-int
-winc1500_scan_start(struct winc1500 *w)
-{
-    if (w->w_state == INIT) {
-        winc1500_tgt_state(w, SCANNING);
-        return 0;
-    }
-    return -1;
-}
-
-static void
-winc1500_step(struct winc1500 *w)
-{
+    struct winc1500 *w = (struct winc1500 *)wi;
     tstrWifiInitParam init_param;
     int rc;
-    struct wifi_ap *ap;
 
-    switch (w->w_tgt) {
-    case STOPPED:
-        if (w->w_state != STOPPED) {
-            m2m_wifi_deinit(NULL);
-            w->w_state = STOPPED;
-        }
-        break;
-    case INIT:
-        if (w->w_state == STOPPED) {
-            init_param.pfAppWifiCb = wifi_callback;
-            rc = m2m_wifi_init(&init_param);
-            console_printf("wifi_init : %d\n", rc);
-            if (!rc) {
-                w->w_state = INIT;
-                os_callout_reset(&w->w_cb.cf_c, WINC1500_POLL_ITVL);
-            }
-            winc1500_socket_start();
-        } else if (w->w_state == SCANNING) {
-            w->w_state = w->w_tgt;
-        } else if (w->w_state == CONNECTING) {
-            w->w_state = w->w_tgt;
-        }
-        break;
-    case SCANNING:
-        if (w->w_state == INIT) {
-            rc = m2m_wifi_set_scan_region(NORTH_AMERICA);
-            if (rc != 0) {
-                break;
-            }
-            rc = m2m_wifi_request_scan(M2M_WIFI_CH_ALL);
-            console_printf("wifi_request_scan : %d\n", rc);
-            if (rc != 0) {
-                break;
-            }
-            w->w_state = SCANNING;
-        } else {
-            w->w_tgt = w->w_state;
-        }
-        break;
-    case CONNECTING:
-        if (w->w_state == INIT || w->w_state == SCANNING) {
-            ap = wifi_find_ap(w, w->w_ssid);
-            if (!ap) {
-                winc1500_tgt_state(w, SCANNING);
-                break;
-            }
-            rc = m2m_wifi_connect(w->w_ssid, strlen(w->w_ssid),
-              ap->wa_key_type, w->w_key, M2M_WIFI_CH_ALL);
-            console_printf("wifi_connect : %d\n", rc);
-            if (rc == 0) {
-                w->w_state = CONNECTING;
-            } else {
-                w->w_tgt = STOPPED;
-            }
-        }
-        break;
-    case DHCP_WAIT:
-        w->w_state = w->w_tgt;
-        break;
-    case CONNECTED:
-        w->w_state = w->w_tgt;
-        break;
-    default:
-        console_printf("winc1500_step() unknown tgt : %d\n", w->w_tgt);
-        w->w_state = w->w_tgt;
-        break;
+    init_param.pfAppWifiCb = winc1500_callback;
+    rc = m2m_wifi_init(&init_param);
+    if (rc == 0) {
+        os_callout_reset(&w->w_timer.cf_c, WINC1500_POLL_ITVL);
     }
+    winc1500_socket_start();
+    return rc;
 }
 
 static void
-winc1500_task(void *arg)
+winc1500_stop(struct wifi_if *wi)
 {
-    struct os_event *ev;
-    struct os_callout_func *cf;
-    struct winc1500 *w;
+    m2m_wifi_deinit(NULL);
+}
 
-    while ((ev = os_eventq_get(&winc1500_evq))) {
-        switch (ev->ev_type) {
-        case OS_EVENT_T_TIMER:
-            cf = (struct os_callout_func *)ev;
-            cf->cf_func(CF_ARG(cf));
-            break;
-        case WINC1500_EV_STATE:
-            w = (struct winc1500 *)ev->ev_arg;
-            while (w->w_state != w->w_tgt) {
-                winc1500_step(w);
-            }
-            break;
-        default:
-            break;
-        }
+static int
+winc1500_scan_start(struct wifi_if *wi)
+{
+    int rc;
+
+    rc = m2m_wifi_set_scan_region(NORTH_AMERICA);
+    if (rc) {
+        return rc;
     }
+    return m2m_wifi_request_scan(M2M_WIFI_CH_ALL);
+}
+
+static int
+winc1500_connect(struct wifi_if *wi, struct wifi_ap *ap)
+{
+    return m2m_wifi_connect(wi->wi_ssid, strlen(wi->wi_ssid),
+              ap->wa_key_type, wi->wi_key, M2M_WIFI_CH_ALL);
+
+}
+
+static void
+winc1500_disconnect(struct wifi_if *wi)
+{
+    m2m_wifi_disconnect();
 }
 
 int
-winc1500_task_init(uint8_t prio, os_stack_t *stack, uint16_t stack_size)
+winc1500_init(void)
 {
     int rc;
     struct winc1500 *w = &winc1500;
 
-#ifdef SHELL_PRESENT
-    shell_cmd_register(&wifi_cli_cmd);
-#endif
-
-    os_eventq_init(&winc1500_evq);
-    os_callout_func_init(&w->w_cb, &winc1500_evq, winc1500_events, w);
-    w->w_event.ev_type = WINC1500_EV_STATE;
-    w->w_event.ev_arg = w;
+    rc = wifi_if_register(&w->w_if, &winc1500_ops);
+    if (rc) {
+        return -1;
+    }
+    os_callout_func_init(&w->w_timer, &wifi_evq, winc1500_events, w);
 
     rc = hal_gpio_init_out(WINC1500_PIN_RESET, 0); /* reset when 0 */
     assert(rc == 0);
@@ -374,10 +216,8 @@ winc1500_task_init(uint8_t prio, os_stack_t *stack, uint16_t stack_size)
     assert(rc == 0);
 
     nm_bsp_reset();
-    os_mutex_init(&winc1500_mtx);
 
     winc1500_socket_init();
 
-    return os_task_init(&winc1500_os_task, "winc1500", winc1500_task, NULL,
-      prio, OS_WAIT_FOREVER, stack, stack_size);
+    return 0;
 }
