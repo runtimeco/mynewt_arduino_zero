@@ -39,6 +39,7 @@
 #include <string.h>
 #include <json/json.h>
 
+#include <wifi_mgmt/wifi_mgmt.h>
 #include <winc1500/winc1500.h>
 #include <mn_socket/mn_socket.h>
 #include <os/endian.h>
@@ -54,9 +55,9 @@
 #define SHELL_TASK_STACK_SIZE   OS_STACK_ALIGN(384)
 static os_stack_t shell_stack[SHELL_TASK_STACK_SIZE];
 
-#define WINC1500_TASK_PRIO      4
-#define WINC1500_STACK_SZ       512
-static os_stack_t winc1500_stack[WINC1500_STACK_SZ];
+#define WIFI_TASK_PRIO          4
+#define WIFI_STACK_SZ           512
+static os_stack_t wifi_stack[WIFI_STACK_SZ];
 
 #define NET_SERVICE_PRIO        5
 #define NET_SERVICE_STACK_SIZE  1024
@@ -386,7 +387,8 @@ main(int argc, char **argv)
 
     console_printf("\nWifi MKR1000\n");
 
-    winc1500_task_init(WINC1500_TASK_PRIO, winc1500_stack, WINC1500_STACK_SZ);
+    wifi_task_init(WIFI_TASK_PRIO, wifi_stack, WIFI_STACK_SZ);
+    winc1500_init();
     shell_cmd_register(&net_test_cmd);
 
     os_start();
