@@ -110,26 +110,26 @@ samd21_flash_write(uint32_t address, const void *src, uint32_t len)
     struct nvm_parameters params;
     uint8_t page_buffer[64];
     const uint8_t *psrc = src;
-    
+
     /* make sure this fits into our stack buffer  */
-    nvm_get_parameters(&params);      
+    nvm_get_parameters(&params);
     assert(params.page_size <= sizeof(page_buffer));
-    
+
     /* get the page address (this is not a sector, there are 4 pages per
      * row */
-    while(len) {   
+    while(len) {
         int write_len;
-        
+
         base_address = address & ~(params.page_size - 1);
-        
+
         offset = address - base_address;
         write_len = params.page_size - offset;
-        
+
         if(write_len > len) {
             write_len = len;
         }
 
-        if(nvm_read_buffer(base_address, page_buffer, params.page_size) 
+        if(nvm_read_buffer(base_address, page_buffer, params.page_size)
                         != STATUS_OK) {
             return -1;
         }
@@ -137,21 +137,27 @@ samd21_flash_write(uint32_t address, const void *src, uint32_t len)
         /* move the pointers since this is a sure thing */
         len -= write_len;
         address += write_len;
-        
+
         /* copy it into the page buffer */
         while(write_len--) {
+            if (page_buffer[offset] != 0xff) {
+                /*
+                 * Cannot write to non-erased location.
+                 */
+                return -1;
+            }
             page_buffer[offset++] = *psrc++;
         }
-        
+
         /* 0x000054a4 */
 #if 1
         /* write back the page buffer buffer */
         if(nvm_write_buffer(base_address,page_buffer, params.page_size)
                         != STATUS_OK) {
             return -1;
-        }                
+        }
 #endif
-    }    
+    }
     return 0;
 }
 
