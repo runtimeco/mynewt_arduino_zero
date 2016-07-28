@@ -76,13 +76,11 @@ main(int argc, char **argv)
 #ifdef ARCH_sim
     mcu_sim_parse_args(argc, argv);
 #endif
-    
+
     os_init();
 
     shell_task_init(SHELL_TASK_PRIO, shell_stack, SHELL_TASK_STACK_SIZE,
                     SHELL_MAX_INPUT_LEN);
-
-    (void) console_init(shell_console_rx_cb);
 
     nmgr_task_init(NEWTMGR_TASK_PRIO, newtmgr_stack, NEWTMGR_TASK_STACK_SIZE);
 

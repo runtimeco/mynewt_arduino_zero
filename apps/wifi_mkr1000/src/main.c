@@ -381,11 +381,7 @@ main(int argc, char **argv)
     shell_task_init(SHELL_TASK_PRIO, shell_stack, SHELL_TASK_STACK_SIZE,
                     SHELL_MAX_INPUT_LEN);
 
-    (void) console_init(shell_console_rx_cb);
-
     conf_load();
-
-    console_printf("\nWifi MKR1000\n");
 
     wifi_task_init(WIFI_TASK_PRIO, wifi_stack, WIFI_STACK_SZ);
     winc1500_init();
