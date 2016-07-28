@@ -38,7 +38,8 @@ echo "Debugging" $FILE_NAME
 #
 # Block Ctrl-C from getting passed to JLinkGDBServer
 set -m
-JLinkGDBServer -speed 4000 -if SWD -port 3333 -singlerun > /dev/null &
+device ATSAMD21G18A
+JLinkGDBServer -device ATSAMD21G18A -speed 4000 -if SWD -port 3333 -singlerun > /dev/null &
 set +m
 
 echo "target remote localhost:3333" > $GDB_CMD_FILE
