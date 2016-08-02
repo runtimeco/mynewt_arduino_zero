@@ -235,10 +235,10 @@ const struct samd21_spi_config alt_spi_config = {
 };
 
 extern struct hal_spi*
-bsp_get_hal_spi(enum system_device_id sysid) 
+bsp_get_hal_spi(enum system_device_id sysid)
 {
     struct hal_spi *pspi = NULL;
-    
+
     switch (sysid) {
         case ARDUINO_ZERO_SPI_ICSP:
             pspi = samd21_spi_create(SAMD21_SPI_SERCOM4, &icsp_spi_config);

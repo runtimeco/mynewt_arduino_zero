@@ -6,7 +6,7 @@
  * to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
- * 
+ *
  *  http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing,
@@ -27,7 +27,7 @@ enum system_device_id
 {
     /* NOTE: Some HALs use a virtual enumeration of the devices, while
      * other still use the actual pins (GPIO). For arduino this means
-     * that the sysIDs for analog and digital pins are the actual pin 
+     * that the sysIDs for analog and digital pins are the actual pin
      * numbers */
 
      ARDUINO_ZERO_D0 =     (11),
@@ -53,7 +53,7 @@ enum system_device_id
      ARDUINO_ZERO_D4 =     (8),
 #endif
 
-    ARDUINO_ZERO_A0 =      (2),  
+    ARDUINO_ZERO_A0 =      (2),
     ARDUINO_ZERO_A1 =      (40),
     ARDUINO_ZERO_A2 =      (41),
     ARDUINO_ZERO_A3 =      (4),
