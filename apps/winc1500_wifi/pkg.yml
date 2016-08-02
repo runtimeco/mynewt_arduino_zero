@@ -17,12 +17,14 @@
 # under the License.
 #
 
-pkg.name: apps/wifi_mkr1000
+pkg.name: apps/winc1500_wifi
 pkg.type: app
-pkg.description: Example app which uses Wifi with Arduino MKR1000.
+pkg.description: Example app which uses WINC1500 with Arduino MKR1000 or Arduino Zero with Wifi Shield 101.
 pkg.author: "Apache Mynewt <dev@mynewt.incubator.apache.org>"
 pkg.homepage: "http://mynewt.apache.org/"
 pkg.keywords:
+    - wifi
+    - Wi-Fi
 
 pkg.deps:
     - "@apache-mynewt-core/sys/coredump"
