@@ -210,10 +210,14 @@ winc1500_init(void)
 
     rc = hal_gpio_init_out(WINC1500_PIN_RESET, 0); /* reset when 0 */
     assert(rc == 0);
+#ifdef WINC1500_PIN_ENABLE
     rc = hal_gpio_init_out(WINC1500_PIN_ENABLE, 0); /* disabled when 0 */
     assert(rc == 0);
+#endif
+#ifdef WINC1500_PIN_WAKE
     rc = hal_gpio_init_out(WINC1500_PIN_WAKE, 0);
     assert(rc == 0);
+#endif
 
     nm_bsp_reset();
 

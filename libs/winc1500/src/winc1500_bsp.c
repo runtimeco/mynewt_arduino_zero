@@ -74,11 +74,15 @@ nm_bsp_interrupt_ctrl(uint8 enable)
 void
 nm_bsp_reset(void)
 {
+#ifdef WINC1500_PIN_ENABLE
     hal_gpio_clear(WINC1500_PIN_ENABLE);
+#endif
     hal_gpio_clear(WINC1500_PIN_RESET);
     nm_bsp_sleep(100); /* 100ms */
+#ifdef WINC1500_PIN_ENABLE
     hal_gpio_set(WINC1500_PIN_ENABLE);
     nm_bsp_sleep(10); /* 10ms */
+#endif
     hal_gpio_set(WINC1500_PIN_RESET);
     nm_bsp_sleep(10); /* 10ms */
 }
