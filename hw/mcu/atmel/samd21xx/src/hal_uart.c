@@ -167,6 +167,8 @@ hal_uart_config(int port, int32_t baudrate, uint8_t databits, uint8_t stopbits,
     struct usart_module *pinst = &uarts[port].instance;
     struct usart_config config_usart;
     const struct samd21_uart_config *samd21_cfg;
+    SercomUsart *su;
+    int i;
 
     if (uarts[port].u_open) {
         return -1;
@@ -245,6 +247,17 @@ hal_uart_config(int port, int32_t baudrate, uint8_t databits, uint8_t stopbits,
     config_usart.pinmux_pad1       = samd21_cfg->suc_pad1;
     config_usart.pinmux_pad2       = samd21_cfg->suc_pad2;
     config_usart.pinmux_pad3       = samd21_cfg->suc_pad3;
+
+    /* Reset module */
+    su = &samd21_cfg->suc_sercom->USART;
+    su->CTRLA.reg &= ~SERCOM_USART_CTRLA_ENABLE;
+    su->CTRLA.reg |= SERCOM_USART_CTRLA_SWRST;
+
+    for (i = 0; i < 100; i++) {
+        if ((su->CTRLA.reg & SERCOM_USART_CTRLA_SWRST) == 0) {
+            break;
+        }
+    }
 
     if (usart_init(pinst, samd21_cfg->suc_sercom, &config_usart) != STATUS_OK) {
         return -1;
