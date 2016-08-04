@@ -274,15 +274,15 @@ bsp_get_hal_i2c_driver(enum system_device_id sysid)
 
 static const struct samd21_uart_config uart_cfgs[] = {
     [0] = {
-        .suc_sercom = SERCOM5,
+        .suc_sercom = SERCOM2,
         .suc_mux_setting = USART_RX_3_TX_2_XCK_3,
         .suc_generator_source = GCLK_GENERATOR_0,
         .suc_sample_rate = USART_SAMPLE_RATE_16X_ARITHMETIC,
         .suc_sample_adjustment = USART_SAMPLE_ADJUSTMENT_7_8_9,
         .suc_pad0 = 0,
         .suc_pad1 = 0,
-        .suc_pad2 = PINMUX_PB22D_SERCOM5_PAD2,
-        .suc_pad3 = PINMUX_PB23D_SERCOM5_PAD3
+        .suc_pad2 = PINMUX_PA10D_SERCOM2_PAD2,
+        .suc_pad3 = PINMUX_PA11D_SERCOM2_PAD3
     }
 };
 
