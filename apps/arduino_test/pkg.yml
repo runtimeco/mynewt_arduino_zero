@@ -36,4 +36,4 @@ pkg.deps:
     - "@apache-mynewt-core/sys/config"
     - "@apache-mynewt-core/sys/log"
     - "@apache-mynewt-core/sys/stats"
-    - "@mynewt_arduino_zero/libs/arduino_test"
+    - "libs/arduino_test"
