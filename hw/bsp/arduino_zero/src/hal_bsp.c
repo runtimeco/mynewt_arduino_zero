@@ -92,10 +92,12 @@ bsp_hal_init(void)
 {
     int rc;
 
-    /* Configure SPI port for arduino external SPI port.  Change to
-     * alt_spi_config to overwrite the debug interface SPI.
-     */
-    rc = hal_spi_init(0, &icsp_spi_config);
+    rc = hal_spi_init(ARDUINO_ZERO_SPI_ICSP, &icsp_spi_config);
+    if (rc != 0) {
+        goto err;
+    }
+
+    rc = hal_spi_init(ARDUINO_ZERO_SPI_ALT, &alt_spi_config);
     if (rc != 0) {
         goto err;
     }

@@ -52,23 +52,23 @@ enum system_device_id
      ARDUINO_ZERO_D2 =     (14),
      ARDUINO_ZERO_D4 =     (8),
 #endif
-
+#if 0
     ARDUINO_ZERO_A0 =      (2),
     ARDUINO_ZERO_A1 =      (40),
     ARDUINO_ZERO_A2 =      (41),
     ARDUINO_ZERO_A3 =      (4),
     ARDUINO_ZERO_A4 =      (5),
     ARDUINO_ZERO_A5 =      (34),
+#endif
 
-    /* This set does not map directly to a PIN value */
-    ARDUINO_ZERO_SPI_ICSP = 200,
+    /* Use SPI 2 */
+    ARDUINO_ZERO_SPI_ICSP = 2,
 
-    /* an alternate SPI based on SERCOM0 at A3,A4,D8,D9*/
-    ARDUINO_ZERO_SPI_ALT  = 201,
+    /* Use SPI 3 */
+    ARDUINO_ZERO_SPI_ALT  = 3,
 
     /* a I2c port on SCLK and SDA */
-    ARDUINO_ZERO_I2C      = 202,
-
+    ARDUINO_ZERO_I2C      = 4,
 };
 
 #ifdef __cplusplus
