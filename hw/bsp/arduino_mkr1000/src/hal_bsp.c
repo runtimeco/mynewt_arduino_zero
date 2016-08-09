@@ -22,13 +22,8 @@
 #include "bsp/bsp.h"
 #include <bsp/bsp_sysid.h>
 #include <hal/hal_bsp.h>
-#include <hal/hal_adc_int.h>
-#include <mcu/hal_adc.h>
-#include <hal/hal_pwm_int.h>
-#include <mcu/hal_pwm.h>
-#include <mcu/hal_dac.h>
+#include <hal/hal_spi.h>
 #include <mcu/hal_spi.h>
-#include <mcu/hal_i2c.h>
 
 /*
  * hw/mcu/atmel/samd21xx/src/sam0/drivers/sercom/usart/usart.h
@@ -65,25 +60,7 @@ bsp_core_dump(int *area_cnt)
     return dump_cfg;
 }
 
-struct hal_adc *
-bsp_get_hal_adc(enum system_device_id sysid)
-{
-    return NULL;
-}
-
-struct hal_pwm *
-bsp_get_hal_pwm_driver(enum system_device_id sysid)
-{
-    return NULL;
-}
-
-extern struct hal_dac *
-bsp_get_hal_dac(enum system_device_id sysid)
-{
-    return NULL;
-}
-
-static const struct samd21_spi_config winc1500_spi_cfg = {
+static struct samd21_spi_config winc1500_spi_cfg = {
     .dipo = 3,
     .dopo = 0,
     .pad0_pinmux = PINMUX_PA12C_SERCOM2_PAD0,   /* MISO */
@@ -91,21 +68,20 @@ static const struct samd21_spi_config winc1500_spi_cfg = {
     .pad3_pinmux = PINMUX_PA15C_SERCOM2_PAD3    /* MISO */
 };
 
-extern struct hal_spi *
-bsp_get_hal_spi(enum system_device_id sysid)
-{
-    switch (sysid) {
-    case WINC1500_SPI_PORT:
-        return samd21_spi_create(SAMD21_SPI_SERCOM2, &winc1500_spi_cfg);
-    default:
-        return NULL;
-    }
-}
 
-extern struct hal_i2c *
-bsp_get_hal_i2c_driver(enum system_device_id sysid)
+int
+bsp_hal_init(void)
 {
-    return NULL;
+    int rc;
+
+    rc = hal_spi_init(WINC1500_SPI_PORT, &winc1500_spi_cfg);
+    if (rc != 0) {
+        goto err;
+    }
+
+    return (0);
+err:
+    return (rc);
 }
 
 static const struct samd21_uart_config uart_cfgs[] = {
