@@ -28,6 +28,7 @@ pkg.downloadscript: "arduino_zero_download.sh"
 pkg.debugscript: "arduino_zero_debug.sh"
 pkg.deps:
     - hw/mcu/atmel/samd21xx
+    - "@apache-mynewt-core/hw/hal"
     - "@apache-mynewt-core/libs/baselibc"
 pkg.cflags:
     - -mthumb

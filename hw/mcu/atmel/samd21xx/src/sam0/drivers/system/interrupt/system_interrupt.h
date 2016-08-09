@@ -134,7 +134,7 @@ extern "C" {
  */
 
 #include <compiler.h>
-#include <cmsis-core/core_cm0plus.h>
+#include <core_cm0plus.h>
 #include "system_interrupt_features.h"
 
 /**
