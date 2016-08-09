@@ -8,3 +8,6 @@ tags
 .DS_Store
 *.swp
 *.swo
+targets
+repos
+project.state
