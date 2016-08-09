@@ -90,7 +90,7 @@ err:
 
 
 int
-samd21_spi_config(uint8_t spi_num, struct hal_spi_settings *psettings)
+hal_spi_config(uint8_t spi_num, struct hal_spi_settings *psettings)
 {
     struct samd21_spi_state *spi;
     struct spi_config cfg;
@@ -175,7 +175,7 @@ err:
 }
 
 int
-samd21_spi_transfer(uint8_t spi_num, uint16_t tx)
+hal_spi_master_transfer(uint8_t spi_num, uint16_t tx)
 {
     struct samd21_spi_state *spi;
     enum status_code status;
