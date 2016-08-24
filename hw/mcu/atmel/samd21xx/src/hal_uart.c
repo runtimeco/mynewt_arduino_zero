@@ -33,38 +33,39 @@ struct hal_uart {
     uint8_t u_open;
     uint8_t tx_on;
     int16_t rxdata;
-    uint8_t txdata[TX_BUFFER_SIZE];    
+    uint8_t txdata[TX_BUFFER_SIZE];
     hal_uart_rx_char u_rx_func;
     hal_uart_tx_char u_tx_func;
     hal_uart_tx_done u_tx_done;
     void *u_func_arg;
+    const struct samd21_uart_config *u_cfg;
 };
 static struct hal_uart uarts[UART_CNT];
 
 static int fill_tx_buf(struct hal_uart *u) {
     int i;
-    
+
     for(i = 0; i < TX_BUFFER_SIZE; i++) {
         int val;
         val = u->u_tx_func(u->u_func_arg);
         if(val < 0) {
-            break;            
+            break;
         }
         u->txdata[i] = val;
     }
     return i;
 }
 
-static void 
+static void
 usart_callback_txdone(struct usart_module *const module) {
     int sz;
-    
+
     struct hal_uart *u = (struct hal_uart*) module;
-    
+
     if(!u->u_open) {
         return;
     }
-    
+
     sz = fill_tx_buf(u);
 
     if(sz > 0) {
@@ -73,7 +74,7 @@ usart_callback_txdone(struct usart_module *const module) {
     } else {
         u->tx_on = 0;
         if(u->u_tx_done) {
-            u->u_tx_done(u->u_func_arg);    
+            u->u_tx_done(u->u_func_arg);
         }
     }
 }
@@ -81,15 +82,15 @@ usart_callback_txdone(struct usart_module *const module) {
 static void
 usart_callback_rx(struct usart_module *const module) {
     struct hal_uart *u = (struct hal_uart*) module;
-    
+
     if(!u->u_open) {
         return;
     }
-    
+
     if(u->u_rx_func) {
         u->u_rx_func(u->u_func_arg, (uint8_t) u->rxdata);
     }
-    usart_read_job(&u->instance, (uint16_t*) &u->rxdata);      
+    usart_read_job(&u->instance, (uint16_t*) &u->rxdata);
 }
 
 int
@@ -117,8 +118,8 @@ hal_uart_start_rx(int port)
     u = &uarts[port];
     if (port >= UART_CNT || !u->u_open) {
         return;
-    }    
-    usart_read_job(&u->instance, (uint16_t*) &u->rxdata);    
+    }
+    usart_read_job(&u->instance, (uint16_t*) &u->rxdata);
 }
 
 void
@@ -129,17 +130,17 @@ hal_uart_start_tx(int port)
     if (port >= UART_CNT || !u->u_open) {
         return;
     }
-    
+
     if(u->tx_on) {
         /* we are already transmitting */
         return;
     }
-     
+
     if(u->u_tx_func) {
         int sz;
-        sz = fill_tx_buf(u);        
+        sz = fill_tx_buf(u);
         if(sz > 0) {
-            u->tx_on=1;            
+            u->tx_on=1;
             usart_write_buffer_job(&u->instance, u->txdata, sz);
         }
     }
@@ -150,14 +151,14 @@ hal_uart_blocking_tx(int port, uint8_t data)
 {
     struct hal_uart *u;
     u = &uarts[port];
-    
+
     if(!u->u_open) {
         return;
     }
-    
-    usart_disable_callback(&u->instance, USART_CALLBACK_BUFFER_TRANSMITTED);    
+
+    usart_disable_callback(&u->instance, USART_CALLBACK_BUFFER_TRANSMITTED);
     usart_write_wait(&u->instance, data);
-    usart_enable_callback(&u->instance, USART_CALLBACK_BUFFER_TRANSMITTED);    
+    usart_enable_callback(&u->instance, USART_CALLBACK_BUFFER_TRANSMITTED);
 }
 
 int
@@ -174,7 +175,7 @@ hal_uart_config(int port, int32_t baudrate, uint8_t databits, uint8_t stopbits,
         return -1;
     }
 
-    samd21_cfg = bsp_uart_config(port);
+    samd21_cfg = uarts[port].u_cfg;
     if (!samd21_cfg) {
         return -1;
     }
@@ -276,6 +277,32 @@ hal_uart_config(int port, int32_t baudrate, uint8_t databits, uint8_t stopbits,
     uarts[port].u_open = 1;
 
     hal_uart_start_rx(port);
+
+    return 0;
+}
+
+int
+hal_uart_close(int port)
+{
+    struct usart_module *pinst = &uarts[port].instance;
+
+    usart_disable_callback(pinst, USART_CALLBACK_BUFFER_TRANSMITTED);
+    usart_disable_callback(pinst, USART_CALLBACK_BUFFER_RECEIVED);
+    usart_disable(pinst);
+
+    return 0;
+}
+
+int
+hal_uart_init(int port, void *arg)
+{
+    struct hal_uart *u;
+
+    if (port >= UART_CNT) {
+        return -1;
+    }
+    u = &uarts[port];
+    u->u_cfg = (const struct samd21_uart_config *)arg;
 
     return 0;
 }
