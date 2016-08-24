@@ -25,6 +25,6 @@ pkg.keywords:
 pkg.cflags:
 pkg.deps:
     - "@apache-mynewt-core/libs/os"
-    - "@apache-mynewt-core/hw/hal"
+    - "@apache-mynewt-core/drivers/uart"
 pkg.reqs:
     - console
