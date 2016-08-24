@@ -40,7 +40,9 @@ extern uint8_t _ram_start;
 #define ARDUINO_ZERO_PIN_UART_TX (ARDUINO_ZERO_D1)
 
 #define LED_BLINK_PIN   (ARDUINO_ZERO_D13)
-#define CONSOLE_UART    (0)
+
+#define CONSOLE_UART            "uart0"
+#define CONSOLE_UART_SPEED      115200
 
 /*
  * Wiring of Wifi Shield 101 chip to SAMD21.
