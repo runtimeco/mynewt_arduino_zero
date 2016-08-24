@@ -20,7 +20,7 @@
 #include <string.h>
 
 #include <os/os.h>
-#include <hal/hal_uart.h>
+#include <uart/uart.h>
 
 #include <console/console.h>
 
@@ -29,7 +29,7 @@
 #include "crc16.h"
 
 struct espduino {
-    uint8_t e_uart;
+    struct uart_dev *e_uart;
     uint8_t e_is_return;
     uint16_t e_cur_cmd;
     esp_req_cb e_cur_cb;
@@ -48,13 +48,26 @@ static int espduino_uart_tx(void *arg);
 static int espduino_uart_rx(void *arg, uint8_t byte);
 
 int
-espduino_init(int uart, uint32_t speed)
+espduino_init(char *uart, uint32_t speed)
 {
     struct espduino *e = &esp;
-    int rc;
+    struct uart_conf uc = {
+        .uc_speed = speed,
+        .uc_databits = 8,
+        .uc_stopbits = 1,
+        .uc_parity = UART_PARITY_NONE,
+        .uc_flow_ctl = UART_FLOW_CTL_NONE,
+        .uc_tx_char = espduino_uart_tx,
+        .uc_rx_char = espduino_uart_rx,
+        .uc_cb_arg = &esp
+    };
 
     memset(e, 0, sizeof(*e));
-    e->e_uart = uart;
+
+    e->e_uart = (struct uart_dev *)os_dev_open(uart, OS_WAIT_FOREVER, &uc);
+    if (!e->e_uart) {
+        return -1;
+    }
     e->e_proto.buf = e->e_protobuf;
     e->e_proto.bufSize = sizeof(e->e_protobuf);
     e->e_proto.dataLen = 0;
@@ -63,16 +76,6 @@ espduino_init(int uart, uint32_t speed)
     RINGBUF_Init(&e->e_rx, e->e_rx_buf, sizeof(e->e_rx_buf));
     RINGBUF_Init(&e->e_tx, e->e_tx_buf, sizeof(e->e_tx_buf));
 
-    rc = hal_uart_init_cbs(uart, espduino_uart_tx, NULL, espduino_uart_rx,
-      &esp);
-    if (rc) {
-        return -1;
-    }
-    rc = hal_uart_config(uart, speed, 8, 1, HAL_UART_PARITY_NONE,
-      HAL_UART_FLOW_CTL_NONE);
-    if (rc) {
-        return -1;
-    }
     return 0;
 }
 
@@ -113,7 +116,7 @@ esp_uart_write(struct espduino *e, uint8_t data)
         OS_ENTER_CRITICAL(sr);
     }
     OS_EXIT_CRITICAL(sr);
-    hal_uart_start_tx(e->e_uart);
+    uart_start_tx(e->e_uart);
 }
 
 static int

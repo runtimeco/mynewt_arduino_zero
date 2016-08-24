@@ -4,8 +4,8 @@
  * \author
  *       Tuan PM <tuanpm@live.com>
  */
-#ifndef _ARDUINO_WIFI_H_
-#define _ARDUINO_WIFI_H_
+#ifndef _LIBS_ESPDUINO_H_
+#define _LIBS_ESPDUINO_H_
 
 /*
  * Note that this library only works if the byte-order of ESP is the same
@@ -82,7 +82,7 @@ typedef struct PACKET_CMD PACKET_CMD;
 
 typedef void (*esp_req_cb)(struct PACKET_CMD *);
 
-int espduino_init(int uart, uint32_t speed);
+int espduino_init(char *port, uint32_t speed);
 bool esp_ready(void);
 void esp_reset(void);
 
@@ -109,4 +109,4 @@ bool esp_wait_return_timo(int32_t timeout, uint32_t *ret_value);
  */
 void esp_wait_for(uint16_t cmd, esp_req_cb callback);
 
-#endif
+#endif /* _LIBS_ESPDUINO_H_ */
