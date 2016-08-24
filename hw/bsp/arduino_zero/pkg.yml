@@ -30,6 +30,7 @@ pkg.deps:
     - hw/mcu/atmel/samd21xx
     - "@apache-mynewt-core/hw/hal"
     - "@apache-mynewt-core/libs/baselibc"
+    - "@apache-mynewt-core/drivers/uart/uart_hal"
 pkg.cflags:
     - -mthumb
     - -D__SAMD21G18A__
