@@ -31,6 +31,12 @@
 #include <usart.h>
 #include <mcu/hal_uart.h>
 
+#include <os/os_dev.h>
+#include <uart/uart.h>
+#include <uart_hal/uart_hal.h>
+
+static struct uart_dev hal_uart0;
+
 const struct hal_flash *
 bsp_flash_dev(uint8_t id)
 {
@@ -68,22 +74,6 @@ static struct samd21_spi_config winc1500_spi_cfg = {
     .pad3_pinmux = PINMUX_PA15C_SERCOM2_PAD3    /* MISO */
 };
 
-
-int
-bsp_hal_init(void)
-{
-    int rc;
-
-    rc = hal_spi_init(WINC1500_SPI_PORT, &winc1500_spi_cfg);
-    if (rc != 0) {
-        goto err;
-    }
-
-    return (0);
-err:
-    return (rc);
-}
-
 static const struct samd21_uart_config uart_cfgs[] = {
     [0] = {
         .suc_sercom = SERCOM5,
@@ -98,11 +88,23 @@ static const struct samd21_uart_config uart_cfgs[] = {
     }
 };
 
-const struct samd21_uart_config *
-bsp_uart_config(int port)
+int
+bsp_hal_init(void)
 {
-    if (port < sizeof(uart_cfgs) / sizeof(uart_cfgs[0])) {
-        return &uart_cfgs[port];
+    int rc;
+
+    rc = os_dev_create((struct os_dev *) &hal_uart0, CONSOLE_UART,
+      OS_DEV_INIT_PRIMARY, 0, uart_hal_init, (void *)&uart_cfgs[0]);
+    if (rc != 0) {
+        goto err;
     }
-    return NULL;
+
+    rc = hal_spi_init(WINC1500_SPI_PORT, &winc1500_spi_cfg);
+    if (rc != 0) {
+        goto err;
+    }
+
+    return (0);
+err:
+    return (rc);
 }

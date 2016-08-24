@@ -33,7 +33,8 @@ extern uint8_t _ram_start;
 #define RAM_SIZE        0x00008000
 
 #define LED_BLINK_PIN   (20)
-#define CONSOLE_UART    (0)
+#define CONSOLE_UART            "uart0"
+#define CONSOLE_UART_SPEED      115200
 
 #ifdef BOOT_SERIAL
 #define BOOT_SERIAL_DETECT_PIN 		43
