@@ -18,7 +18,6 @@
  * under the License.
  */
 
-#include <errno.h>
 #include <hal/hal_bsp.h>
 
 extern char _user_heap_start;
@@ -40,7 +39,6 @@ _sbrk(int incr)
             _brk += incr;
         } else {
             prev_brk = (void *)-1;
-            errno = ENOMEM;
         }
     }
 
