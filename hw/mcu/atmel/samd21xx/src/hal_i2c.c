@@ -31,14 +31,14 @@ struct samd21_i2c_state {
 
 #define HAL_SAMD21_I2C_MAX (6)
 
-struct samd21_i2c_state *samd21_hal_i2cs[HAL_SAMD21_I2C_MAX];
+struct samd21_i2c_state samd21_hal_i2cs[HAL_SAMD21_I2C_MAX];
 
 #define SAMD21_I2C_RESOLVE(__n, __v)    \
     if ((__n) >= HAL_SAMD21_I2C_MAX) {  \
         rc = EINVAL;                    \
         goto err;                       \
     }                                   \
-    (__v) = samd21_hal_i2cs[(__n)];
+    (__v) = &samd21_hal_i2cs[(__n)];
 
 
 int
@@ -79,6 +79,7 @@ hal_i2c_init(uint8_t i2c_num, void *usercfg)
             goto err;
     }
 
+    i2c_master_get_config_defaults(&cfg);
     cfg.pinmux_pad0 = i2c->pconfig->pad0_pinmux;
     cfg.pinmux_pad1 = i2c->pconfig->pad1_pinmux;
 
