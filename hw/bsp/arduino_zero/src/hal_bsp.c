@@ -18,6 +18,7 @@
  * under the License.
  */
 #include <stddef.h>
+#include <assert.h>
 #include "mcu/samd21.h"
 #include "bsp/bsp.h"
 #include <bsp/bsp_sysid.h>
@@ -31,7 +32,12 @@
  * hw/mcu/atmel/samd21xx/src/sam0/drivers/sercom/usart/usart.h
  */
 #include <usart.h>
+#include <os/os_dev.h>
+#include <uart/uart.h>
+#include <uart_hal/uart_hal.h>
 #include <mcu/hal_uart.h>
+
+static struct uart_dev hal_uart0;
 
 const struct hal_flash *
 bsp_flash_dev(uint8_t id)
@@ -87,10 +93,28 @@ struct samd21_i2c_config i2c_config = {
     .pad1_pinmux = PINMUX_PA23D_SERCOM5_PAD1,
 };
 
+static const struct samd21_uart_config uart_cfgs[] = {
+    [0] = {
+        .suc_sercom = SERCOM2,
+        .suc_mux_setting = USART_RX_3_TX_2_XCK_3,
+        .suc_generator_source = GCLK_GENERATOR_0,
+        .suc_sample_rate = USART_SAMPLE_RATE_16X_ARITHMETIC,
+        .suc_sample_adjustment = USART_SAMPLE_ADJUSTMENT_7_8_9,
+        .suc_pad0 = 0,
+        .suc_pad1 = 0,
+        .suc_pad2 = PINMUX_PA10D_SERCOM2_PAD2,
+        .suc_pad3 = PINMUX_PA11D_SERCOM2_PAD3
+    }
+};
+
 int
 bsp_hal_init(void)
 {
     int rc;
+
+    rc = os_dev_create((struct os_dev *) &hal_uart0, CONSOLE_UART,
+      OS_DEV_INIT_PRIMARY, 0, uart_hal_init, (void *)&uart_cfgs[0]);
+    assert(rc == 0);
 
     rc = hal_spi_init(ARDUINO_ZERO_SPI_ICSP, &icsp_spi_config);
     if (rc != 0) {
@@ -110,27 +134,4 @@ bsp_hal_init(void)
     return (0);
 err:
     return (rc);
-}
-
-static const struct samd21_uart_config uart_cfgs[] = {
-    [0] = {
-        .suc_sercom = SERCOM2,
-        .suc_mux_setting = USART_RX_3_TX_2_XCK_3,
-        .suc_generator_source = GCLK_GENERATOR_0,
-        .suc_sample_rate = USART_SAMPLE_RATE_16X_ARITHMETIC,
-        .suc_sample_adjustment = USART_SAMPLE_ADJUSTMENT_7_8_9,
-        .suc_pad0 = 0,
-        .suc_pad1 = 0,
-        .suc_pad2 = PINMUX_PA10D_SERCOM2_PAD2,
-        .suc_pad3 = PINMUX_PA11D_SERCOM2_PAD3
-    }
-};
-
-const struct samd21_uart_config *
-bsp_uart_config(int port)
-{
-    if (port < sizeof(uart_cfgs) / sizeof(uart_cfgs[0])) {
-        return &uart_cfgs[port];
-    }
-    return NULL;
 }
