@@ -63,10 +63,7 @@ static struct flash_area arduino_zero_flash_areas[] = {
         .fa_size = (1 * 1024)
     },
 };
-
-/* XXX should not be declared here */
-extern const struct samd21_uart_config *bsp_uart_config(int port);
-static struct uart_dev hal_uart0;
+extern int bsp_hal_init(void);
 
 int
 bsp_imgr_current_slot(void)
@@ -77,8 +74,6 @@ bsp_imgr_current_slot(void)
 void
 bsp_init(void)
 {
-    int rc;
-
     /*
      * XXX these references are here to keep the functions in for libc to find.
      */
@@ -87,7 +82,5 @@ bsp_init(void)
     flash_area_init(arduino_zero_flash_areas,
       sizeof(arduino_zero_flash_areas) / sizeof(arduino_zero_flash_areas[0]));
 
-    rc = os_dev_create((struct os_dev *) &hal_uart0, CONSOLE_UART,
-      OS_DEV_INIT_PRIMARY, 0, uart_hal_init, (void *)bsp_uart_config(0));
-    assert(rc == 0);
+    bsp_hal_init();
 }
