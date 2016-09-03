@@ -23,6 +23,10 @@
 #include <mcu/samd21.h>
 #include <errno.h>
 
+/*
+ * XXX Timeout value parameter in functions is not used, because Atmel's
+ * SDK for i2c internally times out much faster than one OS tick takes.
+ */
 struct samd21_i2c_state {
     struct i2c_master_module        module;
     const struct samd21_i2c_config *pconfig;
@@ -97,7 +101,8 @@ err:
 }
 
 int
-hal_i2c_master_write(uint8_t i2c_num, struct hal_i2c_master_data *ppkt)
+hal_i2c_master_write(uint8_t i2c_num, struct hal_i2c_master_data *ppkt,
+  uint32_t os_ticks)
 {
     struct samd21_i2c_state *i2c;
     struct i2c_master_packet pkt;
@@ -123,7 +128,8 @@ err:
 }
 
 int
-hal_i2c_master_read(uint8_t i2c_num, struct hal_i2c_master_data *ppkt)
+hal_i2c_master_read(uint8_t i2c_num, struct hal_i2c_master_data *ppkt,
+  uint32_t os_ticks)
 {
     struct samd21_i2c_state *i2c;
     struct i2c_master_packet pkt;
@@ -184,9 +190,8 @@ err:
     return (rc);
 }
 
-
 int
-hal_i2c_master_probe(uint8_t i2c_num, uint8_t address)
+hal_i2c_master_probe(uint8_t i2c_num, uint8_t address, uint32_t os_ticks)
 {
     struct samd21_i2c_state *i2c;
     struct i2c_master_packet pkt;
