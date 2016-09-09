@@ -61,13 +61,6 @@ fi
 
 echo "Downloading" $FILE_NAME "to" $FLASH_OFFSET
 
-# Extra parameters to pass to openocd
-if [ ! -z "$EXTRA_JTAG_CMD" ]; then
-    EXTRA_CMD="-c $EXTRA_JTAG_CMD"
-else
-    EXTRA_CMD=
-fi
-
-openocd -f $BSP_PATH/arduino_zero.cfg $EXTRA_CMD -c init -c "reset halt" $CMD "$UNPROTECT_FLASH" -c "reset halt" -c "flash write_image erase $FILE_NAME $FLASH_OFFSET" $CMD "$PROTECT_FLASH" -c "reset run" -c shutdown | xargs -n 1 echo 
+openocd -f $BSP_PATH/arduino_zero.cfg -c "$EXTRA_JTAG_CMD" -c init -c "reset halt" $CMD "$UNPROTECT_FLASH" -c "reset halt" -c "flash write_image erase $FILE_NAME $FLASH_OFFSET" $CMD "$PROTECT_FLASH" -c "reset run" -c shutdown
 
 
