@@ -27,6 +27,11 @@
 IS_BOOTLOADER=0
 GDB_CMD_FILE=.gdb_cmds
 
+if [ -z "$BIN_BASENAME" ]; then
+    echo "Need binary to download"
+    exit 1
+fi
+
 # Look for 'bootloader' in FEATURES
 for feature in $FEATURES; do
     if [ $feature == "bootloader" ]; then
