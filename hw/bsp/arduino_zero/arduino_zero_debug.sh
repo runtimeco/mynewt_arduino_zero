@@ -16,21 +16,26 @@
 # specific language governing permissions and limitations
 # under the License.
 #
-# Called: $0 <bsp_directory_path> <binary> [features...]
-#  - bsp_directory_path is absolute path to hw/bsp/bsp_name
-#  - binary is the path to prefix to target binary, .elf appended to name is
-#    the ELF file
-#  - identities is the project identities string.
-#
-#
 
-if [ $# -lt 2 ]; then
+# Called with following variables set:
+#  - BSP_PATH is absolute path to hw/bsp/bsp_name
+#  - BIN_BASENAME is the path to prefix to target binary,
+#    .elf appended to name is the ELF file
+#  - FEATURES holds the target features string
+#  - EXTRA_JTAG_CMD holds extra parameters to pass to jtag software
+#  - RESET set if target should be reset when attaching
+#
+if [ -z "$BIN_BASENAME" ]; then
     echo "Need binary to debug"
     exit 1
 fi
 
-MY_PATH=$1
-FILE_NAME=$2.elf
+if [ -z "$BSP_PATH" ]; then
+    echo "Need BSP path for openocd script location"
+    exit 1
+fi
+
+FILE_NAME=$BIN_BASENAME.elf
 GDB_CMD_FILE=.gdb_cmds
 
 echo "Debugging" $FILE_NAME
@@ -40,9 +45,17 @@ echo "Debugging" $FILE_NAME
 # Exit openocd when gdb detaches.
 #
 set -m
-openocd -f $MY_PATH/arduino_zero.cfg -c "gdb_port 3333;telnet_port 4444; init;reset halt" &
+openocd -f $BSP_PATH/arduino_zero.cfg -c "gdb_port 3333;telnet_port 4444" -c "$EXTRA_JTAG_CMD" -c init -c halt &
 set +m
-echo "target remote localhost:3333 " > $GDB_CMD_FILE
+echo "target remote localhost:3333" > $GDB_CMD_FILE
+
+# Whether target should be reset or not
+if [ ! -z "$RESET" ]; then
+    echo "mon reset halt" >> $GDB_CMD_FILE
+else
+    echo "mon halt" >> $GDB_CMD_FILE
+fi
+
 arm-none-eabi-gdb -x $GDB_CMD_FILE $FILE_NAME
 rm $GDB_CMD_FILE
 
