@@ -40,7 +40,7 @@ int winc1500_spi_inited;
 sint8
 nm_bus_init(void *pvinit)
 {
-    struct hal_spi_settings cfg;
+    struct hal_spi_settings cfg = { 0 };
 
     /*
      * Add code to configure spi.
@@ -49,15 +49,19 @@ nm_bus_init(void *pvinit)
         if (hal_gpio_init_out(WINC1500_SPI_SSN, 1)) {
             return M2M_ERR_BUS_FAIL;
         }
+        cfg.spi_type = HAL_SPI_TYPE_MASTER;
         cfg.data_mode = HAL_SPI_MODE0;
         cfg.data_order = HAL_SPI_MSB_FIRST;
         cfg.word_size = HAL_SPI_WORD_SIZE_8BIT;
         cfg.baudrate = WINC1500_SPI_SPEED;
 
-        if (hal_spi_config(WINC1500_SPI_PORT, &cfg)) {
+        if (hal_spi_config(BSP_WINC1500_SPI_PORT, &cfg)) {
             return M2M_ERR_BUS_FAIL;
         }
         winc1500_spi_inited = 1;
+        if (hal_spi_enable(BSP_WINC1500_SPI_PORT)) {
+            return M2M_ERR_BUS_FAIL;
+        }
     }
     nm_bsp_reset();
     nm_bsp_sleep(1);
@@ -88,7 +92,7 @@ nm_spi_rw(uint8 *pu8Mosi, uint8 *pu8Miso, uint16 u16Sz)
             tx = *pu8Mosi;
             pu8Mosi++;
         }
-        rx = hal_spi_master_transfer(WINC1500_SPI_PORT, tx);
+        rx = hal_spi_tx_val(BSP_WINC1500_SPI_PORT, tx);
         if (rx < 0) {
             rc = M2M_ERR_BUS_FAIL;
             break;

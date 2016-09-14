@@ -17,7 +17,12 @@
  * specific language governing permissions and limitations
  * under the License.
  */
+
 #include <stddef.h>
+#include "syscfg/syscfg.h"
+#include "sysinit/sysinit.h"
+#include "hal/hal_flash.h"
+#include "hal/hal_cputime.h"
 #include "mcu/samd21.h"
 #include "bsp/bsp.h"
 #include <bsp/bsp_sysid.h>
@@ -93,16 +98,21 @@ bsp_hal_init(void)
 {
     int rc;
 
+    rc = hal_flash_init();
+    SYSINIT_PANIC_ASSERT(rc == 0);
+
     rc = os_dev_create((struct os_dev *) &hal_uart0, CONSOLE_UART,
       OS_DEV_INIT_PRIMARY, 0, uart_hal_init, (void *)&uart_cfgs[0]);
     if (rc != 0) {
         goto err;
     }
 
-    rc = hal_spi_init(WINC1500_SPI_PORT, &winc1500_spi_cfg);
+#if MYNEWT_VAL(SPI_2)
+    rc = hal_spi_init(2, &winc1500_spi_cfg, MYNEWT_VAL(SPI_2_TYPE));
     if (rc != 0) {
         goto err;
     }
+#endif
 
     return (0);
 err:

@@ -49,8 +49,29 @@ pkg.cflags:
     - -I../../../../hw/mcu/atmel/samd21xx/src/sam0/utils/preprocessor
     - -I../../../../hw/mcu/atmel/samd21xx/src/common/utils
 
-# you will need to specify arduino_zero_pro or
-# arduino in your target features to get this to
-# build
-pkg.cflags.arduino_zero_pro: -DARDUINO_ZERO_PRO
-pkg.cflags.arduino_zero: -DARDUINO_ZERO
+pkg.syscfg_defs:
+    BSP_ARDUINO_ZERO:
+        description: 'TBD'
+        value: 1
+
+    BSP_ARDUINO_ZERO_PRO:
+        description: 'TBD'
+        value: 0
+
+    UART_0:
+        description: 'TBD'
+        value: 1
+
+    SPI_0:
+        description: 'TBD'
+        value:  1
+    SPI_0_TYPE:
+        description: 'TBD'
+        value: 'HAL_SPI_TYPE_MASTER'
+
+    SPI_1:
+        description: 'TBD'
+        value:  1
+    SPI_1_TYPE:
+        description: 'TBD'
+        value: 'HAL_SPI_TYPE_MASTER'

@@ -19,6 +19,8 @@
 #ifndef BSP_SYSID_H
 #define BSP_SYSID_H
 
+#include "syscfg/syscfg.h"
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -43,12 +45,12 @@ enum system_device_id
      ARDUINO_ZERO_D12 =    (19),
      ARDUINO_ZERO_D13 =    (17),
 
-#ifdef ARDUINO_ZERO_PRO
+#if MYNEWT_VAL(ARDUINO_ZERO_PRO)
      ARDUINO_ZERO_D2 =     (8),
      ARDUINO_ZERO_D4 =     (14),
 #endif
 
-#ifdef ARDUINO_ZERO
+#if MYNEWT_VAL(ARDUINO_ZERO)
      ARDUINO_ZERO_D2 =     (14),
      ARDUINO_ZERO_D4 =     (8),
 #endif

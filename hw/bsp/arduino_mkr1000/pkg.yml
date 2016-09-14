@@ -51,3 +51,25 @@ pkg.cflags:
     - -I../../../../hw/mcu/atmel/samd21xx/src/sam0/utils/preprocessor
     - -I../../../../hw/mcu/atmel/samd21xx/src/common/utils
 
+
+pkg.syscfg_defs:
+    SPI_0:
+        description: 'TBD'
+        value:  0
+    SPI_0_TYPE:
+        description: 'TBD'
+        value: 'HAL_SPI_TYPE_MASTER'
+
+    SPI_1:
+        description: 'TBD'
+        value:  0
+    SPI_1_TYPE:
+        description: 'TBD'
+        value: 'HAL_SPI_TYPE_MASTER'
+
+    SPI_2:
+        description: 'WINC1500 SPI'
+        value:  1
+    SPI_2_TYPE:
+        description: 'TBD'
+        value: 'HAL_SPI_TYPE_MASTER'

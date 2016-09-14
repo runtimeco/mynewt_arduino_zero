@@ -19,7 +19,9 @@
 #ifndef __ARDUINO_BSP_H
 #define __ARDUINO_BSP_H
 
-#if !defined(ARDUINO_ZERO_PRO) && !defined(ARDUINO_ZERO)
+#include "syscfg/syscfg.h"
+
+#if !MYNEWT_VAL(BSP_ARDUINO_ZERO_PRO) && !MYNEWT_VAL(BSP_ARDUINO_ZERO)
   #error you must defined arduino_zero_pro or arduino_zero in your target features
 #endif
 
