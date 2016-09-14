@@ -23,7 +23,7 @@ pkg.repository: https://github.com/runtimeinc/mynewt_arduino_zero
 pkg.arch: cortex_m0
 pkg.compiler: "@apache-mynewt-core/compiler/arm-none-eabi-m0"
 pkg.linkerscript: "mkr1000.ld"
-pkg.linkerscript.bootloader.OVERWRITE: "mkr1000_boot.ld"
+pkg.linkerscript.BOOT_LOADER.OVERWRITE: "mkr1000_boot.ld"
 pkg.downloadscript: "mkr1000_download.sh"
 pkg.debugscript: "mkr1000_debug.sh"
 pkg.deps:
