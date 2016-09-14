@@ -23,7 +23,7 @@ pkg.repository: https://github.com/runtimeinc/mynewt_arduino_zero
 pkg.arch: cortex_m0
 pkg.compiler: "@apache-mynewt-core/compiler/arm-none-eabi-m0"
 pkg.linkerscript: "arduino_zero.ld"
-pkg.linkerscript.bootloader.OVERWRITE: "arduino_zero_boot.ld"
+pkg.linkerscript.BOOT_LOADER.OVERWRITE: "arduino_zero_boot.ld"
 pkg.downloadscript: "arduino_zero_download.sh"
 pkg.debugscript: "arduino_zero_debug.sh"
 pkg.deps:
