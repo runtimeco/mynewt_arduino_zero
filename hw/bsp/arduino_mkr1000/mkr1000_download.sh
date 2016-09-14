@@ -16,45 +16,39 @@
 # specific language governing permissions and limitations
 # under the License.
 
-# Called: $0 <bsp_directory_path> <binary> [features...]
-#  - bsp_directory_path is absolute path to hw/bsp/bsp_name
-#  - binary is the path to prefix to target binary, .elf.bin appended to this
-#    name is the raw binary format of the binary.
-#  - features are the target features. So you can have e.g. different
-#    flash offset for bootloader 'feature'
-#
-#
+# Called with following variables set:
+#  - BSP_PATH is absolute path to hw/bsp/bsp_name
+#  - BIN_BASENAME is the path to prefix to target binary,
+#    .elf appended to name is the ELF file
+#  - IMAGE_SLOT is the image slot to download to
+#  - FEATURES holds the target features string
+#  - EXTRA_JTAG_CMD holds extra parameters to pass to jtag software
 
-if [ $# -lt 2 ]; then
+IS_BOOTLOADER=0
+GDB_CMD_FILE=.gdb_cmds
+
+if [ -z "$BIN_BASENAME" ]; then
     echo "Need binary to download"
     exit 1
 fi
 
-IS_BOOTLOADER=0
-MYPATH=$1
-BASENAME=$2
-GDB_CMD_FILE=.gdb_cmds
-
-# Look for 'bootloader' from 3rd arg onwards
-shift
-shift
-while [ $# -gt 0 ]; do
-    if [ $1 = "bootloader" ]; then
-        IS_BOOTLOADER=1
+# Look for 'bootloader' in FEATURES
+for feature in $FEATURES; do
+    if [ $feature == "BOOT_LOADER" ]; then
+	IS_BOOTLOADER=1
     fi
-    shift
 done
 
 if [ $IS_BOOTLOADER -eq 1 ]; then
     FLASH_OFFSET=0x0
-    FILE_NAME=$BASENAME.elf.bin
+    FILE_NAME=$BIN_BASENAME.elf.bin
 else
     FLASH_OFFSET=0xc000
-    FILE_NAME=$BASENAME.img
+    FILE_NAME=$BIN_BASENAME.img
 fi
 
-#echo "Downloading" $FILE_NAME "to" $FLASH_OFFSET
-#
+echo "Downloading" $FILE_NAME "to" $FLASH_OFFSET
+
 #echo "loadbin $FILENAME,$FLASH_OFFSET" > $GDB_CMD_FILE
 #JLinkExe -device ATSAMD21G18A -speed 4000 -if SWD -CommandFile $GDB_CMD_FILE
 
