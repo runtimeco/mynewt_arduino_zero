@@ -382,7 +382,7 @@ winc1500_sock_sendto(struct mn_socket *sock, struct os_mbuf *m,
 {
     struct winc1500_sock *ws = (struct winc1500_sock *)sock;
     struct sockaddr_in sin;
-    struct os_mbuf *n;
+    struct os_mbuf *n = NULL;
     struct os_mbuf *o;
     int rc;
     int off;
@@ -445,6 +445,9 @@ winc1500_sock_sendto(struct mn_socket *sock, struct os_mbuf *m,
         return 0;
     } else {
 err:
+        if (n) {
+            os_mbuf_free_chain(n);
+        }
         return rc;
     }
 }
