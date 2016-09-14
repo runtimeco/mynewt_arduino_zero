@@ -39,7 +39,7 @@ fi
 
 # Look for 'bootloader' in FEATURES
 for feature in $FEATURES; do
-    if [ $feature == "bootloader" ]; then
+    if [ $feature == "BOOT_LOADER" ]; then
 	IS_BOOTLOADER=1
     fi
 done
