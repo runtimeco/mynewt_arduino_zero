@@ -23,24 +23,11 @@
 extern "C" {
 #endif
 
-enum system_device_id {
-    /* NOTE: Some HALs use a virtual enumeration of the devices, while
-     * other still use the actual pins (GPIO). For arduino this means
-     * that the sysIDs for analog and digital pins are the actual pin
-     * numbers */
-
-    /*
-     * XXX fill in
-     */
-    NONE = 0,
-
-    WINC1500_SPI_PORT = 200
-
-};
+#define BSP_WINC1500_SPI_PORT   2
 
 #ifdef __cplusplus
 }
 #endif
 
-#endif /* BSP_SYSID_H */
+#endif /* __BSP_SYSID_H__ */
 

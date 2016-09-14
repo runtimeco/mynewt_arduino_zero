@@ -373,7 +373,7 @@ arduino_write(int entry_id, int value)
             break;
 #endif
         case INTERFACE_SPI:
-            rc = hal_spi_master_transfer(pmap->sysid, (uint8_t) value);
+            rc = hal_spi_tx_val(pmap->sysid, (uint8_t) value);
             /* this method has a special return code */
             if(rc >= 0) {
                 /* store what we read back  */

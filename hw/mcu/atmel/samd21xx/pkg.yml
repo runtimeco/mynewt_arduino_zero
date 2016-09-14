@@ -18,6 +18,7 @@ pkg.cflags:
           -  -DAC_CALLBACK_MODE=true 
           -  -DEVENTS_INTERRUPT_HOOKS_MODE=true 
           -  -DEXTINT_CALLBACK_MODE=true  
+          -  -DSPI_CALLBACK_MODE=true
           -  -I../include 
           -  -I. 
           -  -I../. 

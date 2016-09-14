@@ -38,10 +38,4 @@ pkg.deps:
     - "@apache-mynewt-core/sys/log"
     - "@apache-mynewt-core/sys/mn_socket"
     - "@apache-mynewt-core/libs/wifi_mgmt"
-    - libs/winc1500
-
-pkg.cflags.NFFS:
-    - "-DNFFS_PRESENT"
-
-pkg.cflags.FCB:
-    - "-DFCB_PRESENT"
+    - "libs/winc1500"

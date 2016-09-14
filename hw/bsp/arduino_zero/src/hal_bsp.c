@@ -19,6 +19,7 @@
  */
 #include <stddef.h>
 #include <assert.h>
+#include "syscfg/syscfg.h"
 #include "mcu/samd21.h"
 #include "bsp/bsp.h"
 #include <bsp/bsp_sysid.h>
@@ -69,6 +70,7 @@ bsp_core_dump(int *area_cnt)
     return dump_cfg;
 }
 
+#if MYNEWT_VAL(SPI_0)
 /* configure the SPI port for arduino external spi */
 struct samd21_spi_config icsp_spi_config = {
     .dipo = 0,  /* sends MISO to PAD 0 */
@@ -77,7 +79,9 @@ struct samd21_spi_config icsp_spi_config = {
     .pad3_pinmux = PINMUX_PB11D_SERCOM4_PAD3,       /* SCK */
     .pad2_pinmux = PINMUX_PB10D_SERCOM4_PAD2,       /* MOSI */
 };
+#endif
 
+#if MYNEWT_VAL(SPI_1)
 /* NOTE using this will overwrite the debug interface */
 struct samd21_spi_config alt_spi_config = {
     .dipo = 3,  /* sends MISO to PAD 3 */
@@ -87,12 +91,14 @@ struct samd21_spi_config alt_spi_config = {
     .pad2_pinmux = PINMUX_PA06D_SERCOM0_PAD2,       /* SCK */
     .pad3_pinmux = PINMUX_PA07D_SERCOM0_PAD3,       /* MISO */
 };
+#endif
 
 struct samd21_i2c_config i2c_config = {
     .pad0_pinmux = PINMUX_PA22D_SERCOM5_PAD0,
     .pad1_pinmux = PINMUX_PA23D_SERCOM5_PAD1,
 };
 
+#if MYNEWT_VAL(UART_0)
 static const struct samd21_uart_config uart_cfgs[] = {
     [0] = {
         .suc_sercom = SERCOM2,
@@ -106,25 +112,41 @@ static const struct samd21_uart_config uart_cfgs[] = {
         .suc_pad3 = PINMUX_PA11D_SERCOM2_PAD3
     }
 };
+#endif
 
 int
 bsp_hal_init(void)
 {
     int rc;
 
+#if MYNEWT_VAL(UART_0)
     rc = os_dev_create((struct os_dev *) &hal_uart0, CONSOLE_UART,
       OS_DEV_INIT_PRIMARY, 0, uart_hal_init, (void *)&uart_cfgs[0]);
     assert(rc == 0);
+#endif
 
-    rc = hal_spi_init(ARDUINO_ZERO_SPI_ICSP, &icsp_spi_config);
+#if MYNEWT_VAL(SPI_0)
+    rc = hal_spi_init(ARDUINO_ZERO_SPI_ICSP, &icsp_spi_config,
+                      MYNEWT_VAL(SPI_0_TYPE));
     if (rc != 0) {
         goto err;
     }
+#endif
 
-    rc = hal_spi_init(ARDUINO_ZERO_SPI_ALT, &alt_spi_config);
+#if 0
+    rc = hal_spi_init(ARDUINO_ZERO_SPI_ICSP, &icsp_spi_config,
+                      MYNEWT_VAL(SPI_0_TYPE));
     if (rc != 0) {
         goto err;
     }
+#if MYNEWT_VAL(SPI_1)
+    rc = hal_spi_init(ARDUINO_ZERO_SPI_ALT, &alt_spi_config,
+                      MYNEWT_VAL(SPI_1_TYPE));
+    if (rc != 0) {
+        goto err;
+    }
+#endif
+#endif
 
     rc = hal_i2c_init(5, &i2c_config);
     if (rc != 0) {
