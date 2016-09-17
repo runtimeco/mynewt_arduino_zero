@@ -228,7 +228,7 @@ net_cli(int argc, char **argv)
         sin.msin_len = sizeof(sin);
         sin.msin_family = MN_AF_INET;
         sin.msin_port = htons(port);
-        sin.msin_addr = addr;
+        sin.msin_addr.s_addr = addr;
 
         if (!strcmp(argv[1], "connect")) {
             mn_socket_set_cbs(net_test_socket, NULL, &net_test_cbs);
@@ -286,7 +286,7 @@ net_cli(int argc, char **argv)
             sin.msin_len = sizeof(sin);
             sin.msin_family = MN_AF_INET;
             sin.msin_port = htons(port);
-            sin.msin_addr = addr;
+            sin.msin_addr.s_addr = addr;
             sinp = &sin;
         } else {
             sinp = NULL;

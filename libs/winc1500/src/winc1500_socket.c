@@ -148,7 +148,7 @@ winc1500_mn_addr_to_addr(struct mn_sockaddr_in *msin, struct sockaddr_in *sin)
     }
     sin->sin_family = AF_INET;
     sin->sin_port = msin->msin_port;
-    sin->sin_addr.s_addr = msin->msin_addr;
+    sin->sin_addr.s_addr = msin->msin_addr.s_addr;
 
     return 0;
 }
@@ -159,7 +159,7 @@ winc1500_addr_to_mn_addr(struct sockaddr_in *sin, struct mn_sockaddr_in *msin)
     msin->msin_len = sizeof(*msin);
     msin->msin_family = MN_AF_INET;
     msin->msin_port = sin->sin_port;
-    msin->msin_addr = sin->sin_addr.s_addr;
+    msin->msin_addr.s_addr = sin->sin_addr.s_addr;
 }
 
 /*
