@@ -53,23 +53,34 @@ pkg.cflags:
 
 
 pkg.syscfg_defs:
+    BSP_ARDUINO_MKR1000:
+        description: 'TBD'
+        value:  1
+
     SPI_0:
         description: 'TBD'
         value:  0
-    SPI_0_TYPE:
+    SPI_0_MASTER:
         description: 'TBD'
-        value: 'HAL_SPI_TYPE_MASTER'
+        value: 1
 
     SPI_1:
         description: 'TBD'
         value:  0
-    SPI_1_TYPE:
+    SPI_1_MASTER:
         description: 'TBD'
-        value: 'HAL_SPI_TYPE_MASTER'
+        value: 1
 
     SPI_2:
         description: 'WINC1500 SPI'
         value:  1
     SPI_2_TYPE:
         description: 'TBD'
-        value: 'HAL_SPI_TYPE_MASTER'
+        value: 1
+
+    SPI_3:
+        description: 'TBD SPI'
+        value:  0
+    SPI_3_MASTER:
+        description: 'TBD'
+        value: 1

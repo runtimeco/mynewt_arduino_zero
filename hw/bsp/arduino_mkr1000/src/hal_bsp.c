@@ -71,13 +71,66 @@ bsp_core_dump(int *area_cnt)
     return dump_cfg;
 }
 
-static struct samd21_spi_config winc1500_spi_cfg = {
+#if MYNEWT_VAL(SPI_0)
+static struct samd21_spi_config ext_spi_cfg = {
     .dipo = 3,
     .dopo = 0,
-    .pad0_pinmux = PINMUX_PA12C_SERCOM2_PAD0,   /* MISO */
-    .pad1_pinmux = PINMUX_PA13C_SERCOM2_PAD1,   /* SCK */
-    .pad3_pinmux = PINMUX_PA15C_SERCOM2_PAD3    /* MISO */
+    .pad0_pinmux = PINMUX_PA04D_SERCOM0_PAD0,   /* DO */
+    .pad1_pinmux = PINMUX_PA05D_SERCOM0_PAD1,   /* SCK */
+#if MYNEWT_VAL(SPI_0_MASTER)
+    .pad2_pinmux = PINMUX_UNUSED,               /* SS */
+#else
+    .pad2_pinmux = PINMUX_PA06D_SERCOM0_PAD2,   /* SS */
+#endif
+    .pad3_pinmux = PINMUX_PA07D_SERCOM0_PAD3    /* DI */
 };
+#endif
+
+#if MYNEWT_VAL(SPI_1)
+static struct samd21_spi_config ext_spi_cfg = {
+    .dipo = 3,
+    .dopo = 0,
+    .pad0_pinmux = PINMUX_PA00D_SERCOM1_PAD0,   /* DO */
+    .pad1_pinmux = PINMUX_PA01D_SERCOM1_PAD1,   /* SCK */
+#if MYNEWT_VAL(SPI_0_MASTER)
+    .pad2_pinmux = PINMUX_UNUSED,               /* SS */
+#else
+    .pad2_pinmux = PINMUX_PA02D_SERCOM1_PAD2,   /* SS */
+#endif
+    .pad3_pinmux = PINMUX_PA31D_SERCOM1_PAD3    /* DI */
+};
+#endif
+
+#if MYNEWT_VAL(SPI_2)
+static struct samd21_spi_config winc1500_spi_cfg = {
+    .dipo = 2,
+    .dopo = 0,
+    .pad0_pinmux = PINMUX_PA12C_SERCOM2_PAD0,   /* DO */
+    .pad1_pinmux = PINMUX_PA13C_SERCOM2_PAD1,   /* SCK */
+#if MYNEWT_VAL(SPI_0_MASTER)
+    .pad2_pinmux = PINMUX_UNUSED,               /* SS */
+#else
+    .pad2_pinmux = PINMUX_PA14C_SERCOM2_PAD2,   /* SS */
+#endif
+    .pad3_pinmux = PINMUX_PA15C_SERCOM2_PAD3    /* DI */
+
+};
+#endif
+
+#if MYNEWT_VAL(SPI_3)
+static struct samd21_spi_config ext_spi_cfg = {
+    .dipo = 3,
+    .dopo = 0,
+    .pad0_pinmux = PINMUX_PA16D_SERCOM3_PAD0,   /* MOSI */
+    .pad1_pinmux = PINMUX_PA17D_SERCOM3_PAD1,   /* SCK */
+#if MYNEWT_VAL(SPI_0_MASTER)
+    .pad2_pinmux = PINMUX_UNUSED,               /* SS */
+#else
+    .pad2_pinmux = PINMUX_PA18D_SERCOM3_PAD2,   /* SS */
+#endif
+    .pad3_pinmux = PINMUX_PA19D_SERCOM3_PAD3    /* MISO */
+};
+#endif
 
 static const struct samd21_uart_config uart_cfgs[] = {
     [0] = {
@@ -93,6 +146,11 @@ static const struct samd21_uart_config uart_cfgs[] = {
     }
 };
 
+#define SPI_TYPE(spi_num)   \
+    (MYNEWT_VAL(SPI_ ## spi_num ## _MASTER) ? \
+        HAL_SPI_TYPE_MASTER : \
+        HAL_SPI_TYPE_SLAVE)
+
 int
 bsp_hal_init(void)
 {
@@ -107,8 +165,29 @@ bsp_hal_init(void)
         goto err;
     }
 
+#if MYNEWT_VAL(SPI_0)
+    rc = hal_spi_init(0, &ext_spi_cfg, SPI_TYPE(0));
+    if (rc != 0) {
+        goto err;
+    }
+#endif
+
+#if MYNEWT_VAL(SPI_1)
+    rc = hal_spi_init(1, &ext_spi_cfg, SPI_TYPE(1));
+    if (rc != 0) {
+        goto err;
+    }
+#endif
+
 #if MYNEWT_VAL(SPI_2)
-    rc = hal_spi_init(2, &winc1500_spi_cfg, MYNEWT_VAL(SPI_2_TYPE));
+    rc = hal_spi_init(2, &winc1500_spi_cfg, SPI_TYPE(2));
+    if (rc != 0) {
+        goto err;
+    }
+#endif
+
+#if MYNEWT_VAL(SPI_3)
+    rc = hal_spi_init(3, &ext_spi_cfg, SPI_TYPE(3));
     if (rc != 0) {
         goto err;
     }
