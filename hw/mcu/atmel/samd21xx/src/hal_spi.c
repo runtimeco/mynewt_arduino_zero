@@ -27,15 +27,17 @@
 #include "spi_interrupt.h"
 #include "mcu/samd21.h"
 
-
 #define SAMD21_SPI_FLAG_ENABLED     (0x1)
-#define SAMD21_SPI_FLAG_9BIT        (0x2)
+#define SAMD21_SPI_FLAG_XFER        (0x2)
 
 struct samd21_hal_spi {
     struct spi_module               module;
-    struct hal_spi_settings spi_cfg; /* Slave and master */
     const struct samd21_spi_config *pconfig;
     uint8_t                         flags;
+
+    hal_spi_txrx_cb txrx_cb;
+    uint16_t txrx_len;
+    void *txrx_cb_arg;
 };
 
 #define HAL_SAMD21_SPI_MAX (6)
@@ -92,6 +94,24 @@ static struct samd21_hal_spi *samd21_hal_spis[HAL_SAMD21_SPI_MAX] = {
 #endif
 };
 
+static int
+samd21_hal_spi_rc_from_status(enum status_code status)
+{
+    switch (status) {
+    case STATUS_OK:
+        return 0;
+
+    case STATUS_ERR_INVALID_ARG:
+        return EINVAL;
+
+    case STATUS_ERR_TIMEOUT:
+    case STATUS_ERR_DENIED:
+    case STATUS_ERR_OVERFLOW:
+    default:
+        return EIO;
+    }
+}
+
 static struct samd21_hal_spi *
 samd21_hal_spi_resolve(int spi_num)
 {
@@ -106,17 +126,28 @@ samd21_hal_spi_resolve(int spi_num)
     return spi;
 }
 
+static struct samd21_hal_spi *
+samd21_hal_spi_resolve_module(const struct spi_module *module)
+{
+    struct samd21_hal_spi *spi;
+    int i;
+
+    for (i = 0; i < HAL_SAMD21_SPI_MAX; i++) {
+        spi = samd21_hal_spis[i];
+        if (&spi->module == module) {
+            return spi;
+        }
+    }
+
+    return NULL;
+}
+
 int
 hal_spi_init(int spi_num, void *cfg, uint8_t spi_type)
 {
     struct samd21_hal_spi *spi;
 
     if (cfg == NULL) {
-        return EINVAL;
-    }
-
-    /* Slave currently unsupported. */
-    if (spi_type != HAL_SPI_TYPE_MASTER) {
         return EINVAL;
     }
 
@@ -154,72 +185,78 @@ hal_spi_init(int spi_num, void *cfg, uint8_t spi_type)
 }
 
 static int
-samd21_spi_config_master(struct samd21_hal_spi *spi,
-                         struct hal_spi_settings *settings)
+samd21_spi_config(struct samd21_hal_spi *spi,
+                  struct hal_spi_settings *settings)
 {
     struct spi_config cfg;
-    uint32_t ctrla;
     int rc;
 
     spi_get_config_defaults(&cfg);
-
-    if (spi->flags & SAMD21_SPI_FLAG_ENABLED) {
-        spi_disable(&spi->module);
-        spi->flags &= ~SAMD21_SPI_FLAG_ENABLED;
-    }
-
-    ctrla = (spi->pconfig->dopo << SERCOM_SPI_CTRLA_DOPO_Pos) |
-            (spi->pconfig->dipo << SERCOM_SPI_CTRLA_DIPO_Pos);
 
     cfg.pinmux_pad0 = spi->pconfig->pad0_pinmux;
     cfg.pinmux_pad1 = spi->pconfig->pad1_pinmux;
     cfg.pinmux_pad2 = spi->pconfig->pad2_pinmux;
     cfg.pinmux_pad3 = spi->pconfig->pad3_pinmux;
-    cfg.mux_setting = ctrla;
+
+    cfg.mux_setting = spi->pconfig->dopo << SERCOM_SPI_CTRLA_DOPO_Pos |
+                      spi->pconfig->dipo << SERCOM_SPI_CTRLA_DIPO_Pos;
+
 
     /* apply the hal_settings */
     switch (settings->word_size) {
-        case HAL_SPI_WORD_SIZE_8BIT:
-            cfg.character_size = SPI_CHARACTER_SIZE_8BIT;
-            spi->flags &= ~SAMD21_SPI_FLAG_9BIT;
-            break;
-        case HAL_SPI_WORD_SIZE_9BIT:
-            cfg.character_size = SPI_CHARACTER_SIZE_9BIT;
-            spi->flags |= SAMD21_SPI_FLAG_9BIT;
-            break;
-        default:
-            return EINVAL;
+    case HAL_SPI_WORD_SIZE_8BIT:
+        cfg.character_size = SPI_CHARACTER_SIZE_8BIT;
+        break;
+    case HAL_SPI_WORD_SIZE_9BIT:
+        cfg.character_size = SPI_CHARACTER_SIZE_9BIT;
+        break;
+    default:
+        return EINVAL;
     }
 
     switch (settings->data_order) {
-        case HAL_SPI_LSB_FIRST:
-            cfg.data_order = SPI_DATA_ORDER_LSB;
-            break;
-        case HAL_SPI_MSB_FIRST:
-            cfg.data_order = SPI_DATA_ORDER_MSB;
-            break;
-        default:
-            return EINVAL;
+    case HAL_SPI_LSB_FIRST:
+        cfg.data_order = SPI_DATA_ORDER_LSB;
+        break;
+    case HAL_SPI_MSB_FIRST:
+        cfg.data_order = SPI_DATA_ORDER_MSB;
+        break;
+    default:
+        return EINVAL;
     }
 
     switch (settings->data_mode) {
-        case HAL_SPI_MODE0:
-            cfg.transfer_mode = SPI_TRANSFER_MODE_0;
-            break;
-        case HAL_SPI_MODE1:
-            cfg.transfer_mode = SPI_TRANSFER_MODE_1;
-            break;
-        case HAL_SPI_MODE2:
-            cfg.transfer_mode = SPI_TRANSFER_MODE_2;
-            break;
-        case HAL_SPI_MODE3:
-            cfg.transfer_mode = SPI_TRANSFER_MODE_3;
-            break;
-        default:
-            return EINVAL;
+    case HAL_SPI_MODE0:
+        cfg.transfer_mode = SPI_TRANSFER_MODE_0;
+        break;
+    case HAL_SPI_MODE1:
+        cfg.transfer_mode = SPI_TRANSFER_MODE_1;
+        break;
+    case HAL_SPI_MODE2:
+        cfg.transfer_mode = SPI_TRANSFER_MODE_2;
+        break;
+    case HAL_SPI_MODE3:
+        cfg.transfer_mode = SPI_TRANSFER_MODE_3;
+        break;
+    default:
+        return EINVAL;
     }
 
-    cfg.mode_specific.master.baudrate = settings->baudrate;
+    switch (settings->spi_type) {
+    case HAL_SPI_TYPE_MASTER:
+        cfg.mode = SPI_MODE_MASTER;
+        cfg.mode_specific.master.baudrate = settings->baudrate;
+        break;
+
+    case HAL_SPI_TYPE_SLAVE:
+        cfg.mode = SPI_MODE_SLAVE;
+        cfg.mode_specific.slave.frame_format = SPI_FRAME_FORMAT_SPI_FRAME;
+        cfg.mode_specific.slave.preload_enable = true;
+        break;
+
+    default:
+        return EINVAL;
+    }
 
     rc = spi_init(&spi->module, spi->module.hw, &cfg);
     if (rc != STATUS_OK) {
@@ -240,15 +277,22 @@ hal_spi_config(int spi_num, struct hal_spi_settings *settings)
         return EINVAL;
     }
 
-    /* Slave currently unsupported. */
-    if (settings->spi_type != HAL_SPI_TYPE_MASTER) {
-        return EINVAL;
+    if (spi->flags & SAMD21_SPI_FLAG_ENABLED) {
+        return EACCES;
     }
 
-    spi->spi_cfg = *settings;
+    rc = samd21_spi_config(spi, settings);
+    if (rc != 0) {
+        return rc;
+    }
 
-    rc = samd21_spi_config_master(spi, settings);
-    return rc;
+    rc = hal_spi_set_txrx_cb(spi_num, settings->txrx_cb_func,
+                             settings->txrx_cb_arg);
+    if (rc != 0) {
+        return rc;
+    }
+
+    return 0;
 }
 
 int
@@ -261,6 +305,7 @@ hal_spi_enable(int spi_num)
         return EINVAL;
     }
 
+    /* Configure and initialize software device instance of peripheral slave */
     spi_enable(&spi->module);
     spi->flags |= SAMD21_SPI_FLAG_ENABLED;
 
@@ -292,6 +337,7 @@ hal_spi_tx_val(int spi_num, uint16_t tx)
 
     spi = samd21_hal_spi_resolve(spi_num);
     assert(spi != NULL);
+    assert(!(spi->flags & SAMD21_SPI_FLAG_XFER));
 
     status = spi_transceive_wait(&spi->module, tx, &rx);
     assert(status == 0);
@@ -299,31 +345,113 @@ hal_spi_tx_val(int spi_num, uint16_t tx)
     return rx;
 }
 
+static void
+samd21_hal_spi_cb(struct spi_module *module)
+{
+    struct samd21_hal_spi *spi;
+    enum status_code status;
+    int len;
+
+    spi = samd21_hal_spi_resolve_module(module);
+    if (spi == NULL) {
+        return;
+    }
+
+    status = spi_get_job_status(module);
+    switch (status) {
+    case STATUS_OK:
+        len = spi->txrx_len;
+        break;
+
+    default:
+        /* No way to determine how much data was trasmitted! */
+        len = 0;
+        break;
+    }
+
+    if (spi->flags & SAMD21_SPI_FLAG_XFER) {
+        spi->flags &= ~SAMD21_SPI_FLAG_XFER;
+
+        assert(spi->txrx_cb != NULL);
+        spi->txrx_cb(spi->txrx_cb_arg, len);
+    }
+}
+
 int
 hal_spi_set_txrx_cb(int spi_num, hal_spi_txrx_cb txrx_cb, void *arg)
 {
     struct samd21_hal_spi *spi;
+    enum spi_callback type;
 
     spi = samd21_hal_spi_resolve(spi_num);
     if (spi == NULL) {
         return EINVAL;
     }
 
-    if (!(spi->flags & SAMD21_SPI_FLAG_ENABLED)) {
+    if (spi->flags & SAMD21_SPI_FLAG_XFER) {
         return EACCES;
     }
 
-    spi->spi_cfg.txrx_cb_func = txrx_cb;
-    spi->spi_cfg.txrx_cb_arg = arg;
+    for (type  = SPI_CALLBACK_BUFFER_TRANSMITTED;
+         type != SPI_CALLBACK_N;
+         type++) {
+
+        if (txrx_cb == NULL) {
+            spi_disable_callback(&spi->module, type);
+        } else {
+            spi_register_callback(&spi->module, samd21_hal_spi_cb, type);
+            spi_enable_callback(&spi->module, type);
+        }
+    }
+
+    spi->txrx_cb = txrx_cb;
+    spi->txrx_cb_arg = arg;
 
     return 0;
+}
+
+static int
+samd21_hal_spi_txrx_blocking(struct samd21_hal_spi *spi, void *txbuf,
+                             void *rxbuf, uint16_t len)
+{
+    enum status_code status;
+
+    spi->flags |= SAMD21_SPI_FLAG_XFER;
+    if (rxbuf == NULL) {
+        status = spi_write_buffer_wait(&spi->module, txbuf, len);
+    } else {
+        status = spi_transceive_buffer_wait(&spi->module, txbuf, rxbuf, len);
+    }
+    spi->flags &= ~SAMD21_SPI_FLAG_XFER;
+
+    return samd21_hal_spi_rc_from_status(status);
+}
+
+static int
+samd21_hal_spi_txrx_nonblocking(struct samd21_hal_spi *spi, void *txbuf,
+                                void *rxbuf, uint16_t len)
+{
+    enum status_code status;
+
+    spi->flags |= SAMD21_SPI_FLAG_XFER;
+    spi->txrx_len = len;
+
+    if (txbuf == NULL && rxbuf != NULL) {
+        status = spi_read_buffer_job(&spi->module, rxbuf, len, 0);
+    } else if (rxbuf == NULL) {
+        status = spi_write_buffer_job(&spi->module, txbuf, len);
+    } else {
+        status = spi_transceive_buffer_job(&spi->module, txbuf, rxbuf, len);
+    }
+
+    return samd21_hal_spi_rc_from_status(status);
 }
 
 int
 hal_spi_txrx(int spi_num, void *txbuf, void *rxbuf, int len)
 {
     struct samd21_hal_spi *spi;
-    enum status_code status;
+    int rc;
 
     spi = samd21_hal_spi_resolve(spi_num);
     if (spi == NULL) {
@@ -334,46 +462,54 @@ hal_spi_txrx(int spi_num, void *txbuf, void *rxbuf, int len)
         return EINVAL;
     }
 
-    /* Slave currently unsupported. */
-    assert(spi->spi_cfg.spi_type == HAL_SPI_TYPE_MASTER);
+    if (spi->flags & SAMD21_SPI_FLAG_XFER) {
+        return EALREADY;
+    }
 
-    status = spi_transceive_buffer_wait(&spi->module, txbuf, rxbuf, len);
-    switch (status) {
-    case STATUS_OK:
-        return 0;
+    switch (spi->module.mode) {
+    case SPI_MODE_MASTER:
+        if (txbuf == NULL) {
+            return EINVAL;
+        }
+        break;
 
-    case STATUS_ERR_INVALID_ARG:
-        return EINVAL;
+    case SPI_MODE_SLAVE:
+        if (txbuf == NULL && rxbuf == NULL) {
+            return EINVAL;
+        }
+        break;
 
-    case STATUS_ERR_TIMEOUT:
-    case STATUS_ERR_DENIED:
-    case STATUS_ERR_OVERFLOW:
     default:
+        assert(0);
         return EIO;
     }
+
+    if (spi->txrx_cb == NULL) {
+        rc = samd21_hal_spi_txrx_blocking(spi, txbuf, rxbuf, len);
+    } else {
+        rc = samd21_hal_spi_txrx_nonblocking(spi, txbuf, rxbuf, len);
+    }
+    if (rc != 0) {
+        return rc;
+    }
+
+    return 0;
 }
 
+/**
+ * Not supported by the Atmel SPI API.
+ */
 int
 hal_spi_slave_set_def_tx_val(int spi_num, uint16_t val)
 {
     struct samd21_hal_spi *spi;
-    enum status_code status;
 
     spi = samd21_hal_spi_resolve(spi_num);
     if (spi == NULL) {
         return EINVAL;
     }
 
-    if (!spi_is_ready_to_write(&spi->module)) {
-        return EACCES;
-    }
-
-    status = spi_write(&spi->module, val);
-    if (status != STATUS_OK) {
-        return EIO;
-    }
-
-    return 0;
+    return ENOTSUP;
 }
 
 int
@@ -387,5 +523,7 @@ hal_spi_abort(int spi_num)
     }
 
     spi_abort_job(&spi->module);
+    spi->flags &= ~SAMD21_SPI_FLAG_XFER;
+
     return 0;
 }

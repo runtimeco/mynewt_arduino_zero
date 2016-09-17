@@ -92,8 +92,9 @@ nm_spi_rw(uint8 *pu8Mosi, uint8 *pu8Miso, uint16 u16Sz)
             tx = *pu8Mosi;
             pu8Mosi++;
         }
-        rx = hal_spi_tx_val(BSP_WINC1500_SPI_PORT, tx);
-        if (rx < 0) {
+        //rx = hal_spi_tx_val(BSP_WINC1500_SPI_PORT, tx);
+        rc = hal_spi_txrx(BSP_WINC1500_SPI_PORT, &tx, &rx, 1);
+        if (rc != 0) {
             rc = M2M_ERR_BUS_FAIL;
             break;
         }
