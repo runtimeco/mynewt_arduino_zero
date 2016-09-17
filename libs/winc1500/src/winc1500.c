@@ -18,9 +18,11 @@
  */
 #include <stddef.h>
 #include <string.h>
+#include <strings.h>
 #include <assert.h>
 
 #include <os/os.h>
+#include <os/endian.h>
 #include <bsp/bsp.h>
 #include <hal/hal_gpio.h>
 #include <shell/shell.h>
@@ -62,6 +64,7 @@ winc1500_callback(uint8_t msg_type, void *msg_data)
     tstrM2mScanDone *scan_done;
     tstrM2mWifiscanResult *scan;
     tstrM2mWifiStateChanged *state;
+    tstrM2MIPConfig *dhcp;
     tstrSystemTime *time;
     struct wifi_ap ap;
     int rc;
@@ -114,6 +117,7 @@ winc1500_callback(uint8_t msg_type, void *msg_data)
             wifi_connect_done(wi, 0);
         } else if (state->u8CurrState == M2M_WIFI_DISCONNECTED) {
             /* disconnected */
+            w->w_up = 0;
             if (wi->wi_state == CONNECTING) {
                 wifi_connect_done(wi, state->u8ErrCode);
             } else {
@@ -122,7 +126,15 @@ winc1500_callback(uint8_t msg_type, void *msg_data)
         }
         break;
     case M2M_WIFI_REQ_DHCP_CONF:
-        wifi_dhcp_done(&w->w_if, msg_data);
+        dhcp = (tstrM2MIPConfig *)msg_data;
+        w->w_up = 1;
+        w->w_addr = dhcp->u32StaticIP;
+        if (dhcp->u32SubnetMask) {
+            w->w_plen = 33 - ffs(ntohl(dhcp->u32SubnetMask));
+        } else {
+            w->w_plen = 0;
+        }
+        wifi_dhcp_done(&w->w_if, (uint8_t *)&dhcp->u32StaticIP);
         break;
     case M2M_WIFI_RESP_GET_SYS_TIME:
         time = (tstrSystemTime *)msg_data;
@@ -167,6 +179,9 @@ winc1500_start(struct wifi_if *wi)
 static void
 winc1500_stop(struct wifi_if *wi)
 {
+    struct winc1500 *w = (struct winc1500 *)wi;
+    w->w_up = 0;
+
     m2m_wifi_deinit(NULL);
 }
 
@@ -187,12 +202,13 @@ winc1500_connect(struct wifi_if *wi, struct wifi_ap *ap)
 {
     return m2m_wifi_connect(wi->wi_ssid, strlen(wi->wi_ssid),
               ap->wa_key_type, wi->wi_key, M2M_WIFI_CH_ALL);
-
 }
 
 static void
 winc1500_disconnect(struct wifi_if *wi)
 {
+    struct winc1500 *w = (struct winc1500 *)wi;
+    w->w_up = 0;
     m2m_wifi_disconnect();
 }
 

@@ -51,6 +51,8 @@ static int winc1500_sock_sendto(struct mn_socket *, struct os_mbuf *,
 static int winc1500_sock_recvfrom(struct mn_socket *, struct os_mbuf **,
   struct mn_sockaddr *);
 static int winc1500_sock_getpeername(struct mn_socket *, struct mn_sockaddr *);
+static int winc1500_itf_getnext(struct mn_itf *);
+static int winc1500_itf_addr_getnext(struct mn_itf *, struct mn_itf_addr *);
 
 /*
  * MAX_SOCKET comes from socket/socket.h
@@ -100,6 +102,8 @@ static const struct mn_socket_ops winc1500_sock_ops = {
 
     .mso_getpeername = winc1500_sock_getpeername,
 
+    .mso_itf_getnext = winc1500_itf_getnext,
+    .mso_itf_addr_getnext = winc1500_itf_addr_getnext
 };
 
 /*
@@ -496,6 +500,42 @@ winc1500_sock_getpeername(struct mn_socket *sock, struct mn_sockaddr *addr)
     struct winc1500_sock *ws = (struct winc1500_sock *)sock;
 
     *(struct mn_sockaddr_in *)addr = ws->ws_tgt;
+    return 0;
+}
+
+/*
+ * There is only one interface, which can have only one address.
+ */
+static int
+winc1500_itf_getnext(struct mn_itf *mi)
+{
+    if (mi->mif_name[0] != '\0') {
+        return MN_EADDRNOTAVAIL;
+    }
+    strcpy(mi->mif_name, "wnc");
+    mi->mif_idx = 1;
+    mi->mif_flags = MN_ITF_F_MULTICAST;
+    if (winc1500.w_up) {
+        mi->mif_flags = MN_ITF_F_UP;
+    }
+    return 0;
+}
+
+static int
+winc1500_itf_addr_getnext(struct mn_itf *mi, struct mn_itf_addr *mia)
+{
+    if (mi->mif_idx != 1) {
+        return MN_EADDRNOTAVAIL;
+    }
+    if (winc1500.w_up == 0) {
+        return MN_EADDRNOTAVAIL;
+    }
+    if (mia->mifa_family) {
+        return MN_EADDRNOTAVAIL;
+    }
+    mia->mifa_family = MN_AF_INET;
+    mia->mifa_plen = winc1500.w_plen;
+    mia->mifa_addr.v4.s_addr = winc1500.w_addr;
     return 0;
 }
 

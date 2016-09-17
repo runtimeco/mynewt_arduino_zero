@@ -28,6 +28,9 @@ struct winc1500 {
     struct os_callout_func w_timer;
     uint8_t w_scan_cnt;
     uint8_t w_scan_idx;
+    uint8_t w_up:1;
+    uint8_t w_plen:6;
+    uint32_t w_addr;
 };
 
 extern struct winc1500 winc1500;
