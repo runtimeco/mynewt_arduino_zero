@@ -219,8 +219,6 @@ winc1500_init(void)
     assert(rc == 0);
 #endif
 
-    nm_bsp_reset();
-
     winc1500_socket_init();
 
     return 0;
