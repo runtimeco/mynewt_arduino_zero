@@ -50,6 +50,8 @@ static int winc1500_sock_sendto(struct mn_socket *, struct os_mbuf *,
   struct mn_sockaddr *);
 static int winc1500_sock_recvfrom(struct mn_socket *, struct os_mbuf **,
   struct mn_sockaddr *);
+static int winc1500_sock_setsockopt(struct mn_socket *, uint8_t level,
+  uint8_t name, void *val);
 static int winc1500_sock_getpeername(struct mn_socket *, struct mn_sockaddr *);
 static int winc1500_itf_getnext(struct mn_itf *);
 static int winc1500_itf_addr_getnext(struct mn_itf *, struct mn_itf_addr *);
@@ -99,6 +101,8 @@ static const struct mn_socket_ops winc1500_sock_ops = {
 
     .mso_sendto = winc1500_sock_sendto,
     .mso_recvfrom = winc1500_sock_recvfrom,
+
+    .mso_setsockopt = winc1500_sock_setsockopt,
 
     .mso_getpeername = winc1500_sock_getpeername,
 
@@ -492,6 +496,42 @@ static int winc1500_sock_recvfrom(struct mn_socket *sock, struct os_mbuf **mp,
         *mp = NULL;
         return MN_EAGAIN;
     }
+}
+
+static int
+winc1500_sock_setsockopt(struct mn_socket *sock, uint8_t level, uint8_t name,
+  void *val)
+{
+    struct winc1500_sock *ws = (struct winc1500_sock *)sock;
+    struct mn_mreq *mreq;
+    int rc;
+
+    if (level == MN_SO_LEVEL) {
+        switch (name) {
+        case MN_MCAST_JOIN_GROUP:
+        case MN_MCAST_LEAVE_GROUP:
+            mreq = (struct mn_mreq *)val;
+            if (mreq->mm_family != MN_AF_INET) {
+                return MN_EINVAL;
+            }
+            if (name == MN_MCAST_JOIN_GROUP) {
+                name = IP_ADD_MEMBERSHIP;
+            } else {
+                name = IP_DROP_MEMBERSHIP;
+            }
+            os_mutex_pend(&winc1500.w_if.wi_mtx, OS_TIMEOUT_NEVER);
+            rc = setsockopt(ws->ws_idx, 1, name, &mreq->mm_addr.v4,
+              sizeof(mreq->mm_addr.v4));
+            os_mutex_release(&winc1500.w_if.wi_mtx);
+            if (rc) {
+                return winc1500_err_to_mn_err(rc);
+            }
+            return 0;
+        case MN_MCAST_IF:
+            return 0;
+        }
+    }
+    return MN_EPROTONOSUPPORT;
 }
 
 static int
