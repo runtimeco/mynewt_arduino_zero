@@ -326,6 +326,59 @@ net_cli(int argc, char **argv)
               OS_MBUF_PKTHDR(m)->omp_len, (char *)m->om_data);
             os_mbuf_free_chain(m);
         }
+    } else if (!strcmp(argv[1], "mcast_join") ||
+      !strcmp(argv[1], "mcast_leave")) {
+        struct mn_mreq mm;
+        int val;
+
+        if (argc < 4) {
+            return 0;
+        }
+
+        val = strtoul(argv[2], &eptr, 0);
+        if (*eptr != '\0') {
+            console_printf("Invalid itf_idx %s\n", argv[2]);
+            return 0;
+        }
+
+        memset(&mm, 0, sizeof(mm));
+        mm.mm_idx = val;
+        mm.mm_family = MN_AF_INET;
+        if (mn_inet_pton(MN_AF_INET, argv[3], &mm.mm_addr) != 1) {
+            console_printf("Invalid address %s\n", argv[2]);
+            return 0;
+        }
+        if (!strcmp(argv[1], "mcast_join")) {
+            val = MN_MCAST_JOIN_GROUP;
+        } else {
+            val = MN_MCAST_LEAVE_GROUP;
+        }
+        rc = mn_setsockopt(net_test_socket, MN_SO_LEVEL, val, &mm);
+        console_printf("mn_setsockopt() = %d\n", rc);
+    } else if (!strcmp(argv[1], "listif")) {
+        struct mn_itf itf;
+        struct mn_itf_addr itf_addr;
+        char addr_str[48];
+
+        memset(&itf, 0, sizeof(itf));
+        while (1) {
+            rc = mn_itf_getnext(&itf);
+            if (rc) {
+                break;
+            }
+            console_printf("%d: %x %s\n", itf.mif_idx, itf.mif_flags,
+              itf.mif_name);
+            memset(&itf_addr, 0, sizeof(itf_addr));
+            while (1) {
+                rc = mn_itf_addr_getnext(&itf, &itf_addr);
+                if (rc) {
+                    break;
+                }
+                mn_inet_ntop(itf_addr.mifa_family, &itf_addr.mifa_addr,
+                  addr_str, sizeof(addr_str));
+                console_printf(" %s/%d\n", addr_str, itf_addr.mifa_plen);
+            }
+        }
     } else if (!strcmp(argv[1], "service")) {
         inet_def_service_init(NET_SERVICE_PRIO, net_service_stack,
           NET_SERVICE_STACK_SIZE);
