@@ -593,8 +593,9 @@ enum status_code spi_init(
 	}
 	module->tx_buffer_ptr              = NULL;
 	module->rx_buffer_ptr              = NULL;
-	module->remaining_tx_buffer_length = 0x0000;
-	module->remaining_rx_buffer_length = 0x0000;
+	module->total_length               = 0x0000;
+	module->remaining_rx_length        = 0x0000;
+	module->remaining_tx_length        = 0x0000;
 	module->registered_callback        = 0x00;
 	module->enabled_callback           = 0x00;
 	module->status                     = STATUS_OK;
