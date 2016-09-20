@@ -138,7 +138,7 @@ enum status_code spi_transceive_buffer_job(
 		uint8_t *rx_data,
 		uint16_t length);
 
-void spi_abort_job(
+uint16_t spi_abort_job(
 		struct spi_module *const module);
 
 /**

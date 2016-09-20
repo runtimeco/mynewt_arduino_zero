@@ -675,7 +675,9 @@ enum spi_character_size {
 struct spi_module;
 
 /** Type of the callback functions */
-typedef void (*spi_callback_t)(struct spi_module *const module);
+typedef void (*spi_callback_t)(struct spi_module *const module,
+                               enum spi_callback callback_type,
+                               uint16_t len);
 
 #  if !defined(__DOXYGEN__)
 /** Prototype for the interrupt handler */
@@ -718,12 +720,12 @@ struct spi_module {
 	/** Buffer pointer to where the next character will be transmitted from
 	**/
 	volatile uint8_t *tx_buffer_ptr;
-	/** Remaining characters to receive */
-	volatile uint16_t remaining_rx_buffer_length;
-	/** Remaining dummy characters to send when reading */
-	volatile uint16_t remaining_dummy_buffer_length;
+	/** Total characters being transfered. */
+	uint16_t total_length;
 	/** Remaining characters to transmit */
-	volatile uint16_t remaining_tx_buffer_length;
+	volatile uint16_t remaining_tx_length;
+	/** Remaining characters to receive */
+	volatile uint16_t remaining_rx_length;
 	/** Bit mask for callbacks registered */
 	uint8_t registered_callback;
 	/** Bit mask for callbacks enabled */

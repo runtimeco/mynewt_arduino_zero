@@ -74,8 +74,9 @@ static void _spi_transceive_buffer(
 	Assert(tx_data);
 
 	/* Write parameters to the device instance */
-	module->remaining_tx_buffer_length = length;
-	module->remaining_rx_buffer_length = length;
+	module->total_length = length;
+	module->remaining_tx_length = length;
+	module->remaining_rx_length = length;
 	module->rx_buffer_ptr = rx_data;
 	module->tx_buffer_ptr = tx_data;
 	module->status = STATUS_BUSY;
@@ -99,6 +100,27 @@ static void _spi_transceive_buffer(
 #  endif
 }
 
+static uint16_t
+spi_xfer_count(const struct spi_module *module)
+{
+	return module->total_length - module->remaining_rx_length;
+}
+
+static void
+spi_call_cb(struct spi_module *const module, enum spi_callback callback_type,
+            uint16_t xfer_count)
+{
+	spi_callback_t callback_func;
+	uint8_t callback_mask;
+
+	callback_mask = module->enabled_callback & module->registered_callback;
+
+	if (callback_mask & 1 << callback_type) {
+		callback_func = module->callback[callback_type];
+		callback_func(module, callback_type, xfer_count);
+	}
+}
+
 /**
  * \internal
  * Starts write of a buffer with a given length
@@ -117,8 +139,9 @@ static void _spi_write_buffer(
 	Assert(tx_data);
 
 	/* Write parameters to the device instance */
-	module->remaining_tx_buffer_length = length;
-	module->remaining_dummy_buffer_length = length;
+	module->total_length = length;
+	module->remaining_tx_length = length;
+	module->remaining_rx_length = 0;
 	module->tx_buffer_ptr = tx_data;
 	module->status = STATUS_BUSY;
 
@@ -167,8 +190,9 @@ static void _spi_read_buffer(
 
 	/* Set length for the buffer and the pointer, and let
 	 * the interrupt handler do the rest */
-	module->remaining_rx_buffer_length = length;
-	module->remaining_dummy_buffer_length = length;
+	module->total_length = length;
+	module->remaining_tx_length = 0;
+	module->remaining_rx_length = length;
 	module->rx_buffer_ptr = rx_data;
 	module->status = STATUS_BUSY;
 
@@ -396,13 +420,16 @@ enum status_code spi_transceive_buffer_job(
  * This function will abort the specified job type.
  *
  * \param[in]  module    Pointer to SPI software instance struct
+ * \returns Number of characters received prior to abort.
  */
-void spi_abort_job(
+uint16_t spi_abort_job(
 		struct spi_module *const module)
 {
 	/* Pointer to the hardware module instance */
 	SercomSpi *const spi_hw
 		= &(module->hw->SPI);
+
+	uint16_t xfer_count = spi_xfer_count(module);
 
 	/* Abort ongoing job */
 
@@ -412,11 +439,12 @@ void spi_abort_job(
 			SPI_INTERRUPT_FLAG_TX_COMPLETE;
 
 	module->status = STATUS_ABORTED;
-	module->remaining_rx_buffer_length = 0;
-	module->remaining_dummy_buffer_length = 0;
-	module->remaining_tx_buffer_length = 0;
+	module->remaining_tx_length = 0;
+	module->remaining_rx_length = 0;
 
 	module->dir = SPI_DIRECTION_IDLE;
+
+	return xfer_count;
 }
 
 #  if CONF_SPI_SLAVE_ENABLE == true || CONF_SPI_MASTER_ENABLE == true
@@ -446,8 +474,7 @@ static void _spi_write(
 	/* Write the data to send*/
 	spi_hw->DATA.reg = data_to_send & SERCOM_SPI_DATA_MASK;
 
-	/* Decrement remaining buffer length */
-	(module->remaining_tx_buffer_length)--;
+	module->remaining_tx_length--;
 }
 #  endif
 
@@ -467,8 +494,7 @@ static void _spi_write_dummy(
 	/* Write dummy byte */
 	spi_hw->DATA.reg = dummy_write;
 
-	/* Decrement remaining dummy buffer length */
-	module->remaining_dummy_buffer_length--;
+	module->remaining_tx_length--;
 }
 #  endif
 
@@ -489,8 +515,7 @@ static void _spi_read_dummy(
 	flush = spi_hw->DATA.reg;
 	UNUSED(flush);
 
-	/* Decrement remaining dummy buffer length */
-	module->remaining_dummy_buffer_length--;
+	module->remaining_rx_length--;
 }
 
 /**
@@ -519,8 +544,7 @@ static void _spi_read(
 		module->rx_buffer_ptr += 1;
 	}
 
-	/* Decrement length of the remaining buffer */
-	module->remaining_rx_buffer_length--;
+	module->remaining_rx_length--;
 }
 
 /**
@@ -542,12 +566,10 @@ void _spi_interrupt_handler(
 	struct spi_module *module
 		= (struct spi_module *)_sercom_instances[instance];
 
+	uint16_t xfer_count = spi_xfer_count(module);
+
 	/* Pointer to the hardware module instance */
 	SercomSpi *const spi_hw = &(module->hw->SPI);
-
-	/* Combine callback registered and enabled masks. */
-	uint8_t callback_mask =
-			module->enabled_callback & module->registered_callback;
 
 	/* Read and mask interrupt flag register */
 	uint16_t interrupt_status = spi_hw->INTFLAG.reg;
@@ -560,7 +582,7 @@ void _spi_interrupt_handler(
 			(module->dir == SPI_DIRECTION_READ)) {
 			/* Send dummy byte when reading in master mode */
 			_spi_write_dummy(module);
-			if (module->remaining_dummy_buffer_length == 0) {
+			if (module->remaining_tx_length == 0) {
 				/* Disable the Data Register Empty Interrupt */
 				spi_hw->INTENCLR.reg
 						= SPI_INTERRUPT_FLAG_DATA_REGISTER_EMPTY;
@@ -580,7 +602,7 @@ void _spi_interrupt_handler(
 		) {
 			/* Write next byte from buffer */
 			_spi_write(module);
-			if (module->remaining_tx_buffer_length == 0) {
+			if (module->remaining_tx_length == 0) {
 				/* Disable the Data Register Empty Interrupt */
 				spi_hw->INTENCLR.reg
 						= SPI_INTERRUPT_FLAG_DATA_REGISTER_EMPTY;
@@ -608,9 +630,7 @@ void _spi_interrupt_handler(
 				spi_hw->INTENCLR.reg = SPI_INTERRUPT_FLAG_RX_COMPLETE |
 						SPI_INTERRUPT_FLAG_DATA_REGISTER_EMPTY;
 				/* Run callback if registered and enabled */
-				if (callback_mask & (1 << SPI_CALLBACK_ERROR)) {
-					(module->callback[SPI_CALLBACK_ERROR])(module);
-				}
+				spi_call_cb(module, SPI_CALLBACK_ERROR, xfer_count);
 			}
 			/* Flush */
 			uint16_t flush = spi_hw->DATA.reg;
@@ -621,33 +641,29 @@ void _spi_interrupt_handler(
 			if (module->dir == SPI_DIRECTION_WRITE) {
 				/* Flush receive buffer when writing */
 				_spi_read_dummy(module);
-				if (module->remaining_dummy_buffer_length == 0) {
+				if (module->remaining_rx_length == 0) {
 					spi_hw->INTENCLR.reg = SPI_INTERRUPT_FLAG_RX_COMPLETE;
 					module->status = STATUS_OK;
 					module->dir = SPI_DIRECTION_IDLE;
+					spi_call_cb(module, SPI_CALLBACK_BUFFER_TRANSMITTED,
+					            xfer_count);
 					/* Run callback if registered and enabled */
-					if (callback_mask &
-							(1 << SPI_CALLBACK_BUFFER_TRANSMITTED)){
-						(module->callback[SPI_CALLBACK_BUFFER_TRANSMITTED])(module);
-					}
 				}
 			} else {
 				/* Read data register */
 				_spi_read(module);
 
 				/* Check if the last character have been received */
-				if (module->remaining_rx_buffer_length == 0) {
+				if (module->remaining_rx_length == 0) {
 					module->status = STATUS_OK;
 					/* Disable RX Complete Interrupt and set status */
 					spi_hw->INTENCLR.reg = SPI_INTERRUPT_FLAG_RX_COMPLETE;
 					if(module->dir == SPI_DIRECTION_BOTH) {
-						if (callback_mask & (1 << SPI_CALLBACK_BUFFER_TRANSCEIVED)) {
-							(module->callback[SPI_CALLBACK_BUFFER_TRANSCEIVED])(module);
-						}
+						spi_call_cb(module, SPI_CALLBACK_BUFFER_TRANSCEIVED,
+						            xfer_count);
 					} else if (module->dir == SPI_DIRECTION_READ) {
-						if (callback_mask & (1 << SPI_CALLBACK_BUFFER_RECEIVED)) {
-							(module->callback[SPI_CALLBACK_BUFFER_RECEIVED])(module);
-						}
+						spi_call_cb(module, SPI_CALLBACK_BUFFER_RECEIVED,
+						            xfer_count);
 					}
 				}
 			}
@@ -668,19 +684,14 @@ void _spi_interrupt_handler(
 			/* Clear interrupt flag */
 			spi_hw->INTFLAG.reg = SPI_INTERRUPT_FLAG_TX_COMPLETE;
 
-
 			/* Reset all status information */
 			module->dir = SPI_DIRECTION_IDLE;
-			module->remaining_tx_buffer_length = 0;
-			module->remaining_rx_buffer_length = 0;
+			module->remaining_tx_length = 0;
+			module->remaining_rx_length = 0;
 			module->status = STATUS_OK;
 
-			if (callback_mask &
-					(1 << SPI_CALLBACK_SLAVE_TRANSMISSION_COMPLETE)) {
-			(module->callback[SPI_CALLBACK_SLAVE_TRANSMISSION_COMPLETE])
-					(module);
-			}
-
+			spi_call_cb(module, SPI_CALLBACK_SLAVE_TRANSMISSION_COMPLETE,
+			            xfer_count);
 		}
 #  endif
 #  if CONF_SPI_MASTER_ENABLE == true
@@ -693,10 +704,7 @@ void _spi_interrupt_handler(
 			module->dir = SPI_DIRECTION_IDLE;
 			module->status = STATUS_OK;
 			/* Run callback if registered and enabled */
-			if (callback_mask & (1 << SPI_CALLBACK_BUFFER_TRANSMITTED)){
-				(module->callback[SPI_CALLBACK_BUFFER_TRANSMITTED])
-						(module);
-			}
+			spi_call_cb(module, SPI_CALLBACK_BUFFER_TRANSMITTED, xfer_count);
 		}
 #endif
 	}
@@ -711,9 +719,7 @@ void _spi_interrupt_handler(
 				/* Clear interrupt flag */
 				spi_hw->INTFLAG.reg = SPI_INTERRUPT_FLAG_SLAVE_SELECT_LOW;
 
-				if (callback_mask & (1 << SPI_CALLBACK_SLAVE_SELECT_LOW)) {
-					(module->callback[SPI_CALLBACK_SLAVE_SELECT_LOW])(module);
-				}
+				spi_call_cb(module, SPI_CALLBACK_SLAVE_SELECT_LOW, xfer_count);
 			}
 		}
 #  endif
@@ -727,9 +733,7 @@ void _spi_interrupt_handler(
 		/* Clear interrupt flag */
 		spi_hw->INTFLAG.reg = SPI_INTERRUPT_FLAG_COMBINED_ERROR;
 
-		if (callback_mask & (1 << SPI_CALLBACK_COMBINED_ERROR)) {
-			(module->callback[SPI_CALLBACK_COMBINED_ERROR])(module);
-		}
+		spi_call_cb(module, SPI_CALLBACK_COMBINED_ERROR, xfer_count);
 	}
 #  endif
 }
