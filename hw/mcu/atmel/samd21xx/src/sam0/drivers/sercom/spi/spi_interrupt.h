@@ -129,8 +129,7 @@ enum status_code spi_write_buffer_job(
 enum status_code spi_read_buffer_job(
 		struct spi_module *const module,
 		uint8_t *rx_data,
-		uint16_t length,
-		uint16_t dummy);
+		uint16_t length);
 
 enum status_code spi_transceive_buffer_job(
 		struct spi_module *const module,
@@ -140,6 +139,8 @@ enum status_code spi_transceive_buffer_job(
 
 uint16_t spi_abort_job(
 		struct spi_module *const module);
+
+void spi_set_dummy(struct spi_module *const module, uint16_t dummy);
 
 /**
  * \brief Retrieves the current status of a job.
