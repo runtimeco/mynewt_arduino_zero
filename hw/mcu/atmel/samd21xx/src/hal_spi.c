@@ -36,7 +36,6 @@ struct samd21_hal_spi {
     uint8_t                         flags;
 
     hal_spi_txrx_cb txrx_cb;
-    uint16_t txrx_len;
     void *txrx_cb_arg;
 };
 
@@ -346,34 +345,21 @@ hal_spi_tx_val(int spi_num, uint16_t tx)
 }
 
 static void
-samd21_hal_spi_cb(struct spi_module *module)
+samd21_hal_spi_cb(struct spi_module *module, enum spi_callback callback_type,
+                  uint16_t xfr_count)
 {
     struct samd21_hal_spi *spi;
-    enum status_code status;
-    int len;
 
     spi = samd21_hal_spi_resolve_module(module);
     if (spi == NULL) {
         return;
     }
 
-    status = spi_get_job_status(module);
-    switch (status) {
-    case STATUS_OK:
-        len = spi->txrx_len;
-        break;
-
-    default:
-        /* No way to determine how much data was trasmitted! */
-        len = 0;
-        break;
-    }
-
     if (spi->flags & SAMD21_SPI_FLAG_XFER) {
         spi->flags &= ~SAMD21_SPI_FLAG_XFER;
 
         assert(spi->txrx_cb != NULL);
-        spi->txrx_cb(spi->txrx_cb_arg, len);
+        spi->txrx_cb(spi->txrx_cb_arg, xfr_count);
     }
 }
 
@@ -417,11 +403,7 @@ samd21_hal_spi_txrx_blocking(struct samd21_hal_spi *spi, void *txbuf,
     enum status_code status;
 
     spi->flags |= SAMD21_SPI_FLAG_XFER;
-    if (rxbuf == NULL) {
-        status = spi_write_buffer_wait(&spi->module, txbuf, len);
-    } else {
-        status = spi_transceive_buffer_wait(&spi->module, txbuf, rxbuf, len);
-    }
+    status = spi_transceive_buffer_wait(&spi->module, txbuf, rxbuf, len);
     spi->flags &= ~SAMD21_SPI_FLAG_XFER;
 
     return samd21_hal_spi_rc_from_status(status);
@@ -434,15 +416,8 @@ samd21_hal_spi_txrx_nonblocking(struct samd21_hal_spi *spi, void *txbuf,
     enum status_code status;
 
     spi->flags |= SAMD21_SPI_FLAG_XFER;
-    spi->txrx_len = len;
 
-    if (txbuf == NULL && rxbuf != NULL) {
-        status = spi_read_buffer_job(&spi->module, rxbuf, len, 0);
-    } else if (rxbuf == NULL) {
-        status = spi_write_buffer_job(&spi->module, txbuf, len);
-    } else {
-        status = spi_transceive_buffer_job(&spi->module, txbuf, rxbuf, len);
-    }
+    status = spi_transceive_buffer_job(&spi->module, txbuf, rxbuf, len);
 
     return samd21_hal_spi_rc_from_status(status);
 }
@@ -509,7 +484,9 @@ hal_spi_slave_set_def_tx_val(int spi_num, uint16_t val)
         return EINVAL;
     }
 
-    return ENOTSUP;
+    spi_set_dummy(&spi->module, val);
+
+    return 0;
 }
 
 int
