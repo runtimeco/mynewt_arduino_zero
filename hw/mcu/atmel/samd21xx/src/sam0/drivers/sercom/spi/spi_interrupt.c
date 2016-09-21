@@ -47,12 +47,8 @@
 
 #include "spi_interrupt.h"
 
-/**
- * \internal
- *
- * Dummy byte to send when reading in master mode.
- */
-uint16_t dummy_write;
+static int _spi_read(struct spi_module *const module);
+static int _spi_write(struct spi_module *const module);
 
 /**
  * \internal
@@ -73,18 +69,29 @@ static void _spi_transceive_buffer(
 	Assert(module);
 	Assert(tx_data);
 
+	/* Get a pointer to the hardware module instance */
+	SercomSpi *const hw = &(module->hw->SPI);
+
+	module->rx_buffer_ptr = NULL;
+	module->tx_buffer_ptr = NULL;
+
 	/* Write parameters to the device instance */
 	module->total_length = length;
-	module->remaining_tx_length = length;
-	module->remaining_rx_length = length;
 	module->rx_buffer_ptr = rx_data;
 	module->tx_buffer_ptr = tx_data;
 	module->status = STATUS_BUSY;
+	if (rx_data != NULL) {
+		module->remaining_rx_length = length;
+	} else {
+		module->remaining_rx_length = 0;
+	}
+	if (tx_data != NULL) {
+		module->remaining_tx_length = length;
+	} else {
+		module->remaining_tx_length = 0;
+	}
 
 	module->dir = SPI_DIRECTION_BOTH;
-
-	/* Get a pointer to the hardware module instance */
-	SercomSpi *const hw = &(module->hw->SPI);
 
 	/* Enable the Data Register Empty and RX Complete Interrupt */
 	hw->INTENSET.reg = (SPI_INTERRUPT_FLAG_DATA_REGISTER_EMPTY |
@@ -119,6 +126,38 @@ spi_call_cb(struct spi_module *const module, enum spi_callback callback_type,
 		callback_func = module->callback[callback_type];
 		callback_func(module, callback_type, xfer_count);
 	}
+}
+
+void
+spi_set_dummy(struct spi_module *const module, uint16_t dummy)
+{
+	SercomSpi *const hw = &module->hw->SPI;
+
+	module->dummy = dummy;
+
+	if (dummy != SPI_DUMMY_NONE) {
+		/* Preload the shift register with the dummy character. */
+		hw->INTENSET.reg = SPI_INTERRUPT_FLAG_DATA_REGISTER_EMPTY;
+		hw->DATA.reg = dummy & SERCOM_SPI_DATA_MASK;
+	} else {
+		hw->INTENSET.reg = 0;
+	}
+}
+
+/**
+ * Disables the specified interrupts for a SPI module.
+ */
+static void
+spi_disable_ints(struct spi_module *const module,
+				 enum spi_interrupt_flag flags)
+{
+	SercomSpi *const hw = &module->hw->SPI;
+
+	if (module->dummy != SPI_DUMMY_NONE) {
+		flags &= ~SPI_INTERRUPT_FLAG_DATA_REGISTER_EMPTY;
+	}
+
+	hw->INTENCLR.reg = flags;
 }
 
 /**
@@ -327,7 +366,6 @@ enum status_code spi_write_buffer_job(
  * \param[in]  module   Pointer to SPI software instance struct
  * \param[out] rx_data  Pointer to data buffer to receive
  * \param[in]  length   Data buffer length
- * \param[in]  dummy    Dummy character to send when reading in master mode
  *
  * \returns Status of the operation.
  * \retval  STATUS_OK               If the operation completed successfully
@@ -339,8 +377,7 @@ enum status_code spi_write_buffer_job(
 enum status_code spi_read_buffer_job(
 		struct spi_module *const module,
 		uint8_t *rx_data,
-		uint16_t length,
-		uint16_t dummy)
+		uint16_t length)
 {
 	/* Sanity check arguments */
 	Assert(module);
@@ -359,7 +396,6 @@ enum status_code spi_read_buffer_job(
 		return STATUS_BUSY;
 	}
 
-	dummy_write = dummy;
 	/* Issue internal read */
 	_spi_read_buffer(module, rx_data, length);
 	return STATUS_OK;
@@ -425,18 +461,15 @@ enum status_code spi_transceive_buffer_job(
 uint16_t spi_abort_job(
 		struct spi_module *const module)
 {
-	/* Pointer to the hardware module instance */
-	SercomSpi *const spi_hw
-		= &(module->hw->SPI);
-
 	uint16_t xfer_count = spi_xfer_count(module);
 
 	/* Abort ongoing job */
 
 	/* Disable interrupts */
-	spi_hw->INTENCLR.reg = SPI_INTERRUPT_FLAG_RX_COMPLETE |
-			SPI_INTERRUPT_FLAG_DATA_REGISTER_EMPTY |
-			SPI_INTERRUPT_FLAG_TX_COMPLETE;
+	spi_disable_ints(module,
+	                 SPI_INTERRUPT_FLAG_RX_COMPLETE |
+	                 SPI_INTERRUPT_FLAG_DATA_REGISTER_EMPTY |
+	                 SPI_INTERRUPT_FLAG_TX_COMPLETE);
 
 	module->status = STATUS_ABORTED;
 	module->remaining_tx_length = 0;
@@ -448,75 +481,48 @@ uint16_t spi_abort_job(
 }
 
 #  if CONF_SPI_SLAVE_ENABLE == true || CONF_SPI_MASTER_ENABLE == true
+
 /**
  * \internal
  * Writes a character from the TX buffer to the Data register.
  *
  * \param[in,out]  module  Pointer to SPI software instance struct
+ *
+ * \returns 1 if done; 0 if more data to write.
  */
-static void _spi_write(
+static int _spi_write(
 		struct spi_module *const module)
 {
+    uint16_t data_to_send;
+    int done;
+
 	/* Pointer to the hardware module instance */
 	SercomSpi *const spi_hw = &(module->hw->SPI);
 
-	/* Write value will be at least 8-bits long */
-	uint16_t data_to_send = *(module->tx_buffer_ptr);
-	/* Increment 8-bit pointer */
-	(module->tx_buffer_ptr)++;
+    if (module->tx_buffer_ptr != NULL) {
+        /* Write value will be at least 8-bits long */
+        data_to_send = *(module->tx_buffer_ptr);
+        /* Increment 8-bit pointer */
+        (module->tx_buffer_ptr)++;
 
-	if (module->character_size == SPI_CHARACTER_SIZE_9BIT) {
-		data_to_send |= ((*(module->tx_buffer_ptr)) << 8);
-		/* Increment 8-bit pointer */
-		(module->tx_buffer_ptr)++;
-	}
+        if (module->character_size == SPI_CHARACTER_SIZE_9BIT) {
+            data_to_send |= ((*(module->tx_buffer_ptr)) << 8);
+            /* Increment 8-bit pointer */
+            (module->tx_buffer_ptr)++;
+        }
+        module->remaining_tx_length--;
+        done = module->remaining_tx_length == 0;
+    } else {
+        data_to_send = module->dummy;
+        done = 0;
+    }
 
 	/* Write the data to send*/
 	spi_hw->DATA.reg = data_to_send & SERCOM_SPI_DATA_MASK;
 
-	module->remaining_tx_length--;
+    return done;
 }
 #  endif
-
-#  if CONF_SPI_MASTER_ENABLE == true
-/**
- * \internal
- * Writes a dummy character to the Data register.
- *
- * \param[in,out]  module  Pointer to SPI software instance struct
- */
-static void _spi_write_dummy(
-		struct spi_module *const module)
-{
-	/* Pointer to the hardware module instance */
-	SercomSpi *const spi_hw = &(module->hw->SPI);
-
-	/* Write dummy byte */
-	spi_hw->DATA.reg = dummy_write;
-
-	module->remaining_tx_length--;
-}
-#  endif
-
-/**
- * \internal
- * Writes a dummy character from the to the Data register.
- *
- * \param[in,out]  module  Pointer to SPI software instance struct
- */
-static void _spi_read_dummy(
-		struct spi_module *const module)
-{
-	/* Pointer to the hardware module instance */
-	SercomSpi *const spi_hw = &(module->hw->SPI);
-	uint16_t flush = 0;
-
-	/* Read dummy byte */
-	flush = spi_hw->DATA.reg;
-	UNUSED(flush);
-
-	module->remaining_rx_length--;
-}
 
 /**
  * \internal
@@ -524,27 +530,36 @@ static void _spi_read_dummy(
  *
  * \param[in,out]  module  Pointer to SPI software instance struct
  */
-static void _spi_read(
+static int _spi_read(
 		struct spi_module *const module)
 {
+    int done;
+
 	/* Pointer to the hardware module instance */
 	SercomSpi *const spi_hw = &(module->hw->SPI);
 
 	uint16_t received_data = (spi_hw->DATA.reg & SERCOM_SPI_DATA_MASK);
 
-	/* Read value will be at least 8-bits long */
-	*(module->rx_buffer_ptr) = received_data;
-	/* Increment 8-bit pointer */
-	module->rx_buffer_ptr += 1;
+    if (module->rx_buffer_ptr != NULL) {
+        /* Read value will be at least 8-bits long */
+        *(module->rx_buffer_ptr) = received_data;
+        /* Increment 8-bit pointer */
+        module->rx_buffer_ptr += 1;
 
-	if(module->character_size == SPI_CHARACTER_SIZE_9BIT) {
-		/* 9-bit data, write next received byte to the buffer */
-		*(module->rx_buffer_ptr) = (received_data >> 8);
-		/* Increment 8-bit pointer */
-		module->rx_buffer_ptr += 1;
-	}
+        if(module->character_size == SPI_CHARACTER_SIZE_9BIT) {
+            /* 9-bit data, write next received byte to the buffer */
+            *(module->rx_buffer_ptr) = (received_data >> 8);
+            /* Increment 8-bit pointer */
+            module->rx_buffer_ptr += 1;
+        }
 
-	module->remaining_rx_length--;
+        module->remaining_rx_length--;
+        done = module->remaining_rx_length == 0;
+    } else {
+        done = 0;
+    }
+
+    return done;
 }
 
 /**
@@ -562,6 +577,8 @@ static void _spi_read(
 void _spi_interrupt_handler(
 		uint8_t instance)
 {
+    int done;
+
 	/* Get device instance from the look-up table */
 	struct spi_module *module
 		= (struct spi_module *)_sercom_instances[instance];
@@ -581,11 +598,11 @@ void _spi_interrupt_handler(
 		if ((module->mode == SPI_MODE_MASTER) &&
 			(module->dir == SPI_DIRECTION_READ)) {
 			/* Send dummy byte when reading in master mode */
-			_spi_write_dummy(module);
-			if (module->remaining_tx_length == 0) {
+			done = _spi_write(module);
+			if (done) {
 				/* Disable the Data Register Empty Interrupt */
-				spi_hw->INTENCLR.reg
-						= SPI_INTERRUPT_FLAG_DATA_REGISTER_EMPTY;
+				spi_disable_ints(module,
+				                 SPI_INTERRUPT_FLAG_DATA_REGISTER_EMPTY);
 			}
 		}
 #  endif
@@ -601,11 +618,11 @@ void _spi_interrupt_handler(
 #  endif
 		) {
 			/* Write next byte from buffer */
-			_spi_write(module);
-			if (module->remaining_tx_length == 0) {
+			done = _spi_write(module);
+			if (done) {
 				/* Disable the Data Register Empty Interrupt */
-				spi_hw->INTENCLR.reg
-						= SPI_INTERRUPT_FLAG_DATA_REGISTER_EMPTY;
+				spi_disable_ints(module,
+				                 SPI_INTERRUPT_FLAG_DATA_REGISTER_EMPTY);
 
 				if (module->dir == SPI_DIRECTION_WRITE &&
 						!(module->receiver_enabled)) {
@@ -627,8 +644,9 @@ void _spi_interrupt_handler(
 				/* End transaction */
 				module->dir = SPI_DIRECTION_IDLE;
 
-				spi_hw->INTENCLR.reg = SPI_INTERRUPT_FLAG_RX_COMPLETE |
-						SPI_INTERRUPT_FLAG_DATA_REGISTER_EMPTY;
+				spi_disable_ints(module,
+				                 SPI_INTERRUPT_FLAG_RX_COMPLETE |
+				                 SPI_INTERRUPT_FLAG_DATA_REGISTER_EMPTY);
 				/* Run callback if registered and enabled */
 				spi_call_cb(module, SPI_CALLBACK_ERROR, xfer_count);
 			}
@@ -640,9 +658,9 @@ void _spi_interrupt_handler(
 		} else {
 			if (module->dir == SPI_DIRECTION_WRITE) {
 				/* Flush receive buffer when writing */
-				_spi_read_dummy(module);
-				if (module->remaining_rx_length == 0) {
-					spi_hw->INTENCLR.reg = SPI_INTERRUPT_FLAG_RX_COMPLETE;
+				done = _spi_read(module);
+				if (done) {
+					spi_disable_ints(module, SPI_INTERRUPT_FLAG_RX_COMPLETE);
 					module->status = STATUS_OK;
 					module->dir = SPI_DIRECTION_IDLE;
 					spi_call_cb(module, SPI_CALLBACK_BUFFER_TRANSMITTED,
@@ -651,13 +669,13 @@ void _spi_interrupt_handler(
 				}
 			} else {
 				/* Read data register */
-				_spi_read(module);
+				done = _spi_read(module);
 
 				/* Check if the last character have been received */
-				if (module->remaining_rx_length == 0) {
+				if (done) {
 					module->status = STATUS_OK;
 					/* Disable RX Complete Interrupt and set status */
-					spi_hw->INTENCLR.reg = SPI_INTERRUPT_FLAG_RX_COMPLETE;
+					spi_disable_ints(module, SPI_INTERRUPT_FLAG_RX_COMPLETE);
 					if(module->dir == SPI_DIRECTION_BOTH) {
 						spi_call_cb(module, SPI_CALLBACK_BUFFER_TRANSCEIVED,
 						            xfer_count);
@@ -677,10 +695,10 @@ void _spi_interrupt_handler(
 			/* Transaction ended by master */
 
 			/* Disable interrupts */
-			spi_hw->INTENCLR.reg =
-					SPI_INTERRUPT_FLAG_TX_COMPLETE |
-					SPI_INTERRUPT_FLAG_RX_COMPLETE |
-					SPI_INTERRUPT_FLAG_DATA_REGISTER_EMPTY;
+			spi_disable_ints(module,
+			                 SPI_INTERRUPT_FLAG_TX_COMPLETE |
+			                 SPI_INTERRUPT_FLAG_RX_COMPLETE |
+			                 SPI_INTERRUPT_FLAG_DATA_REGISTER_EMPTY);
 			/* Clear interrupt flag */
 			spi_hw->INTFLAG.reg = SPI_INTERRUPT_FLAG_TX_COMPLETE;
 
@@ -698,8 +716,7 @@ void _spi_interrupt_handler(
 		if ((module->mode == SPI_MODE_MASTER) &&
 			(module->dir == SPI_DIRECTION_WRITE) && !(module->receiver_enabled)) {
 		  	/* Clear interrupt flag */
-		 	spi_hw->INTENCLR.reg
-					= SPI_INTERRUPT_FLAG_TX_COMPLETE;
+			spi_disable_ints(module, SPI_INTERRUPT_FLAG_TX_COMPLETE);
 			/* Buffer sent with receiver disabled */
 			module->dir = SPI_DIRECTION_IDLE;
 			module->status = STATUS_OK;
@@ -715,7 +732,7 @@ void _spi_interrupt_handler(
 		if (interrupt_status & SPI_INTERRUPT_FLAG_SLAVE_SELECT_LOW) {
 			if (module->mode == SPI_MODE_SLAVE) {
 				/* Disable interrupts */
-				spi_hw->INTENCLR.reg = SPI_INTERRUPT_FLAG_SLAVE_SELECT_LOW;
+				spi_disable_ints(module, SPI_INTERRUPT_FLAG_SLAVE_SELECT_LOW);
 				/* Clear interrupt flag */
 				spi_hw->INTFLAG.reg = SPI_INTERRUPT_FLAG_SLAVE_SELECT_LOW;
 
@@ -729,7 +746,7 @@ void _spi_interrupt_handler(
 	/* When combined error happen */
 	if (interrupt_status & SPI_INTERRUPT_FLAG_COMBINED_ERROR) {
 		/* Disable interrupts */
-		spi_hw->INTENCLR.reg = SPI_INTERRUPT_FLAG_COMBINED_ERROR;
+		spi_disable_ints(module, SPI_INTERRUPT_FLAG_COMBINED_ERROR);
 		/* Clear interrupt flag */
 		spi_hw->INTFLAG.reg = SPI_INTERRUPT_FLAG_COMBINED_ERROR;
 

@@ -593,6 +593,7 @@ enum status_code spi_init(
 	}
 	module->tx_buffer_ptr              = NULL;
 	module->rx_buffer_ptr              = NULL;
+	module->dummy                      = SPI_DUMMY_NONE;
 	module->total_length               = 0x0000;
 	module->remaining_rx_length        = 0x0000;
 	module->remaining_tx_length        = 0x0000;

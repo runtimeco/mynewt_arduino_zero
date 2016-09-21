@@ -415,6 +415,10 @@ extern "C" {
 #  define SPI_TIMEOUT 10000
 #  endif
 
+#  ifndef SPI_DUMMY_NONE
+#  define SPI_DUMMY_NONE 0xFFFF
+#  endif
+
 #  if SPI_CALLBACK_MODE == true
 /**
  * \brief SPI Callback enum
@@ -720,6 +724,8 @@ struct spi_module {
 	/** Buffer pointer to where the next character will be transmitted from
 	**/
 	volatile uint8_t *tx_buffer_ptr;
+	/** Dummy character to send when no data is buffered. */
+	uint16_t dummy;
 	/** Total characters being transfered. */
 	uint16_t total_length;
 	/** Remaining characters to transmit */
