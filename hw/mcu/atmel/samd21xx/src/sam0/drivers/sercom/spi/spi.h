@@ -1266,11 +1266,6 @@ static inline enum status_code spi_write(
 	return STATUS_OK;
 }
 
-enum status_code spi_write_buffer_wait(
-		struct spi_module *const module,
-		const uint8_t *tx_data,
-		uint16_t length);
-
 /**
  * \brief Reads last received SPI character
  *
@@ -1325,12 +1320,6 @@ static inline enum status_code spi_read(
 
 	return retval;
 }
-
-enum status_code spi_read_buffer_wait(
-		struct spi_module *const module,
-		uint8_t *rx_data,
-		uint16_t length,
-		uint16_t dummy);
 
 enum status_code spi_transceive_wait(
 		struct spi_module *const module,
