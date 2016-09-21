@@ -121,16 +121,6 @@ static inline void spi_disable_callback(
  * \name Writing and Reading
  * @{
  */
-enum status_code spi_write_buffer_job(
-		struct spi_module *const module,
-		uint8_t *tx_data,
-		uint16_t length);
-
-enum status_code spi_read_buffer_job(
-		struct spi_module *const module,
-		uint8_t *rx_data,
-		uint16_t length);
-
 enum status_code spi_transceive_buffer_job(
 		struct spi_module *const module,
 		uint8_t *tx_data,
