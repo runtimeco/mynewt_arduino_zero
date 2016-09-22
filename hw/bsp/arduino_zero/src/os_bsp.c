@@ -63,7 +63,7 @@ static struct flash_area arduino_zero_flash_areas[] = {
         .fa_size = (1 * 1024)
     },
 };
-extern int bsp_hal_init(void);
+extern void bsp_hal_init(void);
 
 int
 bsp_imgr_current_slot(void)

@@ -103,7 +103,7 @@ static struct samd21_spi_config ext_spi_cfg = {
 
 #if MYNEWT_VAL(SPI_2)
 static struct samd21_spi_config winc1500_spi_cfg = {
-    .dipo = 2,
+    .dipo = 3,
     .dopo = 0,
     .pad0_pinmux = PINMUX_PA12C_SERCOM2_PAD0,   /* DO */
     .pad1_pinmux = PINMUX_PA13C_SERCOM2_PAD1,   /* SCK */
@@ -146,12 +146,7 @@ static const struct samd21_uart_config uart_cfgs[] = {
     }
 };
 
-#define SPI_TYPE(spi_num)   \
-    (MYNEWT_VAL(SPI_ ## spi_num ## _MASTER) ? \
-        HAL_SPI_TYPE_MASTER : \
-        HAL_SPI_TYPE_SLAVE)
-
-int
+void
 bsp_hal_init(void)
 {
     int rc;
@@ -159,41 +154,30 @@ bsp_hal_init(void)
     rc = hal_flash_init();
     SYSINIT_PANIC_ASSERT(rc == 0);
 
+    rc = cputime_init(MYNEWT_VAL(CLOCK_FREQ));
+    SYSINIT_PANIC_ASSERT(rc == 0);
+
     rc = os_dev_create((struct os_dev *) &hal_uart0, CONSOLE_UART,
       OS_DEV_INIT_PRIMARY, 0, uart_hal_init, (void *)&uart_cfgs[0]);
-    if (rc != 0) {
-        goto err;
-    }
+    SYSINIT_PANIC_ASSERT(rc == 0);
 
 #if MYNEWT_VAL(SPI_0)
-    rc = hal_spi_init(0, &ext_spi_cfg, SPI_TYPE(0));
-    if (rc != 0) {
-        goto err;
-    }
+    rc = hal_spi_init(0, &ext_spi_cfg, MYNEWT_VAL(SPI_0_TYPE));
+    SYSINIT_PANIC_ASSERT(rc == 0);
 #endif
 
 #if MYNEWT_VAL(SPI_1)
-    rc = hal_spi_init(1, &ext_spi_cfg, SPI_TYPE(1));
-    if (rc != 0) {
-        goto err;
-    }
+    rc = hal_spi_init(1, &ext_spi_cfg, MYNEWT_VAL(SPI_1_TYPE));
+    SYSINIT_PANIC_ASSERT(rc == 0);
 #endif
 
 #if MYNEWT_VAL(SPI_2)
-    rc = hal_spi_init(2, &winc1500_spi_cfg, SPI_TYPE(2));
-    if (rc != 0) {
-        goto err;
-    }
+    rc = hal_spi_init(2, &winc1500_spi_cfg, MYNEWT_VAL(SPI_2_TYPE));
+    SYSINIT_PANIC_ASSERT(rc == 0);
 #endif
 
 #if MYNEWT_VAL(SPI_3)
-    rc = hal_spi_init(3, &ext_spi_cfg, SPI_TYPE(3));
-    if (rc != 0) {
-        goto err;
-    }
+    rc = hal_spi_init(3, &ext_spi_cfg, MYNEWT_VAL(SPI_3_TYPE));
+    SYSINIT_PANIC_ASSERT(rc == 0);
 #endif
-
-    return (0);
-err:
-    return (rc);
 }

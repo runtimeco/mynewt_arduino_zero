@@ -21,7 +21,7 @@
 #include <hal/hal_bsp.h>
 #include <hal/flash_map.h>
 
-int bsp_hal_init(void);
+void bsp_hal_init(void);
 void _close(int fd);
 
 static struct flash_area arduino_zero_flash_areas[] = {

@@ -140,17 +140,10 @@ bsp_hal_init(void)
     SYSINIT_PANIC_ASSERT(rc == 0);
 #endif
 
-#if 0
-    rc = hal_spi_init(ARDUINO_ZERO_SPI_ICSP, &icsp_spi_config,
-                      MYNEWT_VAL(SPI_0_TYPE));
-    if (rc != 0) {
-        goto err;
-    }
 #if MYNEWT_VAL(SPI_1)
     rc = hal_spi_init(ARDUINO_ZERO_SPI_ALT, &alt_spi_config,
                       MYNEWT_VAL(SPI_1_TYPE));
     SYSINIT_PANIC_ASSERT(rc == 0);
-#endif
 #endif
 
 #if MYNEWT_VAL(I2C_5)

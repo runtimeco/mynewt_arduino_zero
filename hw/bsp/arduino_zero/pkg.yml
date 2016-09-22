@@ -64,14 +64,14 @@ pkg.syscfg_defs:
 
     SPI_0:
         description: 'TBD'
-        value:  1
+        value:  0
     SPI_0_TYPE:
         description: 'TBD'
         value: 'HAL_SPI_TYPE_MASTER'
 
     SPI_1:
         description: 'TBD'
-        value:  1
+        value:  0
     SPI_1_TYPE:
         description: 'TBD'
         value: 'HAL_SPI_TYPE_MASTER'
