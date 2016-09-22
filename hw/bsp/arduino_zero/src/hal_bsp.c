@@ -20,12 +20,16 @@
 #include <stddef.h>
 #include <assert.h>
 #include "syscfg/syscfg.h"
+#include "sysinit/sysinit.h"
 #include "mcu/samd21.h"
 #include "bsp/bsp.h"
 #include <bsp/bsp_sysid.h>
 #include <hal/hal_spi.h>
+#if MYNEWT_VAL(I2C_5)
 #include <hal/hal_i2c.h>
+#endif
 #include <hal/hal_bsp.h>
+#include "hal/hal_flash.h"
 #include <mcu/hal_spi.h>
 #include <mcu/hal_i2c.h>
 
@@ -93,10 +97,12 @@ struct samd21_spi_config alt_spi_config = {
 };
 #endif
 
+#if MYNEWT_VAL(I2C_5)
 struct samd21_i2c_config i2c_config = {
     .pad0_pinmux = PINMUX_PA22D_SERCOM5_PAD0,
     .pad1_pinmux = PINMUX_PA23D_SERCOM5_PAD1,
 };
+#endif
 
 #if MYNEWT_VAL(UART_0)
 static const struct samd21_uart_config uart_cfgs[] = {
@@ -114,23 +120,24 @@ static const struct samd21_uart_config uart_cfgs[] = {
 };
 #endif
 
-int
+void
 bsp_hal_init(void)
 {
     int rc;
 
+    rc = hal_flash_init();
+    SYSINIT_PANIC_ASSERT(rc == 0);
+
 #if MYNEWT_VAL(UART_0)
     rc = os_dev_create((struct os_dev *) &hal_uart0, CONSOLE_UART,
       OS_DEV_INIT_PRIMARY, 0, uart_hal_init, (void *)&uart_cfgs[0]);
-    assert(rc == 0);
+    SYSINIT_PANIC_ASSERT(rc == 0);
 #endif
 
 #if MYNEWT_VAL(SPI_0)
     rc = hal_spi_init(ARDUINO_ZERO_SPI_ICSP, &icsp_spi_config,
                       MYNEWT_VAL(SPI_0_TYPE));
-    if (rc != 0) {
-        goto err;
-    }
+    SYSINIT_PANIC_ASSERT(rc == 0);
 #endif
 
 #if 0
@@ -142,18 +149,12 @@ bsp_hal_init(void)
 #if MYNEWT_VAL(SPI_1)
     rc = hal_spi_init(ARDUINO_ZERO_SPI_ALT, &alt_spi_config,
                       MYNEWT_VAL(SPI_1_TYPE));
-    if (rc != 0) {
-        goto err;
-    }
+    SYSINIT_PANIC_ASSERT(rc == 0);
 #endif
 #endif
 
+#if MYNEWT_VAL(I2C_5)
     rc = hal_i2c_init(5, &i2c_config);
-    if (rc != 0) {
-        goto err;
-    }
-
-    return (0);
-err:
-    return (rc);
+    SYSINIT_PANIC_ASSERT(rc == 0);
+#endif
 }
