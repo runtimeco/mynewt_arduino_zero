@@ -87,10 +87,18 @@ cputime_hw_init(uint32_t clock_freq)
     g_cputime.ticks_per_usec = 8;
 
     rc = tc_init(&g_cputime_timer, TC4, &cfg);
+    switch (rc) {
+    case STATUS_OK:
+        tc_enable(&g_cputime_timer);
+        return 0;
 
-    tc_enable(&g_cputime_timer);
+    case STATUS_ERR_DENIED:
+        /* Timer already enabled. */
+        return 0;
 
-    return rc;
+    default:
+        return -1;
+    }
 }
 
 /**
