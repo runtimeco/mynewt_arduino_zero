@@ -77,7 +77,7 @@ static struct samd21_spi_config ext_spi_cfg = {
     .dopo = 0,
     .pad0_pinmux = PINMUX_PA04D_SERCOM0_PAD0,   /* DO */
     .pad1_pinmux = PINMUX_PA05D_SERCOM0_PAD1,   /* SCK */
-#if MYNEWT_VAL(SPI_0_MASTER)
+#if MYNEWT_VAL(SPI_0_TYPE) == HAL_SPI_TYPE_MASTER
     .pad2_pinmux = PINMUX_UNUSED,               /* SS */
 #else
     .pad2_pinmux = PINMUX_PA06D_SERCOM0_PAD2,   /* SS */
@@ -92,7 +92,7 @@ static struct samd21_spi_config ext_spi_cfg = {
     .dopo = 0,
     .pad0_pinmux = PINMUX_PA00D_SERCOM1_PAD0,   /* DO */
     .pad1_pinmux = PINMUX_PA01D_SERCOM1_PAD1,   /* SCK */
-#if MYNEWT_VAL(SPI_0_MASTER)
+#if MYNEWT_VAL(SPI_1_TYPE) == HAL_SPI_TYPE_MASTER
     .pad2_pinmux = PINMUX_UNUSED,               /* SS */
 #else
     .pad2_pinmux = PINMUX_PA02D_SERCOM1_PAD2,   /* SS */
@@ -107,7 +107,7 @@ static struct samd21_spi_config winc1500_spi_cfg = {
     .dopo = 0,
     .pad0_pinmux = PINMUX_PA12C_SERCOM2_PAD0,   /* DO */
     .pad1_pinmux = PINMUX_PA13C_SERCOM2_PAD1,   /* SCK */
-#if MYNEWT_VAL(SPI_0_MASTER)
+#if MYNEWT_VAL(SPI_2_TYPE) == HAL_SPI_TYPE_MASTER
     .pad2_pinmux = PINMUX_UNUSED,               /* SS */
 #else
     .pad2_pinmux = PINMUX_PA14C_SERCOM2_PAD2,   /* SS */
@@ -123,7 +123,7 @@ static struct samd21_spi_config ext_spi_cfg = {
     .dopo = 0,
     .pad0_pinmux = PINMUX_PA16D_SERCOM3_PAD0,   /* MOSI */
     .pad1_pinmux = PINMUX_PA17D_SERCOM3_PAD1,   /* SCK */
-#if MYNEWT_VAL(SPI_0_MASTER)
+#if MYNEWT_VAL(SPI_3_TYPE) == HAL_SPI_TYPE_MASTER
     .pad2_pinmux = PINMUX_UNUSED,               /* SS */
 #else
     .pad2_pinmux = PINMUX_PA18D_SERCOM3_PAD2,   /* SS */
