@@ -27,8 +27,9 @@
 #include "spi_interrupt.h"
 #include "mcu/samd21.h"
 
-#define SAMD21_SPI_FLAG_ENABLED     (0x1)
-#define SAMD21_SPI_FLAG_XFER        (0x2)
+#define SAMD21_SPI_FLAG_MASTER      (0x1)
+#define SAMD21_SPI_FLAG_ENABLED     (0x2)
+#define SAMD21_SPI_FLAG_XFER        (0x4)
 
 struct samd21_hal_spi {
     struct spi_module               module;
@@ -154,6 +155,19 @@ hal_spi_init(int spi_num, void *cfg, uint8_t spi_type)
     if (spi == NULL) {
         return EINVAL;
     }
+    memset(spi, 0, sizeof *spi);
+
+    switch (spi_type) {
+    case HAL_SPI_TYPE_MASTER:
+        spi->flags |= SAMD21_SPI_FLAG_MASTER;
+        break;
+
+    case HAL_SPI_TYPE_SLAVE:
+        break;
+
+    default:
+        return EINVAL;
+    }
 
     spi->pconfig = cfg;
 
@@ -241,20 +255,13 @@ samd21_spi_config(struct samd21_hal_spi *spi,
         return EINVAL;
     }
 
-    switch (settings->spi_type) {
-    case HAL_SPI_TYPE_MASTER:
+    if (spi->flags & SAMD21_SPI_FLAG_MASTER) {
         cfg.mode = SPI_MODE_MASTER;
         cfg.mode_specific.master.baudrate = settings->baudrate;
-        break;
-
-    case HAL_SPI_TYPE_SLAVE:
+    } else {
         cfg.mode = SPI_MODE_SLAVE;
         cfg.mode_specific.slave.frame_format = SPI_FRAME_FORMAT_SPI_FRAME;
         cfg.mode_specific.slave.preload_enable = true;
-        break;
-
-    default:
-        return EINVAL;
     }
 
     rc = spi_init(&spi->module, spi->module.hw, &cfg);
@@ -281,12 +288,6 @@ hal_spi_config(int spi_num, struct hal_spi_settings *settings)
     }
 
     rc = samd21_spi_config(spi, settings);
-    if (rc != 0) {
-        return rc;
-    }
-
-    rc = hal_spi_set_txrx_cb(spi_num, settings->txrx_cb_func,
-                             settings->txrx_cb_arg);
     if (rc != 0) {
         return rc;
     }
@@ -441,22 +442,14 @@ hal_spi_txrx(int spi_num, void *txbuf, void *rxbuf, int len)
         return EALREADY;
     }
 
-    switch (spi->module.mode) {
-    case SPI_MODE_MASTER:
+    if (spi->flags & SAMD21_SPI_FLAG_MASTER) {
         if (txbuf == NULL) {
             return EINVAL;
         }
-        break;
-
-    case SPI_MODE_SLAVE:
+    } else {
         if (txbuf == NULL && rxbuf == NULL) {
             return EINVAL;
         }
-        break;
-
-    default:
-        assert(0);
-        return EIO;
     }
 
     if (spi->txrx_cb == NULL) {

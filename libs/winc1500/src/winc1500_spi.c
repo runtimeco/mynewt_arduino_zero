@@ -49,7 +49,6 @@ nm_bus_init(void *pvinit)
         if (hal_gpio_init_out(WINC1500_SPI_SSN, 1)) {
             return M2M_ERR_BUS_FAIL;
         }
-        cfg.spi_type = HAL_SPI_TYPE_MASTER;
         cfg.data_mode = HAL_SPI_MODE0;
         cfg.data_order = HAL_SPI_MSB_FIRST;
         cfg.word_size = HAL_SPI_WORD_SIZE_8BIT;
