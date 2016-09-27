@@ -14,14 +14,17 @@
  * limitations under the License.
  */
 
-#include "hal/hal_i2c.h"
 #include <assert.h>
-#include <compiler.h>
-#include "port.h"
-#include <mcu/hal_i2c.h>
-#include <i2c_master.h>
-#include <mcu/samd21.h>
 #include <errno.h>
+
+#include "compiler.h"
+#include "port.h"
+#include "i2c_master.h"
+
+#include "hal/hal_i2c.h"
+#include "mcu/hal_i2c.h"
+#include "mcu/samd21.h"
+#include "samd21_priv.h"
 
 /*
  * XXX Timeout value parameter in functions is not used, because Atmel's
@@ -57,31 +60,13 @@ hal_i2c_init(uint8_t i2c_num, void *usercfg)
 
     assert(usercfg != NULL);
 
-    i2c->pconfig = (struct samd21_i2c_config *) usercfg;
-
-    switch (i2c_num) {
-        case 0:
-            i2c->hw = SERCOM0;
-            break;
-        case 1:
-            i2c->hw = SERCOM1;
-            break;
-        case 2:
-            i2c->hw = SERCOM2;
-            break;
-        case 3:
-            i2c->hw = SERCOM3;
-            break;
-        case 4:
-            i2c->hw = SERCOM4;
-            break;
-        case 5:
-            i2c->hw = SERCOM5;
-            break;
-        default:
-            rc = EINVAL;
-            goto err;
+    i2c->hw = samd21_sercom(i2c_num);
+    if (i2c->hw == NULL) {
+        rc = EINVAL;
+        goto err;
     }
+
+    i2c->pconfig = (struct samd21_i2c_config *) usercfg;
 
     i2c_master_get_config_defaults(&cfg);
     cfg.pinmux_pad0 = i2c->pconfig->pad0_pinmux;

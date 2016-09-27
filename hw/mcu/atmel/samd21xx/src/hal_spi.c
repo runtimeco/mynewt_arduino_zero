@@ -22,10 +22,11 @@
 #include "compiler.h"
 #include "port.h"
 #include "mcu/hal_spi.h"
+#include "mcu/samd21.h"
 #include "sercom.h"
 #include "spi.h"
 #include "spi_interrupt.h"
-#include "mcu/samd21.h"
+#include "samd21_priv.h"
 
 #define SAMD21_SPI_FLAG_MASTER      (0x1)
 #define SAMD21_SPI_FLAG_ENABLED     (0x2)
@@ -157,6 +158,11 @@ hal_spi_init(int spi_num, void *cfg, uint8_t spi_type)
     }
     memset(spi, 0, sizeof *spi);
 
+    spi->module.hw = samd21_sercom(spi_num);
+    if (spi->module.hw == NULL) {
+        return EINVAL;
+    }
+
     switch (spi_type) {
     case HAL_SPI_TYPE_MASTER:
         spi->flags |= SAMD21_SPI_FLAG_MASTER;
@@ -170,29 +176,6 @@ hal_spi_init(int spi_num, void *cfg, uint8_t spi_type)
     }
 
     spi->pconfig = cfg;
-
-    switch (spi_num) {
-        case 0:
-            spi->module.hw = SERCOM0;
-            break;
-        case 1:
-            spi->module.hw = SERCOM1;
-            break;
-        case 2:
-            spi->module.hw = SERCOM2;
-            break;
-        case 3:
-            spi->module.hw = SERCOM3;
-            break;
-        case 4:
-            spi->module.hw = SERCOM4;
-            break;
-        case 5:
-            spi->module.hw = SERCOM5;
-            break;
-        default:
-            return EINVAL;
-    }
 
     return 0;
 }
