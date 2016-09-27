@@ -53,10 +53,6 @@ pkg.cflags:
 
 
 pkg.syscfg_defs:
-    BSP_ARDUINO_MKR1000:
-        description: 'TBD'
-        value:  1
-
     CLOCK_FREQ:
         description: 'TBD'
         value:  1000000
