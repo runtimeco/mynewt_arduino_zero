@@ -28,8 +28,8 @@ pkg.downloadscript: "mkr1000_download.sh"
 pkg.debugscript: "mkr1000_debug.sh"
 pkg.deps:
     - hw/mcu/atmel/samd21xx
-    - "@apache-mynewt-core/libs/baselibc"
-    - "@apache-mynewt-core/libs/os"
+    - "@apache-mynewt-core/libc/baselibc"
+    - "@apache-mynewt-core/kernel/os"
     - "@apache-mynewt-core/hw/drivers/uart/uart_hal"
 
 # SAMD21G18A

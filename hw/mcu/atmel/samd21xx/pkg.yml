@@ -4,7 +4,8 @@ pkg.repository: https://github.com/runtimeinc/mynewt_arduino_zero
 
 pkg.deps: 
     - "@apache-mynewt-core/hw/hal"
-    - "@apache-mynewt-core/libs/cmsis-core"
+    - "@apache-mynewt-core/hw/cmsis-core"
+
 pkg.cflags: 
           -  -std=c99  
 #          -  -DI2C_MASTER_CALLBACK_MODE=true 

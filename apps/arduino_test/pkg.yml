@@ -26,12 +26,12 @@ pkg.keywords:
 
 pkg.deps:
     - "@apache-mynewt-core/fs/nffs"
-    - "@apache-mynewt-core/libs/console/full"
-    - "@apache-mynewt-core/libs/flash_test"
+    - "@apache-mynewt-core/sys/console/full"
+    - "@apache-mynewt-core/test/flash_test"
     - "@apache-mynewt-core/libs/imgmgr"
     - "@apache-mynewt-core/libs/newtmgr"
-    - "@apache-mynewt-core/libs/os"
-    - "@apache-mynewt-core/libs/shell"
+    - "@apache-mynewt-core/kernel/os"
+    - "@apache-mynewt-core/sys/shell"
     - "@apache-mynewt-core/libs/util"
     - "@apache-mynewt-core/sys/config"
     - "@apache-mynewt-core/sys/log"

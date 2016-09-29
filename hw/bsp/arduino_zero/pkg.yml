@@ -29,8 +29,9 @@ pkg.debugscript: "arduino_zero_debug.sh"
 pkg.deps:
     - hw/mcu/atmel/samd21xx
     - "@apache-mynewt-core/hw/hal"
-    - "@apache-mynewt-core/libs/baselibc"
+    - "@apache-mynewt-core/libc/baselibc"
     - "@apache-mynewt-core/hw/drivers/uart/uart_hal"
+
 pkg.cflags:
     - -mthumb
     - -D__SAMD21G18A__
