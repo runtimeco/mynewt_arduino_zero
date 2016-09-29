@@ -28,10 +28,10 @@ pkg.cflags:
     - -DCONF_WINC_DEBUG
     - -DCONF_WINC_PRINTF=console_printf
 pkg.deps:
-    - "@apache-mynewt-core/libs/os"
+    - "@apache-mynewt-core/kernel/os"
     - "@apache-mynewt-core/libs/util"
     - "@apache-mynewt-core/hw/hal"
-    - "@apache-mynewt-core/libs/wifi_mgmt"
-    - "@apache-mynewt-core/sys/mn_socket"
+    - "@apache-mynewt-core/net/wifi/wifi_mgmt"
+    - "@apache-mynewt-core/net/ip/mn_socket"
 pkg.reqs:
     - console

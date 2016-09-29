@@ -26,9 +26,9 @@ pkg.keywords:
 
 pkg.deps:
     - "@apache-mynewt-core/fs/nffs"
-    - "@apache-mynewt-core/libs/console/full"
-    - "@apache-mynewt-core/libs/shell"
-    - "@apache-mynewt-core/libs/os"
+    - "@apache-mynewt-core/sys/console/full"
+    - "@apache-mynewt-core/sys/shell"
+    - "@apache-mynewt-core/kernel/os"
     - "@apache-mynewt-core/sys/id"
     - libs/espduino
 

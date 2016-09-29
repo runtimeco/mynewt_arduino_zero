@@ -29,16 +29,16 @@ pkg.keywords:
 pkg.deps:
     - "@apache-mynewt-core/sys/coredump"
     - "@apache-mynewt-core/fs/nffs"
-    - "@apache-mynewt-core/libs/console/full"
+    - "@apache-mynewt-core/sys/console/full"
     - "@apache-mynewt-core/libs/newtmgr"
-    - "@apache-mynewt-core/libs/os"
-    - "@apache-mynewt-core/libs/shell"
+    - "@apache-mynewt-core/kernel/os"
+    - "@apache-mynewt-core/sys/shell"
     - "@apache-mynewt-core/libs/util"
-    - "@apache-mynewt-core/libs/inet_def_service"
+    - "@apache-mynewt-core/net/ip/inet_def_service"
     - "@apache-mynewt-core/sys/config"
     - "@apache-mynewt-core/sys/log"
-    - "@apache-mynewt-core/sys/mn_socket"
-    - "@apache-mynewt-core/libs/wifi_mgmt"
+    - "@apache-mynewt-core/net/ip/mn_socket"
+    - "@apache-mynewt-core/net/wifi/wifi_mgmt"
     - "libs/winc1500"
 
 pkg.syscfg_vals:
