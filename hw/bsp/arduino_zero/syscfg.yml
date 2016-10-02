@@ -3,11 +3,15 @@
 syscfg.defs:
     BSP_ARDUINO_ZERO:
         description: 'TBD'
-        value: 1
+        value: 0
+        restrictions:
+            - "!BSP_ARDUINO_ZERO_PRO"
 
     BSP_ARDUINO_ZERO_PRO:
         description: 'TBD'
         value: 0
+        restrictions:
+            - "!BSP_ARDUINO_ZERO"
 
     UART_0:
         description: 'TBD'
