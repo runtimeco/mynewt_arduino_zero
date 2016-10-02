@@ -1,0 +1,34 @@
+# Package: "hw/bsp/arduino_mkr1000"
+
+syscfg.defs:
+    CLOCK_FREQ:
+        description: 'TBD'
+        value:  1000000
+
+    SPI_0:
+        description: 'TBD'
+        value:  0
+    SPI_0_TYPE:
+        description: 'TBD'
+        value: 'HAL_SPI_TYPE_MASTER'
+
+    SPI_1:
+        description: 'TBD'
+        value:  0
+    SPI_1_TYPE:
+        description: 'TBD'
+        value: 'HAL_SPI_TYPE_MASTER'
+
+    SPI_2:
+        description: 'WINC1500 SPI'
+        value:  0
+    SPI_2_TYPE:
+        description: 'TBD'
+        value: 'HAL_SPI_TYPE_MASTER'
+
+    SPI_3:
+        description: 'TBD SPI'
+        value:  0
+    SPI_3_TYPE:
+        description: 'TBD'
+        value: 'HAL_SPI_TYPE_MASTER'

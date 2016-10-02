@@ -1,0 +1,9 @@
+# Package: apps/winc1500_wifi
+
+syscfg.vals:
+    # Enable WINC-1500 SPI.
+    SPI_2: 1
+    SPI_2_TYPE: 'HAL_SPI_TYPE_MASTER'
+
+    # Enable the shell task.
+    SHELL_TASK: 1
