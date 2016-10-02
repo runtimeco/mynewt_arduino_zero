@@ -22,7 +22,7 @@
 #include "syscfg/syscfg.h"
 
 #if !MYNEWT_VAL(BSP_ARDUINO_ZERO_PRO) && !MYNEWT_VAL(BSP_ARDUINO_ZERO)
-  #error you must defined arduino_zero_pro or arduino_zero in your target features
+  #error you must enable BSP_ARDUINO_ZERO or BSP_ARDUINO_ZERO_PRO in your target syscfg.
 #endif
 
 #include <inttypes.h>
