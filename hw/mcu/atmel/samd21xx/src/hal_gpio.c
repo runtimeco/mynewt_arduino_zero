@@ -45,9 +45,9 @@
  * 
  * The port B pins exposed the chip are
  *              PB2,  PB3, 
- *  PB8,  PB9, PB10,  B11,
+ *  PB8,  PB9, PB10,  PB11,
  * 
- *                                     PA22, PA23, 
+ *                                     PB22, PB23, 
  *
  * 
  * We keep the mapping where ports A0-A31 are pins 0 - 31
