@@ -30,6 +30,7 @@ pkg.deps:
     - "@apache-mynewt-core/test/flash_test"
     - "@apache-mynewt-core/libs/imgmgr"
     - "@apache-mynewt-core/mgmt/newtmgr"
+    - "@apache-mynewt-core/mgmt/newtmgr/transport/nmgr_shell"
     - "@apache-mynewt-core/kernel/os"
     - "@apache-mynewt-core/sys/shell"
     - "@apache-mynewt-core/libs/util"
