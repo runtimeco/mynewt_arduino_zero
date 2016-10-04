@@ -1,0 +1,3 @@
+syscfg.vals:
+  - CONFIG_NFFS: 1
+  - SHELL_TASK: 1

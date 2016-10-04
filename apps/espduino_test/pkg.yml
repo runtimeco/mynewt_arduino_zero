@@ -25,15 +25,8 @@ pkg.homepage: "http://mynewt.apache.org/"
 pkg.keywords:
 
 pkg.deps:
-    - "@apache-mynewt-core/fs/nffs"
     - "@apache-mynewt-core/sys/console/full"
     - "@apache-mynewt-core/sys/shell"
     - "@apache-mynewt-core/kernel/os"
     - "@apache-mynewt-core/sys/id"
     - libs/espduino
-
-pkg.cflags.NFFS:
-    - "-DNFFS_PRESENT"
-
-pkg.cflags.FCB:
-    - "-DFCB_PRESENT"

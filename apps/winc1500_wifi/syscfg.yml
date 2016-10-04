@@ -7,3 +7,6 @@ syscfg.vals:
 
     # Enable the shell task.
     SHELL_TASK: 1
+
+    CONFIG_NFFS: 1
+

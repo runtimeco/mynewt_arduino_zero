@@ -25,10 +25,6 @@
 #include <hal/hal_uart.h>
 #include <hal/hal_system.h>
 #include <hal/hal_cputime.h>
-#ifdef NFFS_PRESENT
-#include <fs/fs.h>
-#include <nffs/nffs.h>
-#endif
 
 #include <assert.h>
 #include <string.h>
@@ -37,8 +33,6 @@
 #include <id/id.h>
 
 #include <shell/shell.h>
-
-#include <uart_bitbang/uart_bitbang.h>
 
 #include <espduino/espduino.h>
 #include <espduino/rest.h>
@@ -194,35 +188,6 @@ espduino_test_init(void)
     shell_cmd_register(&esp_cli_cmd);
 }
 
-#ifdef NFFS_PRESENT
-static void
-setup_for_nffs(void)
-{
-    /* NFFS_AREA_MAX is defined in the BSP-specified bsp.h header file. */
-    struct nffs_area_desc descs[NFFS_AREA_MAX + 1];
-    int cnt;
-    int rc;
-
-    /* Initialize nffs's internal state. */
-    rc = nffs_init();
-    assert(rc == 0);
-
-    /* Convert the set of flash blocks we intend to use for nffs into an array
-     * of nffs area descriptors.
-     */
-    cnt = NFFS_AREA_MAX;
-    rc = flash_area_to_nffs_desc(FLASH_AREA_NFFS, &cnt, descs);
-    assert(rc == 0);
-
-    /* Attempt to restore an existing nffs file system from flash. */
-    if (nffs_detect(descs) == FS_ECORRUPT) {
-        /* No valid nffs instance detected; format a new one. */
-        rc = nffs_format(descs);
-        assert(rc == 0);
-    }
-}
-#endif
-
 /**
  * main
  *
@@ -253,18 +218,6 @@ main(int argc, char **argv)
 
     rc = os_msys_register(&default_mbuf_pool);
     assert(rc == 0);
-
-    rc = hal_flash_init();
-    assert(rc == 0);
-
-    setup_for_nffs();
-
-    id_init();
-
-    shell_task_init(SHELL_TASK_PRIO, shell_stack, SHELL_TASK_STACK_SIZE,
-                    SHELL_MAX_INPUT_LEN);
-
-    (void) console_init(shell_console_rx_cb);
 
     espduino_test_init();
     console_printf("\nEspduino testing\n");
