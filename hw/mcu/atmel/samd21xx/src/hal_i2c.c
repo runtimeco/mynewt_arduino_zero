@@ -87,7 +87,7 @@ err:
 
 int
 hal_i2c_master_write(uint8_t i2c_num, struct hal_i2c_master_data *ppkt,
-  uint32_t os_ticks)
+  uint32_t os_ticks, uint8_t last_op)
 {
     struct samd21_i2c_state *i2c;
     struct i2c_master_packet pkt;
@@ -114,7 +114,7 @@ err:
 
 int
 hal_i2c_master_read(uint8_t i2c_num, struct hal_i2c_master_data *ppkt,
-  uint32_t os_ticks)
+  uint32_t os_ticks, uint8_t last_op)
 {
     struct samd21_i2c_state *i2c;
     struct i2c_master_packet pkt;
