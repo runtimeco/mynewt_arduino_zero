@@ -33,7 +33,6 @@ pkg.deps:
     - "@apache-mynewt-core/mgmt/newtmgr/transport/nmgr_shell"
     - "@apache-mynewt-core/kernel/os"
     - "@apache-mynewt-core/sys/shell"
-    - "@apache-mynewt-core/libs/util"
     - "@apache-mynewt-core/net/ip/inet_def_service"
     - "@apache-mynewt-core/sys/config"
     - "@apache-mynewt-core/sys/log"
