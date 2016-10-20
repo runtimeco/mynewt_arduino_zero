@@ -21,7 +21,6 @@
 #include <hal/hal_gpio.h>
 #include <hal/hal_flash.h>
 #include <console/console.h>
-#include <hal/flash_map.h>
 #include <hal/hal_uart.h>
 #include <hal/hal_system.h>
 #include <hal/hal_cputime.h>
