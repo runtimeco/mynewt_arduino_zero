@@ -101,7 +101,11 @@ hal_i2c_master_write(uint8_t i2c_num, struct hal_i2c_master_data *ppkt,
     pkt.data_length = ppkt->len;
     pkt.data = ppkt->buffer;
 
-    status = i2c_master_write_packet_wait_no_stop(&i2c->module, &pkt);
+    if (last_op) {
+        status = i2c_master_write_packet_wait(&i2c->module, &pkt);
+    } else {
+        status = i2c_master_write_packet_wait_no_stop(&i2c->module, &pkt);
+    }
     if (status != STATUS_OK) {
         rc = (int) status;
         goto err;
@@ -128,48 +132,15 @@ hal_i2c_master_read(uint8_t i2c_num, struct hal_i2c_master_data *ppkt,
     pkt.data_length = ppkt->len;
     pkt.data = ppkt->buffer;
 
-    status = i2c_master_read_packet_wait_no_stop(&i2c->module, &pkt);
+    if (last_op ) {
+        status = i2c_master_read_packet_wait(&i2c->module, &pkt);
+    } else {
+        status = i2c_master_read_packet_wait_no_stop(&i2c->module, &pkt);
+    }
     if (status != STATUS_OK) {
         rc = (int) status;
         goto err;
     }
-
-    return (0);
-err:
-    return (rc);
-}
-
-int
-hal_i2c_master_begin(uint8_t i2c_num)
-{
-    struct samd21_i2c_state *i2c;
-    enum status_code status;
-    int rc;
-
-    SAMD21_I2C_RESOLVE(i2c_num, i2c);
-
-    status = i2c_master_lock(&i2c->module);
-    if (status != STATUS_OK) {
-        rc = (int) status;
-        goto err;
-    }
-
-    return (0);
-err:
-    return (rc);
-}
-
-int
-hal_i2c_master_end(uint8_t i2c_num)
-{
-    struct samd21_i2c_state *i2c;
-    int rc;
-
-    SAMD21_I2C_RESOLVE(i2c_num, i2c);
-
-    i2c_master_send_stop(&i2c->module);
-    i2c_master_unlock(&i2c->module);
-
     return (0);
 err:
     return (rc);
@@ -186,12 +157,6 @@ hal_i2c_master_probe(uint8_t i2c_num, uint8_t address, uint32_t os_ticks)
 
     SAMD21_I2C_RESOLVE(i2c_num, i2c);
 
-    status = i2c_master_lock(&i2c->module);
-    if (status != STATUS_OK) {
-        rc = (int) status;
-        goto err;
-    }
-
     memset(&pkt, 0, sizeof(pkt));
     pkt.address = address;
     pkt.data_length = 0;
@@ -199,12 +164,9 @@ hal_i2c_master_probe(uint8_t i2c_num, uint8_t address, uint32_t os_ticks)
 
     status = i2c_master_read_packet_wait(&i2c->module, &pkt);
     if (status != STATUS_OK) {
-        i2c_master_unlock(&i2c->module);
         rc = (int) status;
         goto err;
     }
-
-    i2c_master_unlock(&i2c->module);
 
     return (0);
 err:
