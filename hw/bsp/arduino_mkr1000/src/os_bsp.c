@@ -43,7 +43,7 @@
 static struct uart_dev hal_uart0;
 
 const struct hal_flash *
-bsp_flash_dev(uint8_t id)
+hal_bsp_flash_dev(uint8_t id)
 {
     /*
      * Internal flash mapped to id 0.
@@ -57,15 +57,15 @@ bsp_flash_dev(uint8_t id)
 /*
  * What memory to include in coredump.
  */
-static const struct bsp_mem_dump dump_cfg[] = {
+static const struct hal_bsp_mem_dump dump_cfg[] = {
     [0] = {
-	.bmd_start = &_ram_start,
-        .bmd_size = RAM_SIZE
+	.hbmd_start = &_ram_start,
+        .hbmd_size = RAM_SIZE
     }
 };
 
-const struct bsp_mem_dump *
-bsp_core_dump(int *area_cnt)
+const struct hal_bsp_mem_dump *
+hal_bsp_core_dump(int *area_cnt)
 {
     *area_cnt = sizeof(dump_cfg) / sizeof(dump_cfg[0]);
     return dump_cfg;
@@ -147,7 +147,7 @@ static const struct samd21_uart_config uart_cfgs[] = {
 };
 
 void
-bsp_init(void)
+hal_bsp_init(void)
 {
     int rc;
 

@@ -41,7 +41,7 @@
  * it's supposed to be unique for this particular MCU.
  */
 int
-bsp_hw_id(uint8_t *id, int max_len)
+hal_bsp_hw_id(uint8_t *id, int max_len)
 {
     int len, cnt;
 
