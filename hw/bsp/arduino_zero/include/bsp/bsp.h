@@ -19,6 +19,7 @@
 #ifndef __ARDUINO_BSP_H
 #define __ARDUINO_BSP_H
 
+#include <mcu/mcu.h>
 #include "syscfg/syscfg.h"
 
 #if !MYNEWT_VAL(BSP_ARDUINO_ZERO_PRO) && !MYNEWT_VAL(BSP_ARDUINO_ZERO)
@@ -49,16 +50,16 @@ extern uint8_t _ram_start;
 /*
  * Wiring of Wifi Shield 101 chip to SAMD21.
  */
-#define WINC1500_PIN_RESET      /* PA15 */      15
+#define WINC1500_PIN_RESET      /* PA15 */      MCU_GPIO_PORTA(15)
     /* WINC1500_PIN_WAKE */     /* NC */
-#define WINC1500_PIN_IRQ        /* PA21 */      21
+#define WINC1500_PIN_IRQ        /* PA21 */      MCU_GPIO_PORTA(21)
     /* WINC1500_PIN_ENABLE */   /* NC */
 
 #define WINC1500_SPI_SPEED                      4000000
-#define WINC1500_SPI_SSN        /* PA18 */      18
-#define WINC1500_SPI_SCK        /* PB11 */      (32 + 11)
-#define WINC1500_SPI_MOSI       /* PB10 */      (32 + 10)
-#define WINC1500_SPI_MISO       /* PA12 */      12
+#define WINC1500_SPI_SSN        /* PA18 */      MCU_GPIO_PORTA(18)
+#define WINC1500_SPI_SCK        /* PB11 */      MCU_GPIO_PORTB(11)
+#define WINC1500_SPI_MOSI       /* PB10 */      MCU_GPIO_PORTB(10)
+#define WINC1500_SPI_MISO       /* PA12 */      MCU_GPIO_PORTA(12)
 #define WINC1500_SPI_PORT       ARDUINO_ZERO_SPI_ICSP
 
 /* This defines the maximum NFFS areas (block) are in the BSPs NFS file

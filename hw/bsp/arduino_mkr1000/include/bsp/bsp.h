@@ -20,6 +20,7 @@
 #define __MKR1000_BSP_H__
 
 #include <inttypes.h>
+#include <mcu/mcu.h>
 
 #ifndef BSP_SYSID_H
 #include <bsp/bsp_sysid.h>
@@ -37,24 +38,24 @@ extern uint8_t _ram_start;
 #define CONSOLE_UART_SPEED      115200
 
 #ifdef BOOT_SERIAL
-#define BOOT_SERIAL_DETECT_PIN 		43
-#define BOOT_SERIAL_DETECT_PIN_CFG 	GPIO_PULL_UP
-#define BOOT_SERIAL_DETECT_PIN_VAL      0
+#define BOOT_SERIAL_DETECT_PIN		MCU_GPIO_PORTB(11)
+#define BOOT_SERIAL_DETECT_PIN_CFG	GPIO_PULL_UP
+#define BOOT_SERIAL_DETECT_PIN_VAL	0
 #endif
 
 /*
  * Wiring of WINC1500 chip to SAMD21.
  */
-#define WINC1500_PIN_RESET  /* PA27 */ 27
-#define WINC1500_PIN_WAKE   /* PB08 */ (8 + 32)
-#define WINC1500_PIN_IRQ    /* PB09 */ (9 + 32)
-#define WINC1500_PIN_ENABLE /* PA28 */ 28
+#define WINC1500_PIN_RESET		MCU_GPIO_PORTA(27)	/* PA27 */
+#define WINC1500_PIN_WAKE		MCU_GPIO_PORTB(8)	/* PB08 */
+#define WINC1500_PIN_IRQ		MCU_GPIO_PORTB(9)	/* PB09 */
+#define WINC1500_PIN_ENABLE		MCU_GPIO_PORTA(28)	/* PA28 */
 
-#define WINC1500_SPI_SPEED  4000000
-#define WINC1500_SPI_SSN    /* PA14 */ 14
-#define WINC1500_SPI_SCK    /* PA13 */ 13
-#define WINC1500_SPI_MOSI   /* PA12 */ 12
-#define WINC1500_SPI_MISO   /* PA15 */ 15
+#define WINC1500_SPI_SPEED		4000000
+#define WINC1500_SPI_SSN		MCU_GPIO_PORTA(14)	/* PA14 */
+#define WINC1500_SPI_SCK		MCU_GPIO_PORTA(13)	/* PA13 */
+#define WINC1500_SPI_MOSI		MCU_GPIO_PORTA(12)	/* PA12 */
+#define WINC1500_SPI_MISO		MCU_GPIO_PORTA(15)	/* PA15 */
 
 /* This defines the maximum NFFS areas (block) are in the BSPs NFS file
  * system space.  This in conjunction with flash map determines how
