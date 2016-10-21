@@ -52,6 +52,7 @@ echo "target remote localhost:3333" > $GDB_CMD_FILE
 # Whether target should be reset or not
 if [ ! -z "$RESET" ]; then
     echo "mon reset halt" >> $GDB_CMD_FILE
+    echo "stepi" >> $GDB_CMD_FILE
 else
     echo "mon halt" >> $GDB_CMD_FILE
 fi
