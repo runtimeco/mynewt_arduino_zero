@@ -23,7 +23,6 @@
 #include <console/console.h>
 #include <hal/hal_uart.h>
 #include <hal/hal_system.h>
-#include <hal/hal_cputime.h>
 
 #include <assert.h>
 #include <string.h>

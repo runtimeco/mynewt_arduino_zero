@@ -22,7 +22,6 @@
 #include "syscfg/syscfg.h"
 #include "sysinit/sysinit.h"
 #include "hal/hal_flash.h"
-#include "hal/hal_cputime.h"
 #include "mcu/samd21.h"
 #include "bsp/bsp.h"
 #include <bsp/bsp_sysid.h>

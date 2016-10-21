@@ -19,9 +19,9 @@
 #include <assert.h>
 
 #include <os/os.h>
+#include <os_cputime.h>
 #include <bsp/bsp.h>
 #include <hal/hal_gpio.h>
-#include <hal/hal_cputime.h>
 #include "winc1500/bsp/nm_bsp.h"
 
 #include "winc1500_priv.h"
@@ -32,7 +32,7 @@ nm_bsp_sleep(uint32 msec)
     if (os_started()) {
         os_time_delay((msec * OS_TICKS_PER_SEC) / 1000);
     } else {
-        cputime_delay_usecs(msec * 1000);
+        os_cputime_delay_usecs(msec * 1000);
     }
 }
 

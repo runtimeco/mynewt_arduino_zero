@@ -24,7 +24,6 @@
 #include <os/endian.h>
 #include <bsp/bsp.h>
 #include <hal/hal_gpio.h>
-#include <hal/hal_cputime.h>
 
 #include <mn_socket/mn_socket.h>
 #include <mn_socket/mn_socket_ops.h>
