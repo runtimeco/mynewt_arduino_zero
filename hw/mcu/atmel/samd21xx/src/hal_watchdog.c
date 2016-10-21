@@ -74,6 +74,7 @@ hal_watchdog_init(uint32_t expire_msecs)
     gcfg.run_in_standby = true;
     gcfg.source_clock = GCLK_SOURCE_OSCULP32K;
     system_gclk_gen_set_config(g_wdt_config.clock_source, &gcfg);
+    system_gclk_gen_enable(g_wdt_config.clock_source);
 
     /* We init but dont turn on device */
     rc = wdt_set_config(&g_wdt_config);
