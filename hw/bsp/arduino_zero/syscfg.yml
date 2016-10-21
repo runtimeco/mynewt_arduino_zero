@@ -35,6 +35,64 @@ syscfg.defs:
         description: 'TBD'
         value:  0
 
+# The allowable clock sources for the timers are the following (default is OSC8M):
+#  GCLK_SOURCE_DFLL48M, GCLK_SOURCE_FDPLL (96M), GCLK_SOURCE_OSCULP32K,
+#  GCLK_SOURCE_OSC8M, GCLK_SOURCE_OSC32K, GCLK_SOURCE_XOSC32K.
+    TIMER_0:
+        description: 'Arduino zero Timer 0.'
+        value:  1
+    TIMER_0_INTERRUPT_PRIORITY:
+        description: 'TBD'
+        value: '((1 << __NVIC_PRIO_BITS) - 1)'
+    TIMER_0_SOURCE:
+        description: 'Clock source for timer 0'
+        value:  'GCLK_SOURCE_OSC8M'
+    TIMER_0_GCLK:
+        description: 'Generic clock used for timer 1'
+        value:  'GCLK_GENERATOR_2'
+    TIMER_0_TC:
+        description: 'Timer counter unit to use for Timer 0'
+        value: 'TC3'
+    TIMER_0_IRQ_NUM:
+        description: 'IRQ number for Timer 0. Must be corresponding IRQ number for timer counter being used'
+        value: 'TC3_IRQn'
+    TIMER_1:
+        description: 'Arduino zero Timer 1.'
+        value:  0
+    TIMER_1_INTERRUPT_PRIORITY:
+        description: 'TBD'
+        value: '((1 << __NVIC_PRIO_BITS) - 1)'
+    TIMER_1_SOURCE:
+        description: 'Clock source for timer 1'
+        value:  'GCLK_SOURCE_OSC8M'
+    TIMER_1_GCLK:
+        description: 'Generic clock used for timer 1'
+        value:  'GCLK_GENERATOR_5'
+    TIMER_1_TC:
+        description: 'Timer counter unit to use for Timer 1'
+        value: 'TC4'
+    TIMER_1_IRQ_NUM:
+        description: 'IRQ number for Timer 1. Must be corresponding IRQ number for timer counter being used'
+        value: 'TC4_IRQn'
+    TIMER_2:
+        description: 'Arduino zero Timer 2.'
+        value:  0
+    TIMER_2_INTERRUPT_PRIORITY:
+        description: 'TBD'
+        value: '((1 << __NVIC_PRIO_BITS) - 1)'
+    TIMER_2_SOURCE:
+        description: 'Clock source for timer 2'
+        value:  'GCLK_SOURCE_OSC8M'
+    TIMER_2_GCLK:
+        description: 'Generic clock used for timer 2'
+        value:  'GCLK_GENERATOR_6'
+    TIMER_2_TC:
+        description: 'Timer counter unit to use for Timer 2'
+        value: 'TC5'
+    TIMER_2_IRQ_NUM:
+        description: 'IRQ number for Timer 2. Must be corresponding IRQ number for timer counter being used'
+        value: 'TC5_IRQn'
+
 syscfg.vals:
     CONFIG_FCB_FLASH_AREA: FLASH_AREA_NFFS
     REBOOT_LOG_FLASH_AREA: FLASH_AREA_REBOOT_LOG

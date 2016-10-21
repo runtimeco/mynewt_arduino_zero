@@ -34,6 +34,7 @@ extern uint8_t _ram_start;
 #define RAM_SIZE        0x00008000
 
 #define LED_BLINK_PIN   (20)
+#define LED_2           (21)
 #define CONSOLE_UART            "uart0"
 #define CONSOLE_UART_SPEED      115200
 

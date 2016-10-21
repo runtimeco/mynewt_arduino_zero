@@ -151,9 +151,6 @@ hal_bsp_init(void)
 {
     int rc;
 
-    rc = cputime_init(MYNEWT_VAL(CLOCK_FREQ));
-    SYSINIT_PANIC_ASSERT(rc == 0);
-
     rc = os_dev_create((struct os_dev *) &hal_uart0, CONSOLE_UART,
       OS_DEV_INIT_PRIMARY, 0, uart_hal_init, (void *)&uart_cfgs[0]);
     SYSINIT_PANIC_ASSERT(rc == 0);
