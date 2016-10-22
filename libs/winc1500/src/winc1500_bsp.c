@@ -19,7 +19,7 @@
 #include <assert.h>
 
 #include <os/os.h>
-#include <os_cputime.h>
+#include <os/os_cputime.h>
 #include <bsp/bsp.h>
 #include <hal/hal_gpio.h>
 #include "winc1500/bsp/nm_bsp.h"
