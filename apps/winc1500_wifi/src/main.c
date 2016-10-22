@@ -17,6 +17,7 @@
  * under the License.
  */
 #include "syscfg/syscfg.h"
+#include <sysinit/sysinit.h>
 #include <os/os.h>
 #include <bsp/bsp.h>
 #include <hal/hal_gpio.h>
@@ -24,7 +25,6 @@
 #include <console/console.h>
 #include <shell/shell.h>
 #include <config/config.h>
-#include <hal/flash_map.h>
 #include <hal/hal_system.h>
 #if !MYNEWT_VAL(CONFIG_NFFS)
 #error "Need NFFS or FCB for config storage"
@@ -313,9 +313,10 @@ main(int argc, char **argv)
     mcu_sim_parse_args(argc, argv);
 #endif
 
-    os_init();
+    sysinit();
 
     console_printf("Wifi test\n");
+
     conf_load();
 
     wifi_task_init(WIFI_TASK_PRIO, wifi_stack, WIFI_STACK_SZ);
