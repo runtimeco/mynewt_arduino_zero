@@ -5,6 +5,10 @@ syscfg.defs:
         description: 'TBD'
         value:  1000000
 
+    OS_CPUTIME_TIMER_NUM:
+        description: 'Timer to use for cputime'
+        value:  0
+
     SPI_0:
         description: 'TBD'
         value:  0
@@ -94,5 +98,5 @@ syscfg.defs:
 syscfg.vals:
     CONFIG_FCB_FLASH_AREA: FLASH_AREA_NFFS
     REBOOT_LOG_FLASH_AREA: FLASH_AREA_REBOOT_LOG
-    NFFS_FLASH_AREA: FLASH_AREA_REBOOT_LOG
+    NFFS_FLASH_AREA: FLASH_AREA_NFFS
     COREDUMP_FLASH_AREA: FLASH_AREA_IMAGE_1
