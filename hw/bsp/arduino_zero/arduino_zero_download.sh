@@ -20,11 +20,11 @@
 #  - BSP_PATH is absolute path to hw/bsp/bsp_name
 #  - BIN_BASENAME is the path to prefix to target binary,
 #    .elf appended to name is the ELF file
-#  - IMAGE_SLOT is the image slot to download to
+#  - IMAGE_SLOT is the image slot to download to (for non-mfg-image, non-boot)
 #  - FEATURES holds the target features string
 #  - EXTRA_JTAG_CMD holds extra parameters to pass to jtag software
-#
-#
+#  - MFG_IMAGE is "1" if this is a manufacturing image
+
 IS_BOOTLOADER=0
 
 if [ -z "$BIN_BASENAME" ]; then
@@ -44,23 +44,29 @@ for feature in $FEATURES; do
     fi
 done
 
-if [ $IS_BOOTLOADER -eq 1 ]; then
+if [ "$MFG_IMAGE" -eq 1 ]; then
+    FLASH_OFFSET=0x00000000
+    FILE_NAME=$BIN_BASENAME.bin
+    PROTECT_BOOT=1
+elif [ $IS_BOOTLOADER -eq 1 ]; then
     FLASH_OFFSET=0x00000000
     FILE_NAME=$BIN_BASENAME.elf.bin
-    # we will unprotect and reprotect our bootloader to ensure that its
-    # safe. also Arduino Zero Pro boards looks like they come with the 
-    # arduino bootloader protected via the NVM AUX 
-    CMD=-c
-    UNPROTECT_FLASH="at91samd bootloader 0"
-    PROTECT_FLASH="at91samd bootloader 16384"
+    PROTECT_BOOT=1
 else
     # this number is to offset the bootloader size 
     FLASH_OFFSET=0x0000C000
     FILE_NAME=$BIN_BASENAME.img
 fi
 
+if [ $PROTECT_BOOT -eq 1 ]; then
+    # we will unprotect and reprotect our bootloader to ensure that its
+    # safe. also Arduino Zero Pro boards looks like they come with the 
+    # arduino bootloader protected via the NVM AUX 
+    CMD=-c
+    UNPROTECT_FLASH="at91samd bootloader 0"
+    PROTECT_FLASH="at91samd bootloader 16384"
+fi
+
 echo "Downloading" $FILE_NAME "to" $FLASH_OFFSET
 
 openocd -f $BSP_PATH/arduino_zero.cfg -c "$EXTRA_JTAG_CMD" -c init -c "reset halt" $CMD "$UNPROTECT_FLASH" -c "reset halt" -c "flash write_image erase $FILE_NAME $FLASH_OFFSET" $CMD "$PROTECT_FLASH" -c "reset run" -c shutdown
-
-
