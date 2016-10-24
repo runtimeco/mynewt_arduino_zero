@@ -28,6 +28,8 @@
 #include <string.h>
 #include <assert.h>
 
+#include <bsp/bsp_sysid.h>
+
 struct arduino_pin_map_entry
 {
     char     *name;
@@ -390,14 +392,7 @@ arduino_write(int entry_id, int value)
             data.buffer = buf;
             data.len = 1;
 
-            rc = hal_i2c_master_begin(pmap->sysid);
-
-            if (rc) {
-                break;
-            }
-
-            rc = hal_i2c_master_write(pmap->sysid, &data);
-            hal_i2c_master_end(pmap->sysid);
+            rc = hal_i2c_master_write(pmap->sysid, &data, 100, 1);
             if (rc) {
                 break;
             }
@@ -450,12 +445,7 @@ arduino_read(int entry_id, int *value)
             data.buffer = buf;
             data.len = 1;
 
-            rc = hal_i2c_master_begin(pmap->sysid);
-            if (rc) {
-                break;
-            }
-            rc = hal_i2c_master_read(pmap->sysid, &data);
-            hal_i2c_master_end(pmap->sysid);
+            rc = hal_i2c_master_read(pmap->sysid, &data, 100, 1);
             *value = buf[0];
             break;
         }
