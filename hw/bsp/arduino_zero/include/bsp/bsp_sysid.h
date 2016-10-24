@@ -45,12 +45,12 @@ enum system_device_id
      ARDUINO_ZERO_D12 =    (19),
      ARDUINO_ZERO_D13 =    (17),
 
-#if MYNEWT_VAL(ARDUINO_ZERO_PRO)
+#if MYNEWT_VAL(BSP_ARDUINO_ZERO_PRO)
      ARDUINO_ZERO_D2 =     (8),
      ARDUINO_ZERO_D4 =     (14),
 #endif
 
-#if MYNEWT_VAL(ARDUINO_ZERO)
+#if MYNEWT_VAL(BSP_ARDUINO_ZERO)
      ARDUINO_ZERO_D2 =     (14),
      ARDUINO_ZERO_D4 =     (8),
 #endif
