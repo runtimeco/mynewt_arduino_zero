@@ -73,6 +73,8 @@ enum system_device_id
     ARDUINO_ZERO_I2C      = 4,
 };
 
+#define BSP_WINC1500_SPI_PORT   2
+
 #ifdef __cplusplus
 }
 #endif
