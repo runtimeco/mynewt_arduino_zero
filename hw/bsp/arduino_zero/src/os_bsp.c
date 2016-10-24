@@ -19,6 +19,10 @@
  */
 #include <stddef.h>
 #include <assert.h>
+#include <inttypes.h>
+
+#include <os/os_cputime.h>
+
 #include "syscfg/syscfg.h"
 #include "sysinit/sysinit.h"
 #include "mcu/samd21.h"
@@ -131,6 +135,12 @@ hal_bsp_init(void)
       OS_DEV_INIT_PRIMARY, 0, uart_hal_init, (void *)&uart_cfgs[0]);
     SYSINIT_PANIC_ASSERT(rc == 0);
 #endif
+
+    /*
+     * Set cputime to count at 1 usec increments.
+     */
+    rc = os_cputime_init(MYNEWT_VAL(CLOCK_FREQ));
+    assert(rc == 0);
 
 #if MYNEWT_VAL(SPI_0)
     rc = hal_spi_init(ARDUINO_ZERO_SPI_ICSP, &icsp_spi_config,
