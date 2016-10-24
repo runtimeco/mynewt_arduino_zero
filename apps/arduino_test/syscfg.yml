@@ -17,23 +17,7 @@
 # under the License.
 #
 
-pkg.name: apps/arduino_test
-pkg.type: app
-pkg.description: An application that uses the arduino_test library
-pkg.author: "Apache Mynewt <dev@mynewt.incubator.apache.org>"
-pkg.homepage: "http://mynewt.apache.org/"
-pkg.keywords:
-
-pkg.deps:
-    - "@apache-mynewt-core/fs/nffs"
-    - "@apache-mynewt-core/sys/console/full"
-    - "@apache-mynewt-core/test/flash_test"
-    - "@apache-mynewt-core/mgmt/imgmgr"
-    - "@apache-mynewt-core/mgmt/newtmgr"
-    - "@apache-mynewt-core/mgmt/newtmgr/transport/nmgr_shell"
-    - "@apache-mynewt-core/kernel/os"
-    - "@apache-mynewt-core/sys/shell"
-    - "@apache-mynewt-core/sys/config"
-    - "@apache-mynewt-core/sys/log"
-    - "@apache-mynewt-core/sys/stats"
-    - "libs/arduino_test"
+syscfg.vals:
+    # Enable the shell task.
+    SHELL_TASK: 1
+    CONFIG_NFFS: 1
