@@ -176,7 +176,7 @@ arduino_free_device(int entry_id) {
         case INTERFACE_GPIO_IN:
         case INTERFACE_GPIO_OUT:
             /* just set as input */
-            rc = hal_gpio_init_in(pmap->sysid, GPIO_PULL_NONE);
+            rc = hal_gpio_init_in(pmap->sysid, HAL_GPIO_PULL_NONE);
             break;
         case INTERFACE_I2C:
         case INTERFACE_SPI:
@@ -225,7 +225,7 @@ arduino_set_device(int entry_id, int devtype)
             }
             break;
         case INTERFACE_GPIO_IN:
-            rc = hal_gpio_init_in(pmap->sysid, GPIO_PULL_NONE);
+            rc = hal_gpio_init_in(pmap->sysid, HAL_GPIO_PULL_NONE);
             if (rc == 0) {
                 pint->gpio_pin = pmap->sysid;
                 pint->type = INTERFACE_GPIO_IN;

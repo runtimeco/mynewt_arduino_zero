@@ -144,7 +144,7 @@ static const int8_t hal_gpio_pin_exti_tbl[] = {
  * Registered interrupt handlers.
  */
 struct gpio_irq {
-    gpio_irq_handler_t func;
+    hal_gpio_irq_handler_t func;
     void *arg;
 } hal_gpio_irqs[EIC_NUMBER_OF_INTERRUPTS];
 
@@ -214,7 +214,7 @@ void hal_gpio_clear(int pin)
     port_pin_set_output_level(pin, false);
 }
 
-int hal_gpio_init_in(int pin, gpio_pull_t pull) {
+int hal_gpio_init_in(int pin, hal_gpio_pull_t pull) {
     struct port_config cfg;
 
     int port = GPIO_PORT(pin);
@@ -230,14 +230,14 @@ int hal_gpio_init_in(int pin, gpio_pull_t pull) {
 
     cfg.direction = PORT_PIN_DIR_INPUT;
     switch(pull) {
-        case GPIO_PULL_NONE:
+        case HAL_GPIO_PULL_NONE:
             cfg.input_pull = PORT_PIN_PULL_NONE;
             break;
-        case GPIO_PULL_UP:
-            cfg.input_pull = GPIO_PULL_UP;
+        case HAL_GPIO_PULL_UP:
+            cfg.input_pull = HAL_GPIO_PULL_UP;
             break;
-        case GPIO_PULL_DOWN:
-            cfg.input_pull = GPIO_PULL_DOWN;
+        case HAL_GPIO_PULL_DOWN:
+            cfg.input_pull = HAL_GPIO_PULL_DOWN;
             break;
         default:
             return -1;
@@ -360,8 +360,8 @@ hal_gpio_irq_eic(int pin)
  * @return int
  */
 int
-hal_gpio_irq_init(int pin, gpio_irq_handler_t handler, void *arg,
-                  gpio_irq_trig_t trig, gpio_pull_t pull)
+hal_gpio_irq_init(int pin, hal_gpio_irq_handler_t handler, void *arg,
+                  hal_gpio_irq_trig_t trig, hal_gpio_pull_t pull)
 {
     struct extint_chan_conf cfg;
     int rc;
@@ -375,22 +375,22 @@ hal_gpio_irq_init(int pin, gpio_irq_handler_t handler, void *arg,
     /* Configure the gpio for an external interrupt */
     rc = 0;
     switch (trig) {
-    case GPIO_TRIG_NONE:
+    case HAL_GPIO_TRIG_NONE:
         rc = -1;
         break;
-    case GPIO_TRIG_RISING:
+    case HAL_GPIO_TRIG_RISING:
         cfg.detection_criteria = EXTINT_DETECT_RISING;
         break;
-    case GPIO_TRIG_FALLING:
+    case HAL_GPIO_TRIG_FALLING:
         cfg.detection_criteria = EXTINT_DETECT_FALLING;
         break;
-    case GPIO_TRIG_BOTH:
+    case HAL_GPIO_TRIG_BOTH:
         cfg.detection_criteria = EXTINT_DETECT_BOTH;
         break;
-    case GPIO_TRIG_LOW:
+    case HAL_GPIO_TRIG_LOW:
         cfg.detection_criteria = EXTINT_DETECT_LOW;
         break;
-    case GPIO_TRIG_HIGH:
+    case HAL_GPIO_TRIG_HIGH:
         cfg.detection_criteria = EXTINT_DETECT_HIGH;
         break;
     default:
@@ -402,13 +402,13 @@ hal_gpio_irq_init(int pin, gpio_irq_handler_t handler, void *arg,
     }
 
     switch (pull) {
-    case GPIO_PULL_NONE:
+    case HAL_GPIO_PULL_NONE:
         cfg.gpio_pin_pull = EXTINT_PULL_NONE;
         break;
-    case GPIO_PULL_UP:
+    case HAL_GPIO_PULL_UP:
         cfg.gpio_pin_pull = EXTINT_PULL_UP;
         break;
-    case GPIO_PULL_DOWN:
+    case HAL_GPIO_PULL_DOWN:
         cfg.gpio_pin_pull = EXTINT_PULL_DOWN;
         break;
     default:

@@ -46,8 +46,8 @@ nm_bsp_register_isr(tpfNmBspIsr isr)
     static uint8_t reg_done;
 
     if (!reg_done) {
-        rc = hal_gpio_irq_init(WINC1500_PIN_IRQ, (gpio_irq_handler_t)isr, NULL,
-          GPIO_TRIG_FALLING, GPIO_PULL_UP);
+        rc = hal_gpio_irq_init(WINC1500_PIN_IRQ, (hal_gpio_irq_handler_t)isr,
+                               NULL, HAL_GPIO_TRIG_FALLING, HAL_GPIO_PULL_UP);
         assert(rc == 0);
         reg_done = 1;
     }
