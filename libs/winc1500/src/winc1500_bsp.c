@@ -75,14 +75,14 @@ void
 nm_bsp_reset(void)
 {
 #ifdef WINC1500_PIN_ENABLE
-    hal_gpio_clear(WINC1500_PIN_ENABLE);
+    hal_gpio_write(WINC1500_PIN_ENABLE, 0);
 #endif
-    hal_gpio_clear(WINC1500_PIN_RESET);
+    hal_gpio_write(WINC1500_PIN_RESET, 0);
     nm_bsp_sleep(100); /* 100ms */
 #ifdef WINC1500_PIN_ENABLE
-    hal_gpio_set(WINC1500_PIN_ENABLE);
+    hal_gpio_write(WINC1500_PIN_ENABLE, 1);
     nm_bsp_sleep(10); /* 10ms */
 #endif
-    hal_gpio_set(WINC1500_PIN_RESET);
+    hal_gpio_write(WINC1500_PIN_RESET, 1);
     nm_bsp_sleep(10); /* 10ms */
 }

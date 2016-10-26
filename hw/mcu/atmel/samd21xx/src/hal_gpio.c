@@ -148,7 +148,8 @@ struct gpio_irq {
     void *arg;
 } hal_gpio_irqs[EIC_NUMBER_OF_INTERRUPTS];
 
-int hal_gpio_init_out(int pin, int val)
+int
+hal_gpio_init_out(int pin, int val)
 {
     struct port_config cfg;
 
@@ -169,52 +170,14 @@ int hal_gpio_init_out(int pin, int val)
 
     port_pin_set_config(pin, &cfg);
 
-    if(val) {
-        hal_gpio_set(pin);
-    } else {
-        hal_gpio_clear(pin);
-    }
+    hal_gpio_write(pin, val);
 
     return 0;
 }
 
-/**
- * gpio set
- *
- * Sets specified pin to 1 (high)
- *
- * @param pin
- */
-void hal_gpio_set(int pin)
+int
+hal_gpio_init_in(int pin, hal_gpio_pull_t pull)
 {
-    int port = GPIO_PORT(pin);
-    int port_pin = GPIO_PIN(pin);
-
-    assert(port <= GPIO_MAX_PORT);
-    assert(((1 << port_pin) & valid_pins[port]) != 0);
-
-    port_pin_set_output_level(pin, true);
-}
-
-/**
- * gpio clear
- *
- * Sets specified pin to 0 (low).
- *
- * @param pin
- */
-void hal_gpio_clear(int pin)
-{
-    int port = GPIO_PORT(pin);
-    int port_pin = GPIO_PIN(pin);
-
-    assert(port <= GPIO_MAX_PORT);
-    assert(((1 << port_pin) & valid_pins[port]) != 0);
-
-    port_pin_set_output_level(pin, false);
-}
-
-int hal_gpio_init_in(int pin, hal_gpio_pull_t pull) {
     struct port_config cfg;
 
     int port = GPIO_PORT(pin);
@@ -259,7 +222,8 @@ int hal_gpio_init_in(int pin, hal_gpio_pull_t pull) {
  *
  * @return int 0: low, 1: high
  */
-int hal_gpio_read(int pin)
+int
+hal_gpio_read(int pin)
 {
     int rc;
     int port = GPIO_PORT(pin);
@@ -280,12 +244,13 @@ int hal_gpio_read(int pin)
  * @param pin Pin to set
  * @param val Value to set pin (0:low 1:high)
  */
-void hal_gpio_write(int pin, int val)
+void
+hal_gpio_write(int pin, int val)
 {
     if (val) {
-        hal_gpio_set(pin);
+        port_pin_set_output_level(pin, true);
     } else {
-        hal_gpio_clear(pin);
+        port_pin_set_output_level(pin, false);
     }
 }
 
@@ -298,11 +263,10 @@ void hal_gpio_write(int pin, int val)
  */
 int hal_gpio_toggle(int pin)
 {
-    if (hal_gpio_read(pin)) {
-        hal_gpio_clear(pin);
-    } else {
-        hal_gpio_set(pin);
-    }
+    int pin_state;
+
+    pin_state = (hal_gpio_read(pin) == 0);
+    hal_gpio_write(pin, pin_state);
     return hal_gpio_read(pin);
 }
 

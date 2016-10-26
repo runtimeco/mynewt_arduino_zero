@@ -352,9 +352,9 @@ arduino_write(int entry_id, int value)
             break;
         case INTERFACE_GPIO_OUT:
             if (value) {
-                hal_gpio_set(pint->gpio_pin);
+                hal_gpio_write(pint->gpio_pin, 1);
             } else {
-                hal_gpio_clear(pint->gpio_pin);
+                hal_gpio_write(pint->gpio_pin, 0);
             }
             rc = 0;
             pint->value = value;

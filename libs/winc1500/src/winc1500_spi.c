@@ -85,7 +85,7 @@ nm_spi_rw(uint8 *pu8Mosi, uint8 *pu8Miso, uint16 u16Sz)
     uint8_t rx;
 
     /* chip select */
-    hal_gpio_clear(WINC1500_SPI_SSN);
+    hal_gpio_write(WINC1500_SPI_SSN, 0);
     while (u16Sz) {
         if (pu8Mosi) {
             tx = *pu8Mosi;
@@ -105,7 +105,7 @@ nm_spi_rw(uint8 *pu8Mosi, uint8 *pu8Miso, uint16 u16Sz)
     }
 
     /* chip deselect */
-    hal_gpio_set(WINC1500_SPI_SSN);
+    hal_gpio_write(WINC1500_SPI_SSN, 1);
 
     return rc;
 }
