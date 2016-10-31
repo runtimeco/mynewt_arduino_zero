@@ -5,10 +5,6 @@ syscfg.defs:
         description: 'TBD'
         value:  1000000
 
-    OS_CPUTIME_TIMER_NUM:
-        description: 'Timer to use for cputime'
-        value:  0
-
     SPI_0:
         description: 'TBD'
         value:  0
