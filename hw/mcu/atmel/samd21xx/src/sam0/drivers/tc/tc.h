@@ -48,7 +48,7 @@
 #define TC_H_INCLUDED
 
 /**
- * \defgroup asfdoc_sam0_tc_group SAM Timer/Counter (TC) Driver 
+ * \defgroup asfdoc_sam0_tc_group SAM Timer/Counter (TC) Driver
  *
  * This driver for Atmel&reg; | SMART ARM&reg;-based microcontrollers provides an interface for the configuration
  * and management of the timer modules within the device, for waveform
@@ -1143,6 +1143,8 @@ static inline void tc_enable_events(
 		struct tc_module *const module_inst,
 		struct tc_events *const events)
 {
+    uint8_t i;
+
 	/* Sanity check arguments */
 	Assert(module_inst);
 	Assert(module_inst->hw);
@@ -1164,7 +1166,7 @@ static inline void tc_enable_events(
 		event_mask |= TC_EVCTRL_OVFEO;
 	}
 
-	for (uint8_t i = 0; i < NUMBER_OF_COMPARE_CAPTURE_CHANNELS; i++) {
+	for (i = 0; i < NUMBER_OF_COMPARE_CAPTURE_CHANNELS; i++) {
 		if (events->generate_event_on_compare_channel[i] == true) {
 			event_mask |= (TC_EVCTRL_MCEO(1) << i);
 		}
@@ -1188,6 +1190,8 @@ static inline void tc_disable_events(
 		struct tc_module *const module_inst,
 		struct tc_events *const events)
 {
+    uint8_t i;
+
 	/* Sanity check arguments */
 	Assert(module_inst);
 	Assert(module_inst->hw);
@@ -1209,7 +1213,7 @@ static inline void tc_disable_events(
 		event_mask |= TC_EVCTRL_OVFEO;
 	}
 
-	for (uint8_t i = 0; i < NUMBER_OF_COMPARE_CAPTURE_CHANNELS; i++) {
+	for (i = 0; i < NUMBER_OF_COMPARE_CAPTURE_CHANNELS; i++) {
 		if (events->generate_event_on_compare_channel[i] == true) {
 			event_mask |= (TC_EVCTRL_MCEO(1) << i);
 		}

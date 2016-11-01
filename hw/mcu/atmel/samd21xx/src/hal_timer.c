@@ -27,6 +27,7 @@
 #include "sam0/drivers/tc/tc.h"
 #include "sam0/utils/status_codes.h"
 #include "common/utils/interrupt/interrupt_sam_nvic.h"
+#include "mcu/samd21_hal.h"
 
 /* IRQ prototype */
 typedef void (*hal_timer_irq_handler_t)(void);
@@ -34,17 +35,18 @@ typedef void (*hal_timer_irq_handler_t)(void);
 /* Number of timers for HAL */
 #define SAMD21_HAL_TIMER_MAX    (3)
 
-/* Maximum timer frequency */
+/* Internal timer data structure */
 struct samd21_hal_timer {
     uint8_t tmr_enabled;
     uint8_t tmr_irq_num;
-    uint8_t tmr_clksrc;
-    uint8_t tmr_pad;
+    uint8_t tmr_srcclk;
+    uint8_t tmr_initialized;
     uint32_t tmr_cntr;
     uint32_t timer_isrs;
     uint32_t tmr_freq;
     TAILQ_HEAD(hal_timer_qhead, hal_timer) hal_timer_q;
     struct tc_module tc_mod;
+    enum gclk_generator tmr_clkgen;
 };
 
 #if MYNEWT_VAL(TIMER_0)
@@ -290,32 +292,22 @@ samd21_timer2_irq_handler(void)
 /**
  * hal timer init
  *
- * Initialize (and start) a timer to run at the desired frequency.
+ * Initialize platform specific timer items
  *
- * @param timer_num
- * @param freq_hz
+ * @param timer_num     Timer number to initialize
+ * @param cfg           Pointer to platform specific configuration
  *
- * @return int
+ * @return int          0: success; error code otherwise
  */
 int
-hal_timer_init(int timer_num, uint32_t freq_hz)
+hal_timer_init(int timer_num, void *cfg)
 {
     int rc;
-    uint8_t prescaler;
     uint8_t irq_num;
-    uint16_t prescaler_reg;
-    uint32_t div;
-    uint32_t min_delta;
-    uint32_t max_delta;
-    uint32_t prio;
-    uint32_t max_frequency;
-    Tc *hwtimer;
     struct samd21_hal_timer *bsptimer;
-    enum status_code tc_rc;
-
+    struct samd21_timer_cfg *tmr_cfg;
     hal_timer_irq_handler_t irq_isr;
     struct system_gclk_gen_config gcfg;
-    struct tc_config cfg;
 
     /* Get timer. Make sure not enabled */
     SAMD21_HAL_TIMER_RESOLVE(timer_num, bsptimer);
@@ -323,40 +315,23 @@ hal_timer_init(int timer_num, uint32_t freq_hz)
         rc = EINVAL;
         goto err;
     }
-
-    /* Set tc config to default values */
-    tc_get_config_defaults(&cfg);
+    tmr_cfg = (struct samd21_timer_cfg *)cfg;
 
     rc = 0;
     switch (timer_num) {
 #if MYNEWT_VAL(TIMER_0)
     case 0:
-        cfg.clock_source = MYNEWT_VAL(TIMER_0_GCLK);
-        gcfg.source_clock = MYNEWT_VAL(TIMER_0_SOURCE);
-        hwtimer = MYNEWT_VAL(TIMER_0_TC);
-        irq_num = MYNEWT_VAL(TIMER_0_IRQ_NUM);
         irq_isr = samd21_timer0_irq_handler;
-        prio = MYNEWT_VAL(TIMER_0_INTERRUPT_PRIORITY);
         break;
 #endif
 #if MYNEWT_VAL(TIMER_1)
     case 1:
-        cfg.clock_source = MYNEWT_VAL(TIMER_1_GCLK);
-        gcfg.source_clock = MYNEWT_VAL(TIMER_1_SOURCE);
-        hwtimer = MYNEWT_VAL(TIMER_1_TC);
-        irq_num = MYNEWT_VAL(TIMER_1_IRQ_NUM);
         irq_isr = samd21_timer1_irq_handler;
-        prio = MYNEWT_VAL(TIMER_1_INTERRUPT_PRIORITY);
         break;
 #endif
 #if MYNEWT_VAL(TIMER_2)
     case 2:
-        cfg.clock_source = MYNEWT_VAL(TIMER_2_GCLK);
-        gcfg.source_clock = MYNEWT_VAL(TIMER_2_SOURCE);
-        hwtimer = MYNEWT_VAL(TIMER_2_TC);
-        irq_num = MYNEWT_VAL(TIMER_2_IRQ_NUM);
         irq_isr = samd21_timer2_irq_handler;
-        prio = MYNEWT_VAL(TIMER_2_INTERRUPT_PRIORITY);
         break;
 #endif
     default:
@@ -364,12 +339,73 @@ hal_timer_init(int timer_num, uint32_t freq_hz)
         break;
     }
 
-    if (rc || (freq_hz == 0)) {
+    if (rc) {
         goto err;
     }
 
+    /* set up gclk generator to source this timer */
+    gcfg.division_factor = 1;
+    gcfg.high_when_disabled = false;
+    gcfg.output_enable = false;
+    gcfg.run_in_standby = true;
+    gcfg.source_clock = tmr_cfg->src_clock;
+    system_gclk_gen_set_config(tmr_cfg->clkgen, &gcfg);
+
+    irq_num = tmr_cfg->irq_num;
+    bsptimer->tmr_irq_num = irq_num;
+    bsptimer->tmr_srcclk = tmr_cfg->src_clock;
+    bsptimer->tmr_clkgen = tmr_cfg->clkgen;
+    bsptimer->tc_mod.hw = tmr_cfg->hwtimer;
+    bsptimer->tmr_initialized = 1;
+
+    NVIC_DisableIRQ(irq_num);
+    NVIC_SetPriority(irq_num, (1 << __NVIC_PRIO_BITS) - 1);
+    NVIC_SetVector(irq_num, (uint32_t)irq_isr);
+
+    return 0;
+
+err:
+    return rc;
+}
+
+/**
+ * hal timer config
+ *
+ * Configure a timer to run at the desired frequency. This starts the timer.
+ *
+ * @param timer_num
+ * @param freq_hz
+ *
+ * @return int
+ */
+int
+hal_timer_config(int timer_num, uint32_t freq_hz)
+{
+    int rc;
+    uint8_t prescaler;
+    uint16_t prescaler_reg;
+    uint32_t div;
+    uint32_t min_delta;
+    uint32_t max_delta;
+    uint32_t max_frequency;
+    struct samd21_hal_timer *bsptimer;
+    enum status_code tc_rc;
+    struct tc_config cfg;
+
+    /* Get timer. Make sure not enabled */
+    SAMD21_HAL_TIMER_RESOLVE(timer_num, bsptimer);
+    if (bsptimer->tmr_enabled || (bsptimer->tmr_initialized == 0) ||
+        (freq_hz == 0)) {
+        rc = EINVAL;
+        goto err;
+    }
+
+    /* Set tc config to default values */
+    tc_get_config_defaults(&cfg);
+
     /* Determine max frequency based on clock source */
-    switch (gcfg.source_clock) {
+    rc = 0;
+    switch (bsptimer->tmr_srcclk) {
     case GCLK_SOURCE_DFLL48M:
         max_frequency = 48000000;
         break;
@@ -394,14 +430,6 @@ hal_timer_init(int timer_num, uint32_t freq_hz)
     if (rc || (freq_hz > max_frequency) || (div == 0) || (div > 1024)) {
         goto err;
     }
-
-    /* set up gclk generator to source this timer */
-    gcfg.division_factor = 1;
-    gcfg.high_when_disabled = false;
-    gcfg.output_enable = false;
-    gcfg.run_in_standby = true;
-    system_gclk_gen_set_config(cfg.clock_source, &gcfg);
-    system_gclk_gen_enable(cfg.clock_source);
 
     /* Set up timer counter. Need to determine prescaler */
     cfg.counter_size = TC_COUNTER_SIZE_16BIT;
@@ -431,10 +459,14 @@ hal_timer_init(int timer_num, uint32_t freq_hz)
         }
     }
     cfg.clock_prescaler = prescaler_reg << TC_CTRLA_PRESCALER_Pos;
+    cfg.clock_source = bsptimer->tmr_clkgen;
 
-    tc_rc = tc_init(&bsptimer->tc_mod, hwtimer, &cfg);
+    /* set up gclk generator to source this timer */
+    system_gclk_gen_enable(bsptimer->tmr_clkgen);
+
+    tc_rc = tc_init(&bsptimer->tc_mod, bsptimer->tc_mod.hw, &cfg);
     if (tc_rc == STATUS_OK) {
-        hwtimer->COUNT16.INTENSET.reg = TC_INTFLAG_OVF;
+        bsptimer->tc_mod.hw->COUNT16.INTENSET.reg = TC_INTFLAG_OVF;
         tc_enable(&bsptimer->tc_mod);
     } else {
         rc = EINVAL;
@@ -443,14 +475,10 @@ hal_timer_init(int timer_num, uint32_t freq_hz)
 
     /* Now set the actual frequency */
     bsptimer->tmr_freq = max_frequency / (1 << prescaler);
-    bsptimer->tmr_irq_num = irq_num;
     bsptimer->tmr_enabled = 1;
-    bsptimer->tmr_clksrc = cfg.clock_source;
 
     /* Set isr in vector table and enable interrupt */
-    NVIC_SetPriority(irq_num, prio);
-    NVIC_SetVector(irq_num, (uint32_t)irq_isr);
-    NVIC_EnableIRQ(irq_num);
+    NVIC_EnableIRQ(bsptimer->tmr_irq_num);
 
     return 0;
 
@@ -476,8 +504,9 @@ hal_timer_deinit(int timer_num)
     SAMD21_HAL_TIMER_RESOLVE(timer_num, bsptimer);
 
     tc_disable(&bsptimer->tc_mod);
-    system_gclk_gen_enable(bsptimer->tmr_clksrc);
+    system_gclk_gen_disable(bsptimer->tmr_clkgen);
     bsptimer->tmr_enabled = 0;
+    bsptimer->tmr_initialized = 0;
 
 err:
     return rc;

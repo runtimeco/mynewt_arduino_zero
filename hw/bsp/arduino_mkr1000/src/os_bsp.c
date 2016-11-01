@@ -28,6 +28,8 @@
 #include "hal/hal_flash.h"
 #include "mcu/samd21.h"
 #include "bsp/bsp.h"
+#include "sam0/drivers/tc/tc.h"
+#include "mcu/samd21_hal.h"
 #include <bsp/bsp_sysid.h>
 #include <hal/hal_bsp.h>
 #include <hal/hal_spi.h>
@@ -154,9 +156,38 @@ hal_bsp_init(void)
 {
     int rc;
 
+#if MYNEWT_VAL(TIMER_0) || MYNEWT_VAL(TIMER_1) || MYNEWT_VAL(TIMER_2)
+    struct samd21_timer_cfg tmr_cfg;
+#endif
+
     rc = os_dev_create((struct os_dev *) &hal_uart0, CONSOLE_UART,
       OS_DEV_INIT_PRIMARY, 0, uart_hal_init, (void *)&uart_cfgs[0]);
     SYSINIT_PANIC_ASSERT(rc == 0);
+
+#if MYNEWT_VAL(TIMER_0)
+    tmr_cfg.clkgen = GCLK_GENERATOR_2;
+    tmr_cfg.src_clock = GCLK_SOURCE_OSC8M;
+    tmr_cfg.hwtimer = TC3;
+    tmr_cfg.irq_num = TC3_IRQn;
+    rc = hal_timer_init(0, &tmr_cfg);
+    assert(rc == 0);
+#endif
+#if MYNEWT_VAL(TIMER_1)
+    tmr_cfg.clkgen = GCLK_GENERATOR_5;
+    tmr_cfg.src_clock = GCLK_SOURCE_OSC8M;
+    tmr_cfg.hwtimer = TC4;
+    tmr_cfg.irq_num = TC4_IRQn;
+    rc = hal_timer_init(1, &tmr_cfg);
+    assert(rc == 0);
+#endif
+#if MYNEWT_VAL(TIMER_2)
+    tmr_cfg.clkgen = GCLK_GENERATOR_6;
+    tmr_cfg.src_clock = GCLK_SOURCE_OSC8M;
+    tmr_cfg.hwtimer = TC5;
+    tmr_cfg.irq_num = TC5_IRQn;
+    rc = hal_timer_init(2, &tmr_cfg);
+    assert(rc == 0);
+#endif
 
     /* Set cputime to count at 1 usec increments */
     rc = os_cputime_init(MYNEWT_VAL(CLOCK_FREQ));

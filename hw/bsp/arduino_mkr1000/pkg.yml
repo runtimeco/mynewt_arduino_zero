@@ -45,4 +45,10 @@ pkg.cflags:
     - -I../../../../hw/mcu/atmel/samd21xx/src/sam0/utils/header_files
     - -I../../../../hw/mcu/atmel/samd21xx/src/sam0/utils/preprocessor
     - -I../../../../hw/mcu/atmel/samd21xx/src/common/utils
-
+    - -I../../../../hw/mcu/atmel/samd21xx/src/sam0/drivers/tc
+    - -I../../../../hw/mcu/atmel/samd21xx/src
+    - -I../../../sam0/utils/header_files
+    - -I./sam0/utils/header_files
+    - -I../../../utils/header_files
+    - -I../../../../utils/header_files
+    - -I../../../../hw/mcu/atmel/samd21xx/include/mcu
