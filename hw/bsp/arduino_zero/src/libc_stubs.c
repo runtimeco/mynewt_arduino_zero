@@ -46,7 +46,7 @@ _fstat(int fd, void *s)
 void
 _exit(int s)
 {
-    system_reset();
+    hal_system_reset();
 }
 
 int
