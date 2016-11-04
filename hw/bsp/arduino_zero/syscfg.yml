@@ -35,6 +35,21 @@ syscfg.defs:
         description: 'TBD'
         value: 'HAL_SPI_TYPE_MASTER'
 
+    I2C_0:
+        description: 'TBD'
+        value:  0
+    I2C_1:
+        description: 'TBD'
+        value:  0
+    I2C_2:
+        description: 'TBD'
+        value:  0
+    I2C_3:
+        description: 'TBD'
+        value:  0
+    I2C_4:
+        description: 'TBD'
+        value:  0
     I2C_5:
         description: 'TBD'
         value:  0

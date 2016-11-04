@@ -43,6 +43,25 @@ syscfg.defs:
         description: 'Arduino zero Timer 2.'
         value:  0
 
+    I2C_0:
+        description: 'TBD'
+        value:  0
+    I2C_1:
+        description: 'TBD'
+        value:  0
+    I2C_2:
+        description: 'TBD'
+        value:  0
+    I2C_3:
+        description: 'TBD'
+        value:  0
+    I2C_4:
+        description: 'TBD'
+        value:  0
+    I2C_5:
+        description: 'TBD'
+        value:  0
+
 syscfg.vals:
     CONFIG_FCB_FLASH_AREA: FLASH_AREA_NFFS
     REBOOT_LOG_FLASH_AREA: FLASH_AREA_REBOOT_LOG

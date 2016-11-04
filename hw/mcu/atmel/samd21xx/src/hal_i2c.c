@@ -16,7 +16,7 @@
 
 #include <assert.h>
 #include <errno.h>
-
+#include "syscfg/syscfg.h"
 #include "compiler.h"
 #include "port.h"
 #include "i2c_master.h"
@@ -38,14 +38,65 @@ struct samd21_i2c_state {
 
 #define HAL_SAMD21_I2C_MAX (6)
 
-struct samd21_i2c_state samd21_hal_i2cs[HAL_SAMD21_I2C_MAX];
+#if MYNEWT_VAL(I2C_0)
+static struct samd21_i2c_state samd21_i2c0;
+#endif
+#if MYNEWT_VAL(I2C_1)
+static struct samd21_i2c_state samd21_i2c1;
+#endif
+#if MYNEWT_VAL(I2C_2)
+static struct samd21_i2c_state samd21_i2c2;
+#endif
+#if MYNEWT_VAL(I2C_3)
+static struct samd21_i2c_state samd21_i2c3;
+#endif
+#if MYNEWT_VAL(I2C_4)
+static struct samd21_i2c_state samd21_i2c4;
+#endif
+#if MYNEWT_VAL(I2C_5)
+static struct samd21_i2c_state samd21_i2c5;
+#endif
+
+struct samd21_i2c_state *samd21_hal_i2cs[HAL_SAMD21_I2C_MAX] =
+{
+#if MYNEWT_VAL(I2C_0)
+    &samd21_i2c0,
+#else
+    NULL,
+#endif
+#if MYNEWT_VAL(I2C_1)
+    &samd21_i2c1,
+#else
+    NULL,
+#endif
+#if MYNEWT_VAL(I2C_2)
+    &samd21_i2c2,
+#else
+    NULL,
+#endif
+#if MYNEWT_VAL(I2C_3)
+    &samd21_i2c3,
+#else
+    NULL,
+#endif
+#if MYNEWT_VAL(I2C_4)
+    &samd21_i2c4,
+#else
+    NULL,
+#endif
+#if MYNEWT_VAL(I2C_5)
+    &samd21_i2c5,
+#else
+    NULL,
+#endif
+};
 
 #define SAMD21_I2C_RESOLVE(__n, __v)    \
     if ((__n) >= HAL_SAMD21_I2C_MAX) {  \
         rc = EINVAL;                    \
         goto err;                       \
     }                                   \
-    (__v) = &samd21_hal_i2cs[(__n)];
+    (__v) = samd21_hal_i2cs[(__n)];
 
 
 int
