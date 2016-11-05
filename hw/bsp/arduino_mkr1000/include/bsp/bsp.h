@@ -22,10 +22,6 @@
 #include <inttypes.h>
 #include <mcu/mcu.h>
 
-#ifndef BSP_SYSID_H
-#include <bsp/bsp_sysid.h>
-#endif
-
 #ifdef __cplusplus
 extern "C" {
 #endif
