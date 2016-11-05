@@ -74,6 +74,58 @@ void PendSV_Handler          ( void ) __attribute__ ((weak, alias("Dummy_Handler
 void SysTick_Handler         ( void ) __attribute__ ((weak, alias("Dummy_Handler")));
 
 /* Peripherals handlers */
+void PM_Handler              ( void ) __attribute__ ((weak, alias("Dummy_Handler")));
+void SYSCTRL_Handler         ( void ) __attribute__ ((weak, alias("Dummy_Handler")));
+void WDT_Handler             ( void ) __attribute__ ((weak, alias("Dummy_Handler")));
+void RTC_Handler             ( void ) __attribute__ ((weak, alias("Dummy_Handler")));
+void EIC_Handler             ( void ) __attribute__ ((weak, alias("Dummy_Handler")));
+void NVMCTRL_Handler         ( void ) __attribute__ ((weak, alias("Dummy_Handler")));
+void DMAC_Handler            ( void ) __attribute__ ((weak, alias("Dummy_Handler")));
+#ifdef ID_USB
+void USB_Handler             ( void ) __attribute__ ((weak, alias("Dummy_Handler")));
+#endif
+void EVSYS_Handler           ( void ) __attribute__ ((weak, alias("Dummy_Handler")));
+void SERCOM0_Handler         ( void ) __attribute__ ((weak, alias("Dummy_Handler")));
+void SERCOM1_Handler         ( void ) __attribute__ ((weak, alias("Dummy_Handler")));
+void SERCOM2_Handler         ( void ) __attribute__ ((weak, alias("Dummy_Handler")));
+void SERCOM3_Handler         ( void ) __attribute__ ((weak, alias("Dummy_Handler")));
+#ifdef ID_SERCOM4
+void SERCOM4_Handler         ( void ) __attribute__ ((weak, alias("Dummy_Handler")));
+#endif
+#ifdef ID_SERCOM5
+void SERCOM5_Handler         ( void ) __attribute__ ((weak, alias("Dummy_Handler")));
+#endif
+void TCC0_Handler            ( void ) __attribute__ ((weak, alias("Dummy_Handler")));
+void TCC1_Handler            ( void ) __attribute__ ((weak, alias("Dummy_Handler")));
+void TCC2_Handler            ( void ) __attribute__ ((weak, alias("Dummy_Handler")));
+void TC3_Handler             ( void ) __attribute__ ((weak, alias("Dummy_Handler")));
+void TC4_Handler             ( void ) __attribute__ ((weak, alias("Dummy_Handler")));
+void TC5_Handler             ( void ) __attribute__ ((weak, alias("Dummy_Handler")));
+#ifdef ID_TC6
+void TC6_Handler             ( void ) __attribute__ ((weak, alias("Dummy_Handler")));
+#endif
+#ifdef ID_TC7
+void TC7_Handler             ( void ) __attribute__ ((weak, alias("Dummy_Handler")));
+#endif
+#ifdef ID_ADC
+void ADC_Handler             ( void ) __attribute__ ((weak, alias("Dummy_Handler")));
+#endif
+#ifdef ID_AC
+void AC_Handler              ( void ) __attribute__ ((weak, alias("Dummy_Handler")));
+#endif
+#ifdef ID_DAC
+void DAC_Handler             ( void ) __attribute__ ((weak, alias("Dummy_Handler")));
+#endif
+#ifdef ID_PTC
+void PTC_Handler             ( void ) __attribute__ ((weak, alias("Dummy_Handler")));
+#endif
+#ifdef ID_I2S
+void I2S_Handler             ( void ) __attribute__ ((weak, alias("Dummy_Handler")));
+#endif
+#ifdef ID_AC1
+void AC1_Handler             ( void ) __attribute__ ((weak, alias("Dummy_Handler")));
+#endif
+
 void Unhandled_Handler       ( void ) __attribute__ ((weak, alias("Dummy_Handler")));
 
 
