@@ -362,6 +362,8 @@ hal_timer_init(int timer_num, void *cfg)
     NVIC_SetPriority(irq_num, (1 << __NVIC_PRIO_BITS) - 1);
     NVIC_SetVector(irq_num, (uint32_t)irq_isr);
 
+    tc_disable(&bsptimer->tc_mod);
+
     return 0;
 
 err:
