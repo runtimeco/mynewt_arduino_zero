@@ -22,6 +22,8 @@
 #include <inttypes.h>
 #include <mcu/mcu.h>
 
+#include <syscfg/syscfg.h>
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -35,7 +37,7 @@ extern uint8_t _ram_start;
 #define CONSOLE_UART            "uart0"
 #define CONSOLE_UART_SPEED      115200
 
-#ifdef BOOT_SERIAL
+#if MYNEWT_VAL(BOOT_SERIAL)
 #define BOOT_SERIAL_DETECT_PIN		MCU_GPIO_PORTB(11)
 #define BOOT_SERIAL_DETECT_PIN_CFG	HAL_GPIO_PULL_UP
 #define BOOT_SERIAL_DETECT_PIN_VAL	0
