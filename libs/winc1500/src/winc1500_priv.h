@@ -25,7 +25,7 @@
 
 struct winc1500 {
     struct wifi_if w_if;
-    struct os_callout_func w_timer;
+    struct os_callout w_timer;
     uint8_t w_scan_cnt;
     uint8_t w_scan_idx;
     uint8_t w_up:1;

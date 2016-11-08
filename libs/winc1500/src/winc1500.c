@@ -149,15 +149,15 @@ winc1500_callback(uint8_t msg_type, void *msg_data)
 }
 
 static void
-winc1500_events(void *arg)
+winc1500_events(struct os_event *ev)
 {
-    struct winc1500 *w = (struct winc1500 *)arg;
+    struct winc1500 *w = (struct winc1500 *)ev->ev_arg;
 
     os_mutex_pend(&w->w_if.wi_mtx, OS_TIMEOUT_NEVER);
     m2m_wifi_handle_events(NULL);
     os_mutex_release(&w->w_if.wi_mtx);
     winc1500_socket_poll();
-    os_callout_reset(&w->w_timer.cf_c, WINC1500_POLL_ITVL);
+    os_callout_reset(&w->w_timer, WINC1500_POLL_ITVL);
 }
 
 static int
@@ -170,7 +170,7 @@ winc1500_start(struct wifi_if *wi)
     init_param.pfAppWifiCb = winc1500_callback;
     rc = m2m_wifi_init(&init_param);
     if (rc == 0) {
-        os_callout_reset(&w->w_timer.cf_c, WINC1500_POLL_ITVL);
+        os_callout_reset(&w->w_timer, WINC1500_POLL_ITVL);
     }
     winc1500_socket_start();
     return rc;
@@ -222,7 +222,7 @@ winc1500_init(void)
     if (rc) {
         return -1;
     }
-    os_callout_func_init(&w->w_timer, &wifi_evq, winc1500_events, w);
+    os_callout_init(&w->w_timer, &wifi_evq, winc1500_events, w);
 
     rc = hal_gpio_init_out(WINC1500_PIN_RESET, 0); /* reset when 0 */
     assert(rc == 0);
