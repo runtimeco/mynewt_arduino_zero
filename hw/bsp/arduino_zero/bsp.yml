@@ -19,8 +19,12 @@
 
 bsp.arch: cortex_m0
 bsp.compiler: "@apache-mynewt-core/compiler/arm-none-eabi-m0"
-bsp.linkerscript: "arduino_zero.ld"
-bsp.linkerscript.BOOT_LOADER.OVERWRITE: "arduino_zero_boot.ld"
+bsp.linkerscript:
+    - "arduino_zero.ld"
+    - "@mynewt_arduino_zero/hw/mcu/atmel/samd21xx/samd21xx.ld"
+bsp.linkerscript.BOOT_LOADER.OVERWRITE:
+    - "arduino_zero_boot.ld"
+    - "@mynewt_arduino_zero/hw/mcu/atmel/samd21xx/samd21xx.ld"
 bsp.downloadscript: "arduino_zero_download.sh"
 bsp.debugscript: "arduino_zero_debug.sh"
 
