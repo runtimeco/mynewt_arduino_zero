@@ -31,6 +31,7 @@ extern uint8_t _ram_start;
 
 #define LED_BLINK_PIN   (20)
 #define LED_2           (21)
+#define BSP_WINC1500_SPI_PORT   2
 #define CONSOLE_UART            "uart0"
 #define CONSOLE_UART_SPEED      115200
 
