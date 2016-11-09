@@ -42,7 +42,9 @@
 #include <uart/uart.h>
 #include <uart_hal/uart_hal.h>
 
+#if !MYNEWT_VAL(BOOT_LOADER) || MYNEWT_VAL(BOOT_SERIAL)
 static struct uart_dev hal_uart0;
+#endif
 
 #if MYNEWT_VAL(SPI_0)
 static struct samd21_spi_config ext_spi_cfg = {
@@ -167,16 +169,20 @@ hal_bsp_get_nvic_priority(int irq_num, uint32_t pri)
 void
 hal_bsp_init(void)
 {
+#if !MYNEWT_VAL(BOOT_LOADER) || MYNEWT_VAL(BOOT_SERIAL)
     int rc;
-
+#endif
+#if !MYNEWT_VAL(BOOT_LOADER)
 #if MYNEWT_VAL(TIMER_0) || MYNEWT_VAL(TIMER_1) || MYNEWT_VAL(TIMER_2)
     struct samd21_timer_cfg tmr_cfg;
 #endif
-
+#endif
+#if !MYNEWT_VAL(BOOT_LOADER) || MYNEWT_VAL(BOOT_SERIAL)
     rc = os_dev_create((struct os_dev *) &hal_uart0, CONSOLE_UART,
       OS_DEV_INIT_PRIMARY, 0, uart_hal_init, (void *)&uart_cfgs[0]);
     SYSINIT_PANIC_ASSERT(rc == 0);
-
+#endif
+#if !MYNEWT_VAL(BOOT_LOADER)
 #if MYNEWT_VAL(TIMER_0)
     tmr_cfg.clkgen = GCLK_GENERATOR_2;
     tmr_cfg.src_clock = GCLK_SOURCE_OSC8M;
@@ -224,5 +230,6 @@ hal_bsp_init(void)
 #if MYNEWT_VAL(SPI_3)
     rc = hal_spi_init(3, &ext_spi_cfg, MYNEWT_VAL(SPI_3_TYPE));
     SYSINIT_PANIC_ASSERT(rc == 0);
+#endif
 #endif
 }
