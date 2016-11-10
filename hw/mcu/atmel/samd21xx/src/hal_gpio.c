@@ -53,8 +53,6 @@
  * 
  *                                     PB22, PB23, 
  *
- *                                     PA22, PA23,
- *
  *
  * We keep the mapping where ports A0-A31 are pins 0 - 31
  * and ports B0-B31 are pins 32 - 64;
