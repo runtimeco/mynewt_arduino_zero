@@ -20,13 +20,13 @@
 bsp.arch: cortex_m0
 bsp.compiler: "@apache-mynewt-core/compiler/arm-none-eabi-m0"
 bsp.linkerscript:
-    - "mkr1000.ld"
-    - "@mynewt_arduino_zero/hw/mcu/atmel/samd21xx/samd21xx.ld"
+    - "hw/bsp/arduino_mkr1000/mkr1000.ld"
+    - "hw/mcu/atmel/samd21xx/samd21xx.ld"
 bsp.linkerscript.BOOT_LOADER.OVERWRITE:
-    - "mkr1000_boot.ld"
-    - "@mynewt_arduino_zero/hw/mcu/atmel/samd21xx/samd21xx.ld"
-bsp.downloadscript: "mkr1000_download.sh"
-bsp.debugscript: "mkr1000_debug.sh"
+    - "hw/bsp/arduino_mkr1000/mkr1000_boot.ld"
+    - "hw/mcu/atmel/samd21xx/samd21xx.ld"
+bsp.downloadscript: "hw/bsp/arduino_mkr1000/mkr1000_download.sh"
+bsp.debugscript: "hw/bsp/arduino_mkr1000/mkr1000_debug.sh"
 
 bsp.flash_map:
     areas:
