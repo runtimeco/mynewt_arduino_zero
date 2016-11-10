@@ -28,7 +28,7 @@
 #include <string.h>
 #include <assert.h>
 
-#include <bsp/bsp_sysid.h>
+#include <bsp/bsp.h>
 
 struct arduino_pin_map_entry
 {
