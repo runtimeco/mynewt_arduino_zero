@@ -1,7 +1,6 @@
 pkg.name: "hw/mcu/atmel/samd21xx"
 pkg.repository: https://github.com/runtimeinc/mynewt_arduino_zero
 
-
 pkg.deps:
     - "@apache-mynewt-core/hw/hal"
     - "@apache-mynewt-core/hw/cmsis-core"

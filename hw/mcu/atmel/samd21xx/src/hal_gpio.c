@@ -48,8 +48,10 @@
  * PA24, PA25,       PA27, PA28,       PA30, PA31,
  *
  * The port B pins exposed the chip are
- *              PB2,  PB3,
- *  PB8,  PB9, PB10,  B11,
+ *              PB2,  PB3, 
+ *  PB8,  PB9, PB10,  PB11,
+ * 
+ *                                     PB22, PB23, 
  *
  *                                     PA22, PA23,
  *
