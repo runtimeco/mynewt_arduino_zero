@@ -29,6 +29,7 @@
 #include "sam0/drivers/tc/tc.h"
 #include "mcu/samd21_hal.h"
 #include "hal/hal_spi.h"
+#include "hal/hal_i2c.h"
 #include "hal/hal_flash.h"
 #include "mcu/hal_spi.h"
 #include "mcu/hal_i2c.h"
