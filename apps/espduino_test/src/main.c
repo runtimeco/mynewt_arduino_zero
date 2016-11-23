@@ -16,6 +16,10 @@
  * specific language governing permissions and limitations
  * under the License.
  */
+#include <syscfg/syscfg.h>
+#include <sysinit/sysinit.h>
+#include <sysflash/sysflash.h>
+
 #include <os/os.h>
 #include <bsp/bsp.h>
 #include <hal/hal_gpio.h>
@@ -40,23 +44,13 @@
 #include <mcu/mcu_sim.h>
 #endif
 
-/* Init all tasks */
-volatile int tasks_initialized;
-int init_tasks(void);
+#define WORKER_PRIO       (3)
+#define WORKER_STACK_SIZE (OS_STACK_ALIGN(1024))
+os_stack_t worker_stack[WORKER_STACK_SIZE];
+static struct os_eventq worker_evq;
+static struct os_task worker_task;
 
-#define DEFAULT_MBUF_MPOOL_BUF_LEN (256)
-#define DEFAULT_MBUF_MPOOL_NBUFS (10)
 
-uint8_t default_mbuf_mpool_data[DEFAULT_MBUF_MPOOL_BUF_LEN *
-    DEFAULT_MBUF_MPOOL_NBUFS];
-
-struct os_mbuf_pool default_mbuf_pool;
-struct os_mempool default_mbuf_mpool;
-
-#define SHELL_TASK_PRIO (3)
-#define SHELL_MAX_INPUT_LEN     (256)
-#define SHELL_TASK_STACK_SIZE (OS_STACK_ALIGN(384))
-os_stack_t shell_stack[SHELL_TASK_STACK_SIZE];
 
 int esp_cmd_send(int argc, char **argv);
 
@@ -111,31 +105,13 @@ restCb(struct PACKET_CMD *response)
 int
 esp_cmd_send(int argc, char **argv)
 {
-    uint16_t crc;
     int val;
-    uint32_t rc;
 
     if (argc < 2) {
         console_printf("check esp_cmd_send() for usage\n");
         return 0;
     }
-    if (!strcmp(argv[1], "wifi")) {
-        /*
-         * XXX I don't think ESP-Link takes these commands?
-         */
-        if (argc < 4) {
-            console_printf("wrong\n");
-            return 0;
-        }
-        console_printf("connecting SSID: %s pwd %s\n", argv[2], argv[3]);
-        crc = esp_request_start(CMD_WIFI_CONNECT, &wifiCb, 0, 2);
-        crc = esp_request_cont(crc, argv[2], strlen(argv[2]));
-        crc = esp_request_cont(crc, argv[3], strlen(argv[3]));
-        esp_request_end(crc);
-        esp_wait_return_timo(10000, &rc);
-        esp_wait_return_timo(10000, &rc);
-        esp_wait_return_timo(10000, &rc);
-    } else if (!strcmp(argv[1], "ready")) {
+    if (!strcmp(argv[1], "ready")) {
         /*
          * This should be ok.
          */
@@ -175,6 +151,9 @@ esp_cmd_send(int argc, char **argv)
         }
         console_printf("return code %d\n", http_code);
         console_printf("%s\n", data);
+    } else {
+        console_printf("Invalid command\n");
+        console_printf("esp [ready|rest <hostname> <path>]\n");
     }
     return 0;
 }
@@ -184,6 +163,14 @@ espduino_test_init(void)
 {
     espduino_init(ESPDUINO_UART, ESPDUINO_UART_SPEED);
     shell_cmd_register(&esp_cli_cmd);
+}
+
+static void
+worker_func(void *unused)
+{
+    while (1) {
+        os_eventq_run(&worker_evq);
+    }
 }
 
 /**
@@ -203,19 +190,18 @@ main(int argc, char **argv)
     mcu_sim_parse_args(argc, argv);
 #endif
 
-    os_init();
+    sysinit();
 
-    rc = os_mempool_init(&default_mbuf_mpool, DEFAULT_MBUF_MPOOL_NBUFS,
-            DEFAULT_MBUF_MPOOL_BUF_LEN, default_mbuf_mpool_data,
-            "default_mbuf_data");
-    assert(rc == 0);
+    /* Initialize eventq */
+    os_eventq_init(&worker_evq);
 
-    rc = os_mbuf_pool_init(&default_mbuf_pool, &default_mbuf_mpool,
-            DEFAULT_MBUF_MPOOL_BUF_LEN, DEFAULT_MBUF_MPOOL_NBUFS);
-    assert(rc == 0);
-
-    rc = os_msys_register(&default_mbuf_pool);
-    assert(rc == 0);
+    /* Create the bleprph task.  All application logic and NimBLE host
+     * operations are performed in this task.
+     */
+    os_task_init(&worker_task, "worker", worker_func,
+                 NULL, WORKER_PRIO, OS_WAIT_FOREVER,
+                 worker_stack, WORKER_STACK_SIZE);
+    os_eventq_dflt_set(&worker_evq);
 
     espduino_test_init();
     console_printf("\nEspduino testing\n");

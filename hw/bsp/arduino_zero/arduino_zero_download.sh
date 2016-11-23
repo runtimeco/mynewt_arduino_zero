@@ -43,7 +43,7 @@ if [ $PROTECT_BOOT -eq 1 ]; then
     # we will unprotect and reprotect our bootloader to ensure that its
     # safe. also Arduino Zero Pro boards looks like they come with the 
     # arduino bootloader protected via the NVM AUX
-    EXTRA_JTAG_CMD="$EXTRA_JTAG_CMD; at91samd bootloader 0"
+    CFG_POST_INIT="at91samd bootloader 0"
 
     # XXX reprotect todo
     #PROTECT_FLASH="at91samd bootloader 16384"
