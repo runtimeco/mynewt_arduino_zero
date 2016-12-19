@@ -116,14 +116,6 @@ SECTIONS
         _efixed = .;            /* End of text section */
     } > FLASH
 
-    /* The sysinit section contains package initialization information. */
-    .sysinit :
-    {
-        __sysinit_start__ = .;
-        KEEP(*(sysinit))
-        __sysinit_end__ = .;
-    } > FLASH
-
     /* .ARM.exidx is sorted, so has to go in its own output section.  */
     PROVIDE_HIDDEN (__exidx_start = .);
     .ARM.exidx :
