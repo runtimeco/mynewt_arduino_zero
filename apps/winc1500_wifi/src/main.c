@@ -20,21 +20,12 @@
 #include <sysinit/sysinit.h>
 #include <os/os.h>
 #include <bsp/bsp.h>
-#include <hal/hal_gpio.h>
-#include <hal/hal_flash.h>
 #include <console/console.h>
 #include <shell/shell.h>
 #include <config/config.h>
 #include <hal/hal_system.h>
-#if !MYNEWT_VAL(CONFIG_NFFS)
-#error "Need NFFS or FCB for config storage"
-#endif
-#include <fs/fs.h>
-#include <nffs/nffs.h>
-#include <config/config_file.h>
 #include <assert.h>
 #include <string.h>
-#include <json/json.h>
 
 #include <wifi_mgmt/wifi_mgmt.h>
 #include <winc1500/winc1500.h>
