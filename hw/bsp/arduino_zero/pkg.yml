@@ -22,7 +22,6 @@ pkg.repository: https://github.com/runtimeinc/mynewt_arduino_zero
 
 pkg.deps:
     - hw/mcu/atmel/samd21xx
-    - "@apache-mynewt-core/boot/bootutil"
     - "@apache-mynewt-core/hw/hal"
     - "@apache-mynewt-core/libc/baselibc"
     - "@apache-mynewt-core/hw/drivers/uart/uart_hal"
