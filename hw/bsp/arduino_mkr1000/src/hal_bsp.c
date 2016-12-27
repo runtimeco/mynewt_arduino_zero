@@ -27,7 +27,12 @@
 #include "hal/hal_flash.h"
 #include "mcu/samd21.h"
 #include "bsp/bsp.h"
-#include "sam0/drivers/tc/tc.h"
+
+/*
+ * hw/mcu/atmel/samd21xx/src/sam0/drivers/tc/tc.h
+ */
+#include <tc.h>
+
 #include "mcu/samd21_hal.h"
 #include "hal/hal_spi.h"
 #include "mcu/hal_spi.h"
@@ -39,11 +44,16 @@
 #include <mcu/hal_uart.h>
 
 #include <os/os_dev.h>
+
+#if MYNEWT_VAL(UART_0)
 #include <uart/uart.h>
 #include <uart_hal/uart_hal.h>
+#endif
 
+#if MYNEWT_VAL(UART_0)
 #if !MYNEWT_VAL(BOOT_LOADER) || MYNEWT_VAL(BOOT_SERIAL)
 static struct uart_dev hal_uart0;
+#endif
 #endif
 
 #if MYNEWT_VAL(SPI_0)
@@ -175,9 +185,11 @@ hal_bsp_init(void)
     struct samd21_timer_cfg tmr_cfg;
 #endif
 
+#if MYNEWT_VAL(UART_0) || MYNEWT_VAL(BOOT_SERIAL)
     rc = os_dev_create((struct os_dev *) &hal_uart0, CONSOLE_UART,
       OS_DEV_INIT_PRIMARY, 0, uart_hal_init, (void *)&uart_cfgs[0]);
     SYSINIT_PANIC_ASSERT(rc == 0);
+#endif
 #if MYNEWT_VAL(TIMER_0)
     tmr_cfg.clkgen = GCLK_GENERATOR_2;
     tmr_cfg.src_clock = GCLK_SOURCE_OSC8M;

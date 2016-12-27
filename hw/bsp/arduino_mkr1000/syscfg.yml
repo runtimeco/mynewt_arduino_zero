@@ -5,6 +5,10 @@ syscfg.defs:
         description: 'TBD'
         value:  1000000
 
+    UART_0:
+        description: 'TBD'
+        value: 1
+
     SPI_0:
         description: 'TBD'
         value:  0
