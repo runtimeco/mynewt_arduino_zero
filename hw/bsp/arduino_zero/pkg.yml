@@ -24,6 +24,9 @@ pkg.deps:
     - hw/mcu/atmel/samd21xx
     - "@apache-mynewt-core/hw/hal"
     - "@apache-mynewt-core/libc/baselibc"
+
+pkg.deps.UART_0:
+    - "@apache-mynewt-core/hw/drivers/uart"
     - "@apache-mynewt-core/hw/drivers/uart/uart_hal"
 
 pkg.cflags:
