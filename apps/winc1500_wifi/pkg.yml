@@ -30,6 +30,7 @@ pkg.deps:
     - "@apache-mynewt-core/sys/coredump"
     - "@apache-mynewt-core/fs/nffs"
     - "@apache-mynewt-core/sys/console/full"
+    - "@apache-mynewt-core/sys/stats/stub"
     - "@apache-mynewt-core/mgmt/newtmgr/transport/nmgr_shell"
     - "@apache-mynewt-core/kernel/os"
     - "@apache-mynewt-core/sys/shell"
