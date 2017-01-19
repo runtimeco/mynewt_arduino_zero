@@ -32,6 +32,7 @@
 
 CFG="-f $BSP_PATH/arduino_zero.cfg"
 
+PROTECT_BOOT=0
 if [ "$MFG_IMAGE" ]; then
     FLASH_OFFSET=0x00000000
     PROTECT_BOOT=1
