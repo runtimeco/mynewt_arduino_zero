@@ -184,11 +184,13 @@ hal_bsp_init(void)
     assert(rc == 0);
 #endif
 
+#if (MYNEWT_VAL(OS_CPUTIME_TIMER_NUM) >= 0)
     /*
      * Set cputime to count at 1 usec increments.
      */
     rc = os_cputime_init(MYNEWT_VAL(CLOCK_FREQ));
     assert(rc == 0);
+#endif
 
 #if MYNEWT_VAL(SPI_0)
     rc = hal_spi_init(ARDUINO_ZERO_SPI_ICSP, &icsp_spi_config,
