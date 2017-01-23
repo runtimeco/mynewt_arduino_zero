@@ -222,6 +222,7 @@ hal_bsp_init(void)
     rc = os_cputime_init(MYNEWT_VAL(CLOCK_FREQ));
     assert(rc == 0);
 #endif
+#endif
 
 #if !MYNEWT_VAL(BOOT_LOADER)
 #if MYNEWT_VAL(SPI_0)
