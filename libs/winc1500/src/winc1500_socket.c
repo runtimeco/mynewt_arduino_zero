@@ -555,7 +555,7 @@ winc1500_itf_getnext(struct mn_itf *mi)
     mi->mif_idx = 1;
     mi->mif_flags = MN_ITF_F_MULTICAST;
     if (winc1500.w_up) {
-        mi->mif_flags = MN_ITF_F_UP;
+        mi->mif_flags |= MN_ITF_F_UP;
     }
     return 0;
 }
