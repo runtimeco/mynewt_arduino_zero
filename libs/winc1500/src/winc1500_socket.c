@@ -88,6 +88,7 @@ static struct winc1500_sock_state {
     uint8_t polling;                /* if polling is going on */
     struct os_mbuf *rx_buf;         /* chain of mbufs to receive data to */
     struct os_mbuf *cur_buf;        /* currently receiving to this */
+    uint8_t tx_buf[WINC1500_SOCK_RX_SIZE]; /* send buffer */
 } winc1500_socket_state;
 
 static const struct mn_socket_ops winc1500_sock_ops = {
@@ -387,9 +388,9 @@ static int
 winc1500_sock_sendto(struct mn_socket *sock, struct os_mbuf *m,
   struct mn_sockaddr *dst)
 {
+    struct winc1500_sock_state *wss = &winc1500_socket_state;
     struct winc1500_sock *ws = (struct winc1500_sock *)sock;
     struct sockaddr_in sin;
-    struct os_mbuf *n = NULL;
     struct os_mbuf *o;
     int rc;
     int off;
@@ -416,30 +417,19 @@ winc1500_sock_sendto(struct mn_socket *sock, struct os_mbuf *m,
         if (rc) {
             goto err;
         }
-        off = 0;
-        for (o = m; o; o = SLIST_NEXT(o, om_next)) {
-            off += o->om_len;
-        }
-        n = os_msys_get(off, 0);
-        if (!n) {
-            rc = MN_ENOBUFS;
-            goto err;
-        }
 
-        /*
-         * os_msys_get() might not give big enough buffer to fit the data.
-         */
-        if (OS_MBUF_TRAILINGSPACE(n) < off) {
-            rc = MN_ENOBUFS;
-            goto err;
-        }
+        os_mutex_pend(&winc1500.w_if.wi_mtx, OS_TIMEOUT_NEVER);
         off = 0;
         for (o = m; o; o = SLIST_NEXT(o, om_next)) {
-            os_mbuf_copyinto(n, off, o->om_data, o->om_len);
+            if (off + o->om_len > sizeof(wss->tx_buf)) {
+                rc = MN_EINVAL;
+                os_mutex_release(&winc1500.w_if.wi_mtx);
+                goto err;
+            }
+            os_mbuf_copydata(o, 0, o->om_len, &wss->tx_buf[off]);
             off += o->om_len;
         }
-        os_mutex_pend(&winc1500.w_if.wi_mtx, OS_TIMEOUT_NEVER);
-        rc = sendto(ws->ws_idx, n->om_data, n->om_len, 0,
+        rc = sendto(ws->ws_idx, wss->tx_buf, off, 0,
           (struct sockaddr *)&sin, sizeof(sin));
         os_mutex_release(&winc1500.w_if.wi_mtx);
         if (rc) {
@@ -452,9 +442,6 @@ winc1500_sock_sendto(struct mn_socket *sock, struct os_mbuf *m,
         return 0;
     } else {
 err:
-        if (n) {
-            os_mbuf_free_chain(n);
-        }
         return rc;
     }
 }
@@ -638,10 +625,8 @@ winc1500_sock_start_rx(struct winc1500_sock_state *wss, int idx, int cont)
              * in the chain.
              */
             m = wss->rx_buf;
-            DEBUG_PRINTF(" recvfrom for %d %x\n", ws->ws_idx, (int)m);
         } else {
             m = SLIST_NEXT(wss->cur_buf, om_next);
-            DEBUG_PRINTF(" recvfrom cont for %d %x\n", ws->ws_idx, (int)m);
         }
         rc = recvfrom(idx, m->om_data, OS_MBUF_TRAILINGSPACE(m), 1);
         if (rc == 0) {
