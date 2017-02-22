@@ -216,10 +216,7 @@ hal_bsp_init(void)
 #endif
 
 #if (MYNEWT_VAL(OS_CPUTIME_TIMER_NUM) >= 0)
-    /*
-     * Set cputime to count at 1 usec increments.
-     */
-    rc = os_cputime_init(MYNEWT_VAL(CLOCK_FREQ));
+    rc = os_cputime_init(MYNEWT_VAL(OS_CPUTIME_FREQ));
     assert(rc == 0);
 #endif
 #endif

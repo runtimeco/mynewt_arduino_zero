@@ -1,10 +1,6 @@
 # Package: "hw/bsp/arduino_zero"
 
 syscfg.defs:
-    CLOCK_FREQ:
-        description: 'TBD'
-        value:  1000000
-
     BSP_ARDUINO_ZERO:
         description: 'TBD'
         value: 0
