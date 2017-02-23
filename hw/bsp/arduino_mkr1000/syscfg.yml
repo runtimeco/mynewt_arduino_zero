@@ -19,35 +19,35 @@
 
 syscfg.defs:
     UART_0:
-        description: 'TBD'
+        description: 'Whether to enable UART0'
         value: 1
 
     SPI_0:
-        description: 'TBD'
+        description: 'Whether to enable SPI0'
         value:  0
     SPI_0_TYPE:
-        description: 'TBD'
+        description: 'Decide whether SPI0 operates in master or slave mode'
         value: 'HAL_SPI_TYPE_MASTER'
 
     SPI_1:
-        description: 'TBD'
+        description: 'Whether to enable SPI1'
         value:  0
     SPI_1_TYPE:
-        description: 'TBD'
+        description: 'Decide whether SPI1 operates in master or slave mode'
         value: 'HAL_SPI_TYPE_MASTER'
 
     SPI_2:
-        description: 'WINC1500 SPI'
+        description: 'Whether to enable SPI2, aka WINC1500 SPI'
         value:  0
     SPI_2_TYPE:
-        description: 'TBD'
+        description: 'SPI2 mode, should be master'
         value: 'HAL_SPI_TYPE_MASTER'
 
     SPI_3:
-        description: 'TBD SPI'
+        description: 'Whether to enable SPI3'
         value:  0
     SPI_3_TYPE:
-        description: 'TBD'
+        description: 'Decide whether SPI3 operates in master or slave mode'
         value: 'HAL_SPI_TYPE_MASTER'
 
     TIMER_0:
@@ -58,25 +58,6 @@ syscfg.defs:
         value:  0
     TIMER_2:
         description: 'Arduino zero Timer 2.'
-        value:  0
-
-    I2C_0:
-        description: 'TBD'
-        value:  0
-    I2C_1:
-        description: 'TBD'
-        value:  0
-    I2C_2:
-        description: 'TBD'
-        value:  0
-    I2C_3:
-        description: 'TBD'
-        value:  0
-    I2C_4:
-        description: 'TBD'
-        value:  0
-    I2C_5:
-        description: 'TBD'
         value:  0
 
 syscfg.vals:
