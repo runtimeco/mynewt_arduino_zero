@@ -44,14 +44,6 @@
 #include <mcu/mcu_sim.h>
 #endif
 
-#define WORKER_PRIO       (3)
-#define WORKER_STACK_SIZE (OS_STACK_ALIGN(1024))
-os_stack_t worker_stack[WORKER_STACK_SIZE];
-static struct os_eventq worker_evq;
-static struct os_task worker_task;
-
-
-
 int esp_cmd_send(int argc, char **argv);
 
 static struct shell_cmd esp_cli_cmd = {
@@ -165,14 +157,6 @@ espduino_test_init(void)
     shell_cmd_register(&esp_cli_cmd);
 }
 
-static void
-worker_func(void *unused)
-{
-    while (1) {
-        os_eventq_run(&worker_evq);
-    }
-}
-
 /**
  * main
  *
@@ -192,23 +176,12 @@ main(int argc, char **argv)
 
     sysinit();
 
-    /* Initialize eventq */
-    os_eventq_init(&worker_evq);
-
-    /* Create the bleprph task.  All application logic and NimBLE host
-     * operations are performed in this task.
-     */
-    os_task_init(&worker_task, "worker", worker_func,
-                 NULL, WORKER_PRIO, OS_WAIT_FOREVER,
-                 worker_stack, WORKER_STACK_SIZE);
-    os_eventq_dflt_set(&worker_evq);
-
     espduino_test_init();
     console_printf("\nEspduino testing\n");
 
-    os_start();
-
-    /* os start should never return. If it does, this should be an error */
+    while (1) {
+        os_eventq_run(os_eventq_dflt_get());
+    }
     assert(0);
 
     return rc;

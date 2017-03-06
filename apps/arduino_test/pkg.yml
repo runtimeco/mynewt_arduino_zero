@@ -34,6 +34,6 @@ pkg.deps:
     - "@apache-mynewt-core/kernel/os"
     - "@apache-mynewt-core/sys/shell"
     - "@apache-mynewt-core/sys/config"
-    - "@apache-mynewt-core/sys/log"
-    - "@apache-mynewt-core/sys/stats"
+    - "@apache-mynewt-core/sys/log/full"
+    - "@apache-mynewt-core/sys/stats/full"
     - "libs/arduino_test"

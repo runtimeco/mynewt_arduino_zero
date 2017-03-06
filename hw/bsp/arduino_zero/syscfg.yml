@@ -1,57 +1,38 @@
 # Package: "hw/bsp/arduino_zero"
 
 syscfg.defs:
-    CLOCK_FREQ:
-        description: 'TBD'
-        value:  1000000
-
     BSP_ARDUINO_ZERO:
-        description: 'TBD'
+        description: 'Building for Arduino Zero'
         value: 0
         restrictions:
             - "!BSP_ARDUINO_ZERO_PRO"
 
     BSP_ARDUINO_ZERO_PRO:
-        description: 'TBD'
+        description: 'Building for Arduino Zero Pro'
         value: 0
         restrictions:
             - "!BSP_ARDUINO_ZERO"
 
     UART_0:
-        description: 'TBD'
+        description: 'Whether to enable UART0'
         value: 1
 
     SPI_0:
-        description: 'TBD'
+        description: 'Whether to enable SPI0'
         value:  0
     SPI_0_TYPE:
-        description: 'TBD'
+        description: 'Decide whether SPI0 operates in master or slave mode'
         value: 'HAL_SPI_TYPE_MASTER'
 
     SPI_1:
-        description: 'TBD'
+        description: 'Whether to enable SPI1'
         value:  0
     SPI_1_TYPE:
-        description: 'TBD'
+        description: 'Decide whether SPI1 operates in master or slave mode'
         value: 'HAL_SPI_TYPE_MASTER'
 
-    I2C_0:
-        description: 'TBD'
-        value:  0
-    I2C_1:
-        description: 'TBD'
-        value:  0
-    I2C_2:
-        description: 'TBD'
-        value:  0
-    I2C_3:
-        description: 'TBD'
-        value:  0
-    I2C_4:
-        description: 'TBD'
-        value:  0
     I2C_5:
-        description: 'TBD'
+        description: 'Whether to enable I2C_5'
         value:  0
 
     TIMER_0:

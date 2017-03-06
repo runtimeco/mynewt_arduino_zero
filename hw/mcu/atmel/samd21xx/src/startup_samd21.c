@@ -58,7 +58,7 @@ extern uint32_t _sstack;
 extern uint32_t __StackTop;
 
 /** \cond DOXYGEN_SHOULD_SKIP_THIS */
-int main(void);
+void _start(void);
 /** \endcond */
 
 void __libc_init_array(void);
@@ -273,7 +273,7 @@ void Reset_Handler(void)
         SystemInit();
 
         /* Branch to main function */
-        main();
+        _start();
 
         /* Infinite loop */
         while (1);

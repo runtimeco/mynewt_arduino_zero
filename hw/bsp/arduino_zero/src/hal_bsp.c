@@ -26,9 +26,15 @@
 #include "sysinit/sysinit.h"
 #include "mcu/samd21.h"
 #include "bsp/bsp.h"
-#include "sam0/drivers/tc/tc.h"
+
+/*
+ * hw/mcu/atmel/samd21xx/src/sam0/drivers/tc/tc.h
+ */
+#include <tc.h>
+
 #include "mcu/samd21_hal.h"
 #include "hal/hal_spi.h"
+#include "hal/hal_i2c.h"
 #include "hal/hal_flash.h"
 #include "mcu/hal_spi.h"
 #include "mcu/hal_i2c.h"
@@ -37,6 +43,7 @@
  * hw/mcu/atmel/samd21xx/src/sam0/drivers/sercom/usart/usart.h
  */
 #include <usart.h>
+
 #include <os/os_dev.h>
 #include <uart/uart.h>
 #include <uart_hal/uart_hal.h>
@@ -177,11 +184,13 @@ hal_bsp_init(void)
     assert(rc == 0);
 #endif
 
+#if (MYNEWT_VAL(OS_CPUTIME_TIMER_NUM) >= 0)
     /*
      * Set cputime to count at 1 usec increments.
      */
-    rc = os_cputime_init(MYNEWT_VAL(CLOCK_FREQ));
+    rc = os_cputime_init(MYNEWT_VAL(OS_CPUTIME_FREQ));
     assert(rc == 0);
+#endif
 
 #if MYNEWT_VAL(SPI_0)
     rc = hal_spi_init(ARDUINO_ZERO_SPI_ICSP, &icsp_spi_config,

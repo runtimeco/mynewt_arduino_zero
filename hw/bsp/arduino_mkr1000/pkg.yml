@@ -22,33 +22,67 @@ pkg.repository: https://github.com/runtimeinc/mynewt_arduino_zero
 
 pkg.deps:
     - hw/mcu/atmel/samd21xx
-    - "@apache-mynewt-core/boot/bootutil"
+    - "@apache-mynewt-core/hw/hal"
     - "@apache-mynewt-core/libc/baselibc"
-    - "@apache-mynewt-core/kernel/os"
+
+pkg.deps.UART_0:
+    - "@apache-mynewt-core/hw/drivers/uart"
     - "@apache-mynewt-core/hw/drivers/uart/uart_hal"
 
 # SAMD21G18A
 pkg.cflags:
     - -mthumb
     - -D__SAMD21G18A__
-    - -I../../../../hw/mcu/atmel/samd21xx/src/sam0/drivers/sercom
-    - -I../../../../hw/mcu/atmel/samd21xx/src/sam0/drivers/sercom/usart
-    - -I../../../../hw/mcu/atmel/samd21xx/src/sam0/drivers/system
-    - -I../../../../hw/mcu/atmel/samd21xx/src/sam0/drivers/system/clock
-    - -I../../../../hw/mcu/atmel/samd21xx/src/sam0/drivers/system/clock/clock_samd21_r21_da
-    - -I../../../../hw/mcu/atmel/samd21xx/src/sam0/drivers/system/interrupt
-    - -I../../../../hw/mcu/atmel/samd21xx/src/sam0/drivers/system/interrupt/system_interrupt_samd21
-    - -I../../../../hw/mcu/atmel/samd21xx/src/sam0/drivers/system/pinmux
-    - -I../../../../hw/mcu/atmel/samd21xx/src/sam0/drivers/system/power/power_sam_d_r
-    - -I../../../../hw/mcu/atmel/samd21xx/src/sam0/drivers/system/reset/reset_sam_d_r
-    - -I../../../../hw/mcu/atmel/samd21xx/src/sam0/utils
-    - -I../../../../hw/mcu/atmel/samd21xx/src/sam0/utils/header_files
-    - -I../../../../hw/mcu/atmel/samd21xx/src/sam0/utils/preprocessor
-    - -I../../../../hw/mcu/atmel/samd21xx/src/common/utils
-    - -I../../../../hw/mcu/atmel/samd21xx/src/sam0/drivers/tc
-    - -I../../../../hw/mcu/atmel/samd21xx/src
-    - -I../../../sam0/utils/header_files
-    - -I./sam0/utils/header_files
-    - -I../../../utils/header_files
-    - -I../../../../utils/header_files
-    - -I../../../../hw/mcu/atmel/samd21xx/include/mcu
+    - "-I@mynewt_arduino_zero/hw/mcu/atmel/samd21xx/include"
+    - "-I@mynewt_arduino_zero/hw/mcu/atmel/samd21xx/include/mcu"
+    - "-I@mynewt_arduino_zero/hw/mcu/atmel/samd21xx/src"
+    - "-I@mynewt_arduino_zero/hw/mcu/atmel/samd21xx/src/common/utils"
+    - "-I@mynewt_arduino_zero/hw/mcu/atmel/samd21xx/src/drivers/dac"
+    - "-I@mynewt_arduino_zero/hw/mcu/atmel/samd21xx/src/drivers/dac/dac_sam_d_c"
+    - "-I@mynewt_arduino_zero/hw/mcu/atmel/samd21xx/src/drivers/extint"
+    - "-I@mynewt_arduino_zero/hw/mcu/atmel/samd21xx/src/drivers/sercom/i2c"
+    - "-I@mynewt_arduino_zero/hw/mcu/atmel/samd21xx/src/drivers/sercom/spi"
+    - "-I@mynewt_arduino_zero/hw/mcu/atmel/samd21xx/src/drivers/sercom/spi/module_config"
+    - "-I@mynewt_arduino_zero/hw/mcu/atmel/samd21xx/src/drivers/tc"
+    - "-I@mynewt_arduino_zero/hw/mcu/atmel/samd21xx/src/drivers/tc/tc_sam_d_r"
+    - "-I@mynewt_arduino_zero/hw/mcu/atmel/samd21xx/src/drivers/tcc"
+    - "-I@mynewt_arduino_zero/hw/mcu/atmel/samd21xx/src/drivers/wdt"
+    - "-I@mynewt_arduino_zero/hw/mcu/atmel/samd21xx/src/sam0/drivers/ac"
+    - "-I@mynewt_arduino_zero/hw/mcu/atmel/samd21xx/src/sam0/drivers/adc"
+    - "-I@mynewt_arduino_zero/hw/mcu/atmel/samd21xx/src/sam0/drivers/adc/adc_sam_d_r"
+    - "-I@mynewt_arduino_zero/hw/mcu/atmel/samd21xx/src/sam0/drivers/bod"
+    - "-I@mynewt_arduino_zero/hw/mcu/atmel/samd21xx/src/sam0/drivers/bod/bod_sam_d_r"
+    - "-I@mynewt_arduino_zero/hw/mcu/atmel/samd21xx/src/sam0/drivers/dac"
+    - "-I@mynewt_arduino_zero/hw/mcu/atmel/samd21xx/src/sam0/drivers/dac/dac_sam_d_c"
+    - "-I@mynewt_arduino_zero/hw/mcu/atmel/samd21xx/src/sam0/drivers/dma/module_config"
+    - "-I@mynewt_arduino_zero/hw/mcu/atmel/samd21xx/src/sam0/drivers/events"
+    - "-I@mynewt_arduino_zero/hw/mcu/atmel/samd21xx/src/sam0/drivers/extint"
+    - "-I@mynewt_arduino_zero/hw/mcu/atmel/samd21xx/src/sam0/drivers/extint/module_config"
+    - "-I@mynewt_arduino_zero/hw/mcu/atmel/samd21xx/src/sam0/drivers/i2s"
+    - "-I@mynewt_arduino_zero/hw/mcu/atmel/samd21xx/src/sam0/drivers/nvm"
+    - "-I@mynewt_arduino_zero/hw/mcu/atmel/samd21xx/src/sam0/drivers/pac"
+    - "-I@mynewt_arduino_zero/hw/mcu/atmel/samd21xx/src/sam0/drivers/port"
+    - "-I@mynewt_arduino_zero/hw/mcu/atmel/samd21xx/src/sam0/drivers/rtc"
+    - "-I@mynewt_arduino_zero/hw/mcu/atmel/samd21xx/src/sam0/drivers/sercom"
+    - "-I@mynewt_arduino_zero/hw/mcu/atmel/samd21xx/src/sam0/drivers/sercom/i2c"
+    - "-I@mynewt_arduino_zero/hw/mcu/atmel/samd21xx/src/sam0/drivers/sercom/spi"
+    - "-I@mynewt_arduino_zero/hw/mcu/atmel/samd21xx/src/sam0/drivers/sercom/spi/module_config"
+    - "-I@mynewt_arduino_zero/hw/mcu/atmel/samd21xx/src/sam0/drivers/sercom/spi_master_vec/module-config"
+    - "-I@mynewt_arduino_zero/hw/mcu/atmel/samd21xx/src/sam0/drivers/sercom/usart"
+    - "-I@mynewt_arduino_zero/hw/mcu/atmel/samd21xx/src/sam0/drivers/system"
+    - "-I@mynewt_arduino_zero/hw/mcu/atmel/samd21xx/src/sam0/drivers/system/clock"
+    - "-I@mynewt_arduino_zero/hw/mcu/atmel/samd21xx/src/sam0/drivers/system/clock/clock_samd21_r21_da"
+    - "-I@mynewt_arduino_zero/hw/mcu/atmel/samd21xx/src/sam0/drivers/system/clock/clock_samd21_r21_da/module_config"
+    - "-I@mynewt_arduino_zero/hw/mcu/atmel/samd21xx/src/sam0/drivers/system/interrupt"
+    - "-I@mynewt_arduino_zero/hw/mcu/atmel/samd21xx/src/sam0/drivers/system/interrupt/system_interrupt_samd21"
+    - "-I@mynewt_arduino_zero/hw/mcu/atmel/samd21xx/src/sam0/drivers/system/pinmux"
+    - "-I@mynewt_arduino_zero/hw/mcu/atmel/samd21xx/src/sam0/drivers/system/power"
+    - "-I@mynewt_arduino_zero/hw/mcu/atmel/samd21xx/src/sam0/drivers/system/power/power_sam_d_r"
+    - "-I@mynewt_arduino_zero/hw/mcu/atmel/samd21xx/src/sam0/drivers/system/reset"
+    - "-I@mynewt_arduino_zero/hw/mcu/atmel/samd21xx/src/sam0/drivers/system/reset/reset_sam_d_r"
+    - "-I@mynewt_arduino_zero/hw/mcu/atmel/samd21xx/src/sam0/drivers/tc"
+    - "-I@mynewt_arduino_zero/hw/mcu/atmel/samd21xx/src/sam0/drivers/wdt"
+    - "-I@mynewt_arduino_zero/hw/mcu/atmel/samd21xx/src/sam0/utils"
+    - "-I@mynewt_arduino_zero/hw/mcu/atmel/samd21xx/src/sam0/utils/cmsis/samd21/include"
+    - "-I@mynewt_arduino_zero/hw/mcu/atmel/samd21xx/src/sam0/utils/header_files"
+    - "-I@mynewt_arduino_zero/hw/mcu/atmel/samd21xx/src/sam0/utils/preprocessor"

@@ -53,9 +53,9 @@ main(int argc, char **argv)
     rc = arduino_test_init();
     assert(rc == 0);
 
-    os_start();
-
-    /* os start should never return. If it does, this should be an error */
+    while (1) {
+        os_eventq_run(os_eventq_dflt_get());
+    }
     assert(0);
 
     return rc;

@@ -20,21 +20,12 @@
 #include <sysinit/sysinit.h>
 #include <os/os.h>
 #include <bsp/bsp.h>
-#include <hal/hal_gpio.h>
-#include <hal/hal_flash.h>
 #include <console/console.h>
 #include <shell/shell.h>
 #include <config/config.h>
 #include <hal/hal_system.h>
-#if !MYNEWT_VAL(CONFIG_NFFS)
-#error "Need NFFS or FCB for config storage"
-#endif
-#include <fs/fs.h>
-#include <nffs/nffs.h>
-#include <config/config_file.h>
 #include <assert.h>
 #include <string.h>
-#include <json/json.h>
 
 #include <wifi_mgmt/wifi_mgmt.h>
 #include <winc1500/winc1500.h>
@@ -50,12 +41,6 @@
 #define WIFI_TASK_PRIO          4
 #define WIFI_STACK_SZ           512
 static os_stack_t wifi_stack[WIFI_STACK_SZ];
-
-#define NET_SVC_PRIO            5
-#define NET_SVC_STACK_SIZE      1024
-static struct os_task net_svc_task_struct;
-static struct os_eventq net_svc_evq;
-static os_stack_t net_svc_stack[NET_SVC_STACK_SIZE];
 
 static int net_cli(int argc, char **argv);
 struct shell_cmd net_test_cmd = {
@@ -289,19 +274,11 @@ net_cli(int argc, char **argv)
             }
         }
     } else if (!strcmp(argv[1], "service")) {
-        inet_def_service_init(&net_svc_evq);
+        inet_def_service_init(os_eventq_dflt_get());
     } else {
         console_printf("unknown cmd\n");
     }
     return 0;
-}
-
-static void
-net_svc_task(void *arg)
-{
-    while (1) {
-        os_eventq_run(&net_svc_evq);
-    }
 }
 
 /**
@@ -332,14 +309,9 @@ main(int argc, char **argv)
     winc1500_init();
     shell_cmd_register(&net_test_cmd);
 
-    os_eventq_init(&net_svc_evq);
-    os_task_init(&net_svc_task_struct, "inetdef", net_svc_task, NULL,
-      NET_SVC_PRIO, OS_WAIT_FOREVER, net_svc_stack, NET_SVC_STACK_SIZE);
-
-    os_eventq_dflt_set(&net_svc_evq);
-
-    os_start();
-
+    while (1) {
+        os_eventq_run(os_eventq_dflt_get());
+    }
     /* os start should never return. If it does, this should be an error */
     assert(0);
 
