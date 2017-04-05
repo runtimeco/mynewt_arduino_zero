@@ -71,16 +71,16 @@ enum system_device_id
 #endif
 
     /* Use SPI 2 */
-    ARDUINO_ZERO_SPI_ICSP = 2,
+    ARDUINO_ZERO_SPI_ICSP = 0,
 
     /* Use SPI 3 */
-    ARDUINO_ZERO_SPI_ALT  = 3,
+    ARDUINO_ZERO_SPI_ALT  = 1,
 
     /* a I2c port on SCLK and SDA */
     ARDUINO_ZERO_I2C      = 4,
 };
 
-#define BSP_WINC1500_SPI_PORT   2
+#define BSP_WINC1500_SPI_PORT   0
 
 extern uint8_t _ram_start;
 #define RAM_SIZE        0x00008000
@@ -107,7 +107,6 @@ extern uint8_t _ram_start;
 #define WINC1500_SPI_SCK        /* PB11 */      MCU_GPIO_PORTB(11)
 #define WINC1500_SPI_MOSI       /* PB10 */      MCU_GPIO_PORTB(10)
 #define WINC1500_SPI_MISO       /* PA12 */      MCU_GPIO_PORTA(12)
-#define WINC1500_SPI_PORT       ARDUINO_ZERO_SPI_ICSP
 
 /* This defines the maximum NFFS areas (block) are in the BSPs NFS file
  * system space.  This in conjunction with flash map determines how

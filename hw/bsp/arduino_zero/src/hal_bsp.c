@@ -193,14 +193,12 @@ hal_bsp_init(void)
 #endif
 
 #if MYNEWT_VAL(SPI_0)
-    rc = hal_spi_init(ARDUINO_ZERO_SPI_ICSP, &icsp_spi_config,
-                      MYNEWT_VAL(SPI_0_TYPE));
+    rc = hal_spi_init(0, &icsp_spi_config, MYNEWT_VAL(SPI_0_TYPE));
     SYSINIT_PANIC_ASSERT(rc == 0);
 #endif
 
 #if MYNEWT_VAL(SPI_1)
-    rc = hal_spi_init(ARDUINO_ZERO_SPI_ALT, &alt_spi_config,
-                      MYNEWT_VAL(SPI_1_TYPE));
+    rc = hal_spi_init(1, &alt_spi_config, MYNEWT_VAL(SPI_1_TYPE));
     SYSINIT_PANIC_ASSERT(rc == 0);
 #endif
 
