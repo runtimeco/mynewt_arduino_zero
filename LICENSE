@@ -205,7 +205,21 @@ under a modified 3-clause BSD license.  An extra clause has been added to this
 license which prohibits distribution of the software for use with non-Atmel
 microcontroller products.  The contents of the following directories fall under
 this license (the license text appears at the top of each of these files):
-
     * hw/bsp/arduino_zero/src/arch/cortex_m0/
     * hw/mcu/atmel/samd21xx/src/common/utils/
     * hw/mcu/atmel/samd21xx/src/sam0/drivers/
+
+This product bundles parts of espduino library, which is available under
+MIT license. For details, see libs/espduino/LICENSE.
+    * libs/espduino
+
+This product bundles parts of WINC1500 driver from Atmel Software Framework.
+This is available under the 3-clause BSD license.
+    * libs/winc1500/include/bsp
+    * libs/winc1500/include/bus_wrapper
+    * libs/winc1500/include/common
+    * libs/winc1500/include/driver
+    * libs/winc1500/include/socket
+    * libs/winc1500/src/common
+    * libs/winc1500/src/driver
+    * libs/winc1500/src/socket
