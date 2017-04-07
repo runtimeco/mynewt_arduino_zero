@@ -1,6 +1,6 @@
 repo.name: mynewt_arduino_zero
 repo.versions:
-    "0.0.0": "develop"
+    "0.0.0": "master"
     "0.0.1": "master"
     "0.8.0": "mynewt_arduino_zero_0_8_0_tag"
     "0.9.0": "mynewt_arduino_zero_0_9_0_tag"
@@ -10,7 +10,7 @@ repo.versions:
     "1.0.0": "mynewt_1_0_0_tag"
 
     "0-latest": "1.0.0"     # 1.0.0
-    "0-dev": "0.0.0"        # develop
+    "0-dev": "0.0.0"        # master
 
     "0.8-latest": "0.8.0"
     "0.9-latest": "0.9.0"
