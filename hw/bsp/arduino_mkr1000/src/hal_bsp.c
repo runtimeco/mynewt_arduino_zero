@@ -186,7 +186,7 @@ hal_bsp_init(void)
 #endif
 
 #if MYNEWT_VAL(UART_0) || MYNEWT_VAL(BOOT_SERIAL)
-    rc = os_dev_create((struct os_dev *) &hal_uart0, CONSOLE_UART,
+    rc = os_dev_create((struct os_dev *) &hal_uart0, "uart0",
       OS_DEV_INIT_PRIMARY, 0, uart_hal_init, (void *)&uart_cfgs[0]);
     SYSINIT_PANIC_ASSERT(rc == 0);
 #endif

@@ -91,7 +91,6 @@ extern uint8_t _ram_start;
 #define LED_BLINK_PIN   (ARDUINO_ZERO_D13)
 #define LED_2           (27)
 
-#define CONSOLE_UART            "uart0"
 #define CONSOLE_UART_SPEED      115200
 
 /*
