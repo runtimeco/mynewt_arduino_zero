@@ -91,11 +91,11 @@ struct samd21_i2c_state *samd21_hal_i2cs[HAL_SAMD21_I2C_MAX] =
 #endif
 };
 
-#define SAMD21_I2C_RESOLVE(__n, __v)    \
-    if ((__n) >= HAL_SAMD21_I2C_MAX) {  \
-        rc = EINVAL;                    \
-        goto err;                       \
-    }                                   \
+#define SAMD21_I2C_RESOLVE(__n, __v)                                    \
+    if ((__n) >= HAL_SAMD21_I2C_MAX || !samd21_hal_i2cs[(__n)]) {       \
+        rc = EINVAL;                                                    \
+        goto err;                                                       \
+    }                                                                   \
     (__v) = samd21_hal_i2cs[(__n)];
 
 
