@@ -27,6 +27,7 @@ pkg.keywords:
     - Wi-Fi
 
 pkg.deps:
+    - "@apache-mynewt-core/boot/bootutil"
     - "@apache-mynewt-core/sys/coredump"
     - "@apache-mynewt-core/fs/nffs"
     - "@apache-mynewt-core/sys/console/full"
