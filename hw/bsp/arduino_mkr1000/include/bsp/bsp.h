@@ -36,12 +36,6 @@ extern uint8_t _ram_start;
 #define BSP_WINC1500_SPI_PORT   2
 #define CONSOLE_UART_SPEED      115200
 
-#if MYNEWT_VAL(BOOT_SERIAL)
-#define BOOT_SERIAL_DETECT_PIN		MCU_GPIO_PORTB(11)
-#define BOOT_SERIAL_DETECT_PIN_CFG	HAL_GPIO_PULL_UP
-#define BOOT_SERIAL_DETECT_PIN_VAL	0
-#endif
-
 /*
  * Wiring of WINC1500 chip to SAMD21.
  */
@@ -55,14 +49,6 @@ extern uint8_t _ram_start;
 #define WINC1500_SPI_SCK		MCU_GPIO_PORTA(13)	/* PA13 */
 #define WINC1500_SPI_MOSI		MCU_GPIO_PORTA(12)	/* PA12 */
 #define WINC1500_SPI_MISO		MCU_GPIO_PORTA(15)	/* PA15 */
-
-/* This defines the maximum NFFS areas (block) are in the BSPs NFS file
- * system space.  This in conjunction with flash map determines how
- * many NFS blocks there will be.  A minimum is the number of individually
- * erasable sectors in the flash area and the maximum is this number. If
- * your max is less than the number of sectors then the NFFS will combine
- * multiple sectors into an NFFS area */
-#define NFFS_AREA_MAX    (8)
 
 #ifdef __cplusplus
 }
