@@ -396,6 +396,9 @@ winc1500_sock_sendto(struct mn_socket *sock, struct os_mbuf *m,
     int off;
 
     if (ws->ws_type == SOCK_STREAM) {
+        if (dst) {
+            return MN_EINVAL;
+        }
         rc = 0;
         if (ws->ws_tx) {
             return MN_EAGAIN;
@@ -542,7 +545,7 @@ winc1500_itf_getnext(struct mn_itf *mi)
     mi->mif_idx = 1;
     mi->mif_flags = MN_ITF_F_MULTICAST;
     if (winc1500.w_up) {
-        mi->mif_flags |= MN_ITF_F_UP;
+        mi->mif_flags |= (MN_ITF_F_UP | MN_ITF_F_LINK);
     }
     return 0;
 }
