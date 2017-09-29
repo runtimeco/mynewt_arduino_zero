@@ -17,24 +17,6 @@ syscfg.defs:
         description: 'Whether to enable UART0'
         value: 1
 
-    SPI_0:
-        description: 'Whether to enable SPI0'
-        value:  0
-    SPI_0_TYPE:
-        description: 'Decide whether SPI0 operates in master or slave mode'
-        value: 'HAL_SPI_TYPE_MASTER'
-
-    SPI_1:
-        description: 'Whether to enable SPI1'
-        value:  0
-    SPI_1_TYPE:
-        description: 'Decide whether SPI1 operates in master or slave mode'
-        value: 'HAL_SPI_TYPE_MASTER'
-
-    I2C_5:
-        description: 'Whether to enable I2C_5'
-        value:  0
-
     TIMER_0:
         description: 'Arduino zero Timer 0.'
         value:  1
