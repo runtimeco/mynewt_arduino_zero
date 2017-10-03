@@ -45,12 +45,13 @@
 #include <usart.h>
 
 #include <os/os_dev.h>
+#if MYNEWT_VAL(UART_0)
 #include <uart/uart.h>
 #include <uart_hal/uart_hal.h>
 #include <mcu/hal_uart.h>
 
 static struct uart_dev hal_uart0;
-
+#endif
 #if MYNEWT_VAL(SPI_0)
 /* configure the SPI port for arduino external spi */
 struct samd21_spi_config icsp_spi_config = {
@@ -149,6 +150,7 @@ hal_bsp_init(void)
 {
     int rc;
 
+    (void)rc;
 #if MYNEWT_VAL(TIMER_0) || MYNEWT_VAL(TIMER_1) || MYNEWT_VAL(TIMER_2)
     struct samd21_timer_cfg tmr_cfg;
 #endif
