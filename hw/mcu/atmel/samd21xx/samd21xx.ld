@@ -160,6 +160,7 @@ SECTIONS
     } > RAM
 
     /* Heap starts after BSS */
+    . = ALIGN(8);    
     __HeapBase = .;
 
   /* User_heap_stack section, used to check that there is enough RAM left */
