@@ -22,7 +22,7 @@
 #include <assert.h>
 #include <errno.h>
 #include "syscfg/syscfg.h"
-#include "bsp/cmsis_nvic.h"
+#include "mcu/cmsis_nvic.h"
 #include "hal/hal_timer.h"
 #include "sam0/drivers/tc/tc.h"
 #include "sam0/utils/status_codes.h"

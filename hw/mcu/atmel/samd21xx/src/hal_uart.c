@@ -16,7 +16,7 @@
 
 #include "hal/hal_uart.h"
 #include "hal/hal_gpio.h"
-#include "bsp/cmsis_nvic.h"
+#include "mcu/cmsis_nvic.h"
 #include "bsp/bsp.h"
 #include <mcu/samd21.h>
 #include <assert.h>

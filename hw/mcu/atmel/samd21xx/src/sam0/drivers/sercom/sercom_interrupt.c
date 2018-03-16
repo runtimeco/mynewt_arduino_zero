@@ -44,7 +44,7 @@
  * Support and FAQ: visit <a href="http://www.atmel.com/design-support/">Atmel Support</a>
  */
 #include "sercom_interrupt.h"
-#include "bsp/cmsis_nvic.h"
+#include "mcu/cmsis_nvic.h"
 
 void *_sercom_instances[SERCOM_INST_NUM];
 

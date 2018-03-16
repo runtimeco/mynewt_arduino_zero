@@ -47,7 +47,7 @@
 #include "samd21.h"
 #include <clock.h>
 #include <system.h>
-#include "bsp/cmsis_nvic.h"
+#include "mcu/cmsis_nvic.h"
 
 uint32_t SystemCoreClock;/*!< System Clock Frequency (Core Clock)*/
 
