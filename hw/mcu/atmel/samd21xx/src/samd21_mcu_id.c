@@ -36,6 +36,12 @@
 #define min(a, b) ((a)<(b)?(a):(b))
 #endif
 
+int
+hal_bsp_hw_id_len(void)
+{
+    return 16;
+}
+
 /*
  * This can be used as the unique hardware identifier for the platform, as
  * it's supposed to be unique for this particular MCU.
