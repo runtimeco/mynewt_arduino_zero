@@ -235,6 +235,7 @@ samd21_flash_init(const struct hal_flash *dev)
     samd21_flash_dev.hf_sector_cnt =
             params.nvm_number_of_pages/SAMD21_FLASH_PAGES_PER_SECTOR;
     samd21_flash_dev.hf_align = 1;
+    samd21_flash_dev.hf_erased_val = 0xff;
 
     return 0;
 }
