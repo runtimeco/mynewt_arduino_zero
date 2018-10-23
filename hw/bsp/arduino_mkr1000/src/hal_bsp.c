@@ -19,10 +19,10 @@
 #include <assert.h>
 #include <stddef.h>
 #include <inttypes.h>
+#include "syscfg/syscfg.h"
 #include "hal/hal_bsp.h"
 #include "bsp/bsp.h"
 #include <os/os_cputime.h>
-#include "syscfg/syscfg.h"
 #include "sysinit/sysinit.h"
 #include "hal/hal_flash.h"
 #include "mcu/samd21.h"
@@ -117,6 +117,8 @@ static struct samd21_spi_config ext_spi_cfg = {
 };
 #endif
 
+#if MYNEWT_VAL(UART_0)
+#if !MYNEWT_VAL(BOOT_LOADER) || MYNEWT_VAL(BOOT_SERIAL)
 static const struct samd21_uart_config uart_cfgs[] = {
     [0] = {
         .suc_sercom = SERCOM5,
@@ -130,6 +132,8 @@ static const struct samd21_uart_config uart_cfgs[] = {
         .suc_pad3 = PINMUX_PB23D_SERCOM5_PAD3
     }
 };
+#endif
+#endif
 
 /*
  * What memory to include in coredump.
@@ -184,8 +188,9 @@ hal_bsp_init(void)
 #if MYNEWT_VAL(TIMER_0) || MYNEWT_VAL(TIMER_1) || MYNEWT_VAL(TIMER_2)
     struct samd21_timer_cfg tmr_cfg;
 #endif
+    (void)rc;
 
-#if MYNEWT_VAL(UART_0) || MYNEWT_VAL(BOOT_SERIAL)
+#if MYNEWT_VAL(UART_0)
     rc = os_dev_create((struct os_dev *) &hal_uart0, "uart0",
       OS_DEV_INIT_PRIMARY, 0, uart_hal_init, (void *)&uart_cfgs[0]);
     SYSINIT_PANIC_ASSERT(rc == 0);
