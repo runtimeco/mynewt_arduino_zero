@@ -15,8 +15,8 @@ repo.versions:
     "1.4.1": "mynewt_1_4_1_tag"
     "1.5.0": "mynewt_1_5_0_tag"
 
-    "0-latest": "1.4.1"
-    "1-latest": "1.4.1"
+    "0-latest": "1.5.0"
+    "1-latest": "1.5.0"
     "0-dev": "0.0.0"        # master
 
     "0.8-latest": "0.8.0"
