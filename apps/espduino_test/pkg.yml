@@ -28,5 +28,6 @@ pkg.deps:
     - "@apache-mynewt-core/sys/console/full"
     - "@apache-mynewt-core/sys/shell"
     - "@apache-mynewt-core/kernel/os"
+    - "@apache-mynewt-core/sys/log/stub"
     - "@apache-mynewt-core/sys/id"
     - libs/espduino
