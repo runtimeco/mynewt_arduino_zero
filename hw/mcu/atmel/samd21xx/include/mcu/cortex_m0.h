@@ -18,7 +18,6 @@
 #define __MCU_CORTEX_M0_H__
 
 #include "../../src/sam0/utils/cmsis/samd21/include/samd21.h"
-
-#define OS_TICKS_PER_SEC    (1000)
+#include "mcu.h"
 
 #endif /* __MCU_CORTEX_M0_H__ */

@@ -32,6 +32,12 @@ extern "C" {
 #define MCU_GPIO_PORTA(pin)	((0 * 32) + (pin))
 #define MCU_GPIO_PORTB(pin)	((1 * 32) + (pin))
 
+static inline void
+hal_debug_break(void)
+{
+    __BKPT(1);
+}
+
 #ifdef __cplusplus
 }
 #endif

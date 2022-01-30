@@ -209,3 +209,9 @@ hal_bsp_init(void)
     SYSINIT_PANIC_ASSERT(rc == 0);
 #endif
 }
+
+void
+hal_bsp_deinit(void)
+{
+
+}
