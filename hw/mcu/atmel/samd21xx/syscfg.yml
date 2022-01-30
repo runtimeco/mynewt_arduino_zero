@@ -56,3 +56,6 @@ syscfg.defs:
     SPI_3_TYPE:
         description: 'Decide whether SPI3 operates in master or slave mode'
         value: 'HAL_SPI_TYPE_MASTER'
+
+syscfg.vals:
+    OS_TICKS_PER_SEC: 1000
