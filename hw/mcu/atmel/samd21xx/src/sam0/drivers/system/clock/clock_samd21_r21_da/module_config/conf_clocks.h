@@ -44,13 +44,30 @@
  * Support and FAQ: visit <a href="http://www.atmel.com/design-support/">Atmel Support</a>
  */
 #include <clock.h>
+#include <syscfg/syscfg.h>
 
 #ifndef CONF_CLOCKS_H_INCLUDED
 #  define CONF_CLOCKS_H_INCLUDED
 
 /* System clock bus configuration */
+# if MYNEWT_VAL(CPU_CLOCK_FREQ_MHZ) == 48
+#  define CONF_CLOCK_FLASH_WAIT_STATES            1
+#else
 #  define CONF_CLOCK_FLASH_WAIT_STATES            0
+#endif
+
+#if MYNEWT_VAL(CPU_CLOCK_FREQ_MHZ) == 24
+#  define CONF_CLOCK_CPU_DIVIDER                  SYSTEM_MAIN_CLOCK_DIV_2
+#elif MYNEWT_VAL(CPU_CLOCK_FREQ_MHZ) == 12
+#  define CONF_CLOCK_CPU_DIVIDER                  SYSTEM_MAIN_CLOCK_DIV_4
+#elif (MYNEWT_VAL(CPU_CLOCK_FREQ_MHZ) == 6 || MYNEWT_VAL(CPU_CLOCK_FREQ_MHZ) == 1)
+#  define CONF_CLOCK_CPU_DIVIDER                  SYSTEM_MAIN_CLOCK_DIV_8
+#elif MYNEWT_VAL(CPU_CLOCK_FREQ_MHZ) == 3
+#  define CONF_CLOCK_CPU_DIVIDER                  SYSTEM_MAIN_CLOCK_DIV_16
+#else
 #  define CONF_CLOCK_CPU_DIVIDER                  SYSTEM_MAIN_CLOCK_DIV_1
+#endif
+
 #  define CONF_CLOCK_APBA_DIVIDER                 SYSTEM_MAIN_CLOCK_DIV_1
 #  define CONF_CLOCK_APBB_DIVIDER                 SYSTEM_MAIN_CLOCK_DIV_1
 #  define CONF_CLOCK_APBC_DIVIDER                 SYSTEM_MAIN_CLOCK_DIV_1
@@ -88,7 +105,12 @@
 #  define CONF_CLOCK_OSC32K_RUN_IN_STANDBY        false
 
 /* SYSTEM_CLOCK_SOURCE_DFLL configuration - Digital Frequency Locked Loop */
+#if MYNEWT_VAL(CPU_CLOCK_FREQ_MHZ) != 8 || (MYNEWT_VAL(CPU_CLOCK_FREQ_MHZ) != 1)
+#  define CONF_CLOCK_DFLL_ENABLE                  true
+#else
 #  define CONF_CLOCK_DFLL_ENABLE                  false
+#endif
+
 #  define CONF_CLOCK_DFLL_LOOP_MODE               SYSTEM_CLOCK_DFLL_LOOP_MODE_OPEN
 #  define CONF_CLOCK_DFLL_ON_DEMAND               false
 
@@ -133,7 +155,11 @@
 /* Configure GCLK generator 0 (Main Clock) */
 #  define CONF_CLOCK_GCLK_0_ENABLE                true
 #  define CONF_CLOCK_GCLK_0_RUN_IN_STANDBY        false
+#if (MYNEWT_VAL(CPU_CLOCK_FREQ_MHZ) != 8 && MYNEWT_VAL(CPU_CLOCK_FREQ_MHZ) != 1)
+#  define CONF_CLOCK_GCLK_0_CLOCK_SOURCE          SYSTEM_CLOCK_SOURCE_DFLL
+#else
 #  define CONF_CLOCK_GCLK_0_CLOCK_SOURCE          SYSTEM_CLOCK_SOURCE_OSC8M
+#endif
 #  define CONF_CLOCK_GCLK_0_PRESCALER             1
 #  define CONF_CLOCK_GCLK_0_OUTPUT_ENABLE         false
 
@@ -194,4 +220,3 @@
 #  define CONF_CLOCK_GCLK_8_OUTPUT_ENABLE         false
 
 #endif /* CONF_CLOCKS_H_INCLUDED */
-
