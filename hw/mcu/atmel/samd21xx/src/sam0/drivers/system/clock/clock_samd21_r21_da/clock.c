@@ -43,6 +43,7 @@
 /*
  * Support and FAQ: visit <a href="http://www.atmel.com/design-support/">Atmel Support</a>
  */
+#include <syscfg/syscfg.h>
 #include <clock.h>
 #include <conf_clocks.h>
 #include <system.h>
