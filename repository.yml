@@ -21,6 +21,7 @@ repo.versions:
     "1.10.0": "mynewt_1_10_0_tag"
     "1.11.0": "mynewt_1_11_0_tag"
     "1.13.0": "mynewt_1_13_0_tag"
+    "1.14.0": "mynewt_1_14_0_tag"
 
     "0-latest": "1.13.0"
     "1-latest": "1.13.0"
@@ -41,3 +42,4 @@ repo.versions:
     "1.10-latest": "1.10.0"
     "1.11-latest": "1.11.0"
     "1.13-latest": "1.13.0"
+    "1.14-latest": "1.14.0"
